@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050b18" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
+    <script>
+      // Antes del primer paint: con WebGL 2 la capa semántica se oculta y se ve
+      // solo el fondo hasta que el canvas tenga su primer frame. Sin JS o sin
+      // WebGL 2 la clase no se pone y se lee el HTML.
+      if (window.WebGL2RenderingContext) document.documentElement.classList.add('canvas')
+    </script>
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="off">
+    <div style="display: contents">%sveltekit.body%</div>
+  </body>
+</html>

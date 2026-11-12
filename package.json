@@ -1,0 +1,39 @@
+{
+  "name": "tres-medusas",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@threlte/core": "^8.7.0",
+    "@threlte/extras": "^9.23.1",
+    "essentia-core": "^0.8.1",
+    "essentia-crystal": "^0.3.1",
+    "essentia-primitives": "^0.15.1",
+    "essentia-ui": "^0.9.1",
+    "svelte": "^5.57.3",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@fontsource/manrope": "^5.3.0",
+    "@sveltejs/adapter-static": "^3.0.11",
+    "@sveltejs/kit": "^2.70.4",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/three": "^0.186.0",
+    "svelte-check": "^4.7.8",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8",
+    "vite-plugin-glsl": "^1.6.2",
+    "vitest": "^4.1.12"
+  }
+}
