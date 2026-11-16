@@ -1,19 +1,22 @@
 /**
- * Contenido de la landing. Es la única fuente: la capa semántica
- * (`routes/+page.svelte`, el HTML que indexan los buscadores y que se lee sin
- * WebGL) y la escena del canvas (`lib/scene/*`) dibujan lo mismo desde acá.
+ * Contenido del sitio. Es la única fuente: la capa semántica (las rutas, el
+ * HTML que indexan los buscadores y que se lee sin WebGL) y la escena del
+ * canvas (`lib/scene/*`) dibujan lo mismo desde acá.
  *
  * Reglas de comunicación de Tres Medusas que este texto respeta:
  * - se vende la solución, no la tecnología (la IA y la automatización no son el titular);
  * - nada de «calidad garantizada» ni métricas que no estén medidas;
- * - Solutions es la arista principal; Sites va aparte y solo si entra en el alcance estándar;
  * - tono claro y directo, sin jerga.
+ *
+ * Lo marcado con TODO es provisorio: placeholders hasta tener el contenido real.
  */
 
-/** Contacto. TODO: reemplazar por el dominio y la página de empresa reales cuando existan. */
+/** Contacto. TODO: dominio, página de empresa y agenda reales. */
 export const CONTACT = {
   email: 'hola@tresmedusas.com',
   linkedin: 'https://www.linkedin.com/company/tres-medusas',
+  /** Agenda provisoria: la experiencia de reunión todavía no está definida. */
+  calendly: 'https://calendly.com/tres-medusas',
 } as const
 
 export const SITE = {
@@ -28,112 +31,217 @@ export interface Link {
   href: string
 }
 
-/** Links de la navegación fija: anclas a las secciones. */
-export const NAV: readonly Link[] = [
-  { label: 'Qué resolvemos', href: '#que-resolvemos' },
-  { label: 'Cómo entregamos', href: '#como-entregamos' },
-  { label: 'Contacto', href: '#contacto' },
-]
-
-export const HERO = {
-  eyebrow: 'Software a medida e integraciones',
-  // Frase de posicionamiento vigente, aún por decidir.
-  title: 'Resolvemos operaciones manuales y procesos fragmentados.',
-  lead: 'Construimos el software y las integraciones que conectan lo que hoy se hace a mano, para que tu equipo deje de copiar datos entre sistemas.',
-  primary: { label: 'Cuéntanos tu proceso', href: `mailto:${CONTACT.email}` } satisfies Link,
-  secondary: { label: 'Cómo entregamos', href: '#como-entregamos' } satisfies Link,
-} as const
-
-export interface Item {
-  title: string
-  body: string
-}
-
+/** Escena de una página: su id es el ancla (`#nosotros`) y el `<section>` de la capa semántica. */
 export interface Section {
   id: string
-  /** Número de la sección, como se muestra: «01». */
+  /** Número de la escena, como se muestra: «01». */
   index: string
   label: string
   title: string
   intro?: string
 }
 
-export const PROBLEMS = {
-  section: {
-    id: 'que-resolvemos',
-    index: '01',
-    label: 'Qué resolvemos',
-    title: 'Empezamos por el problema, no por la herramienta.',
-    intro: 'Estos son los que más vemos. Si el tuyo no está en la lista, cuéntanoslo igual.',
-  } satisfies Section,
-  items: [
-    {
-      title: 'Datos que se copian a mano entre sistemas',
-      body: 'Conectamos tus herramientas para que la información pase de una a otra sin volver a capturarla.',
-    },
-    {
-      title: 'Procesos que viven en hojas de cálculo y correos',
-      body: 'Los llevamos a un sistema propio, con pasos claros y un registro de quién hizo qué y cuándo.',
-    },
-    {
-      title: 'Reportes que se arman a mano cada semana',
-      body: 'Los generamos a partir de los datos que ya tienes, cuando los necesitas.',
-    },
-    {
-      title: 'Sistemas que no hablan entre sí',
-      body: 'Integramos tu ERP, CRM, tienda en línea o lo que uses, con integraciones hechas para tu operación.',
-    },
-  ] satisfies Item[],
+export interface Item {
+  title: string
+  body: string
+}
+
+const MEETING: Link = { label: 'Agenda una reunión', href: CONTACT.calendly }
+
+/** Navegación fija. Las anclas de la home funcionan también desde otra página. */
+export const NAV: readonly Link[] = [
+  { label: 'Cómo trabajamos', href: '/#como-trabajamos' },
+  { label: 'Nosotros', href: '/#nosotros' },
+  { label: 'Showcase', href: '/showcase' },
+  { label: 'Contacto', href: '/#contacto' },
+]
+
+// ── Home ─────────────────────────────────────────────────────────
+
+/** Hero provisorio: se trabaja aparte. */
+export const HERO = {
+  id: 'inicio',
+  eyebrow: 'Software a medida e integraciones',
+  // Frase de posicionamiento vigente, aún por decidir.
+  title: 'Resolvemos operaciones manuales y procesos fragmentados.',
+  lead: 'Construimos el software y las integraciones que conectan lo que hoy se hace a mano, para que tu equipo deje de copiar datos entre sistemas.',
+  primary: MEETING,
+  secondary: { label: 'Cómo trabajamos', href: '#como-trabajamos' } satisfies Link,
+  hint: 'Desliza para seguir',
 } as const
 
-export const DELIVERY = {
+export const HOW_WORK = {
   section: {
-    id: 'como-entregamos',
-    index: '02',
-    label: 'Cómo entregamos',
-    title: 'Nada llega a tu sistema sin tu aprobación.',
-    intro: 'Cada cambio recorre los mismos cuatro pasos antes de tocar tu operación.',
+    id: 'como-trabajamos',
+    index: '01',
+    label: 'Cómo trabajamos',
+    title: 'Empezamos por el problema, no por la herramienta.',
+    intro: 'Cada proyecto recorre los mismos pasos, y nada llega a tu sistema sin tu aprobación.',
   } satisfies Section,
   steps: [
-    { title: 'Lo escribe nuestro sistema de desarrollo', body: 'Cada cambio parte de lo que acordamos para el hito.' },
-    { title: 'Lo verifican los tests', body: 'Las pruebas automáticas corren en cada cambio.' },
-    { title: 'Lo revisa una segunda pasada', body: 'Una revisión independiente antes de seguir.' },
-    { title: 'Lo aprueba una persona', body: 'Solo con ese ok llega a tu sistema.' },
+    {
+      title: 'Entendemos tu operación',
+      body: 'Vemos cómo lo hacen hoy, dónde se pierde el tiempo y qué sistemas ya usas.',
+    },
+    {
+      title: 'Lo dividimos en hitos',
+      body: 'Acordamos qué entrega cada hito antes de empezar a construir.',
+    },
+    {
+      title: 'Construimos con verificación',
+      body: 'Cada cambio pasa por tests automáticos y una revisión independiente.',
+    },
+    {
+      title: 'Lo apruebas tú',
+      body: 'Solo con tu ok llega a tu sistema, con un reporte de evidencia por hito.',
+    },
   ] satisfies Item[],
-  note: 'Tus datos no salen del proyecto.',
-  evidence: {
-    title: 'Un reporte de evidencia por hito',
-    body: 'Al cerrar cada hito recibes un reporte con lo que se hizo y la evidencia que lo respalda: las pruebas que corrieron, las revisiones y las aprobaciones.',
-  } satisfies Item,
+  problemsLabel: 'Lo que más resolvemos',
+  problems: [
+    'Datos que se copian a mano',
+    'Procesos en hojas de cálculo y correos',
+    'Reportes armados cada semana',
+    'Sistemas que no hablan entre sí',
+  ],
 } as const
 
-/** Sites: complemento de Solutions, solo para lo que entra en el alcance estándar. */
-export const SITES = {
+export interface Person {
+  name: string
+  role: string
+  /** Bio corta: solo los fundadores la muestran. */
+  bio?: string
+  /** Foto cuadrada en `static/`; sin ella se dibujan las iniciales. */
+  photo?: string
+}
+
+export const ABOUT = {
   section: {
-    id: 'sites',
-    index: '03',
-    label: 'Tres Medusas Sites',
-    title: '¿Solo necesitas una web?',
-    intro:
-      'Hacemos webs y landings con un alcance estándar y definido de antemano. Si tu proyecto entra en ese alcance, es el camino más directo; si no, lo vemos como un proyecto a medida.',
+    id: 'nosotros',
+    index: '02',
+    label: 'Nosotros',
+    // TODO: copy definitivo.
+    title: 'Tres fundadores y un equipo que construye contigo.',
+    intro: 'Tres Medusas la fundamos tres personas. Hoy trabajamos junto a un equipo pequeño.',
   } satisfies Section,
-  action: { label: 'Pregúntanos por Sites', href: `mailto:${CONTACT.email}?subject=Sites` } satisfies Link,
+  foundersLabel: 'Fundadores',
+  // TODO: nombres, roles, bios y fotos reales.
+  founders: [
+    { name: 'Fundador Uno', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
+    { name: 'Fundador Dos', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
+    { name: 'Fundador Tres', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
+  ] satisfies Person[] as readonly Person[],
+  teamLabel: 'Equipo',
+  // TODO: equipo actual.
+  team: [
+    { name: 'Integrante Uno', role: 'Rol por definir' },
+    { name: 'Integrante Dos', role: 'Rol por definir' },
+    { name: 'Integrante Tres', role: 'Rol por definir' },
+    { name: 'Integrante Cuatro', role: 'Rol por definir' },
+  ] satisfies Person[] as readonly Person[],
 } as const
 
 export const CONTACT_SECTION = {
   section: {
     id: 'contacto',
-    index: '04',
+    index: '03',
     label: 'Contacto',
-    title: 'Cuéntanos qué proceso te quita tiempo.',
-    intro: 'Escríbenos con una descripción breve de cómo lo hacen hoy. Te respondemos por correo para agendar una llamada.',
+    title: 'Agenda una reunión.',
+    intro: 'Cuéntanos qué proceso te quita tiempo. En una llamada corta vemos si podemos ayudarte.',
   } satisfies Section,
-  primary: { label: CONTACT.email, href: `mailto:${CONTACT.email}` } satisfies Link,
-  secondary: { label: 'LinkedIn', href: CONTACT.linkedin } satisfies Link,
+  primary: MEETING,
+  secondary: { label: CONTACT.email, href: `mailto:${CONTACT.email}` } satisfies Link,
+  tertiary: { label: 'LinkedIn', href: CONTACT.linkedin } satisfies Link,
 } as const
+
+/** Escenas de la home, en orden. */
+export const HOME_SCENES = [HERO.id, HOW_WORK.section.id, ABOUT.section.id, CONTACT_SECTION.section.id] as const
+
+// ── Showcase ─────────────────────────────────────────────────────
+
+export interface Project {
+  id: string
+  name: string
+  client: string
+  /** Qué tipo de trabajo fue: «Integración», «Sistema interno». */
+  tags: readonly string[]
+  problem: string
+  solution: string
+  /** Imagen 16:10 en `static/`; sin ella se dibuja un panel de la marca. */
+  image?: string
+}
+
+export const SHOWCASE = {
+  section: {
+    id: 'showcase',
+    index: '',
+    label: 'Showcase',
+    title: 'Lo que ya construimos.',
+    intro: 'Cada proyecto empezó con un proceso que se hacía a mano.',
+  } satisfies Section,
+  title: 'Showcase — Tres Medusas',
+  description: 'Proyectos de software a medida e integraciones construidos por Tres Medusas.',
+  problemLabel: 'El problema',
+  solutionLabel: 'Lo que hicimos',
+  // TODO: proyectos reales (sin métricas que no estén medidas).
+  projects: [
+    {
+      id: 'proyecto-1',
+      name: 'Proyecto de ejemplo 1',
+      client: 'Cliente por definir',
+      tags: ['Integración'],
+      problem: 'Descripción breve del proceso que se hacía a mano.',
+      solution: 'Descripción breve de lo que construimos y cómo se usa hoy.',
+    },
+    {
+      id: 'proyecto-2',
+      name: 'Proyecto de ejemplo 2',
+      client: 'Cliente por definir',
+      tags: ['Sistema interno'],
+      problem: 'Descripción breve del proceso que se hacía a mano.',
+      solution: 'Descripción breve de lo que construimos y cómo se usa hoy.',
+    },
+    {
+      id: 'proyecto-3',
+      name: 'Proyecto de ejemplo 3',
+      client: 'Cliente por definir',
+      tags: ['Reportes'],
+      problem: 'Descripción breve del proceso que se hacía a mano.',
+      solution: 'Descripción breve de lo que construimos y cómo se usa hoy.',
+    },
+  ] satisfies Project[] as readonly Project[],
+  closing: {
+    section: {
+      id: 'siguiente',
+      index: '',
+      label: 'Tu proyecto',
+      title: '¿El próximo es el tuyo?',
+      intro: 'Cuéntanos qué proceso te quita tiempo.',
+    } satisfies Section,
+    primary: MEETING,
+    secondary: { label: 'Volver al inicio', href: '/' } satisfies Link,
+  },
+} as const
+
+/** Escenas del showcase, en orden. */
+export const SHOWCASE_SCENES = [SHOWCASE.section.id, ...SHOWCASE.projects.map((p) => p.id), SHOWCASE.closing.section.id] as const
+
+/** Escenas de cada página, por ruta. */
+export function scenesOf(path: string): readonly string[] {
+  return path.replace(/\/$/, '') === '/showcase' ? SHOWCASE_SCENES : HOME_SCENES
+}
 
 export const FOOTER = {
   tagline: 'Software a medida e integraciones.',
   /** El año sale del build: el sitio se prerenderiza. */
   copyright: (year: number) => `© ${year} Tres Medusas`,
 } as const
+
+/** Iniciales de un nombre, para el avatar sin foto: «Fundador Uno» → «FU». */
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join('')
+}

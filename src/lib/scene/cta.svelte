@@ -42,13 +42,13 @@
 {#if labelWidth > 0}
   {#if focused}
     <!-- Anillo de foco del teclado: un halo detrás del vidrio, que lo refracta en el canto. -->
-    <Rect width={width + 10} height={HEIGHT + 10} radius={(HEIGHT + 10) / 2} color={PALETTE.accent} opacity={0.55} x={x + width / 2} y={y - HEIGHT / 2} z={0.5} />
+    <Rect width={width + 10} height={HEIGHT + 10} radius={(HEIGHT + 10) / 2} color={PALETTE.brand} opacity={0.55} x={x + width / 2} y={y - HEIGHT / 2} z={0.5} />
   {/if}
   <Glass
     preset="pill"
     width={width}
     height={HEIGHT}
-    tint={primary ? PALETTE.accent : '#ffffff'}
+    tint={primary ? PALETTE.brand : '#ffffff'}
     tintOpacity={primary ? 0.82 : 0.06}
     brightness={focused ? 0.12 : 0}
     rim={focused ? 0.9 : primary ? 0.15 : 0.25}
@@ -64,8 +64,8 @@
     <MeasuredText
       text={link.label}
       fontSize={FONT_SIZE}
-      color={primary ? PALETTE.onAccent : PALETTE.text}
-      font={FONT.semibold}
+      color={primary ? PALETTE.onBrand : PALETTE.ink}
+      font={FONT.bold}
       lineHeight={1.2}
       anchorX={0.5}
       anchorY={0.5}
@@ -78,8 +78,8 @@
   <MeasuredText
     text={link.label}
     fontSize={FONT_SIZE}
-    color={PALETTE.text}
-    font={FONT.semibold}
+    color={PALETTE.ink}
+    font={FONT.bold}
     lineHeight={1.2}
     x={-100000}
     onmeasure={(w) => (labelWidth = w)}

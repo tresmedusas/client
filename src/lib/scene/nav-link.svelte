@@ -23,7 +23,7 @@
     onnavigate: (href: string) => void
   }
 
-  let { link, fontSize = 15, font = FONT.semibold, color = PALETTE.text, anchorX = 0, x, y, z, focused, onmeasure, onnavigate }: Props = $props()
+  let { link, fontSize = 15, font = FONT.bold, color = PALETTE.ink, anchorX = 0, x, y, z, focused, onmeasure, onnavigate }: Props = $props()
 
   const { onPointerEnter, onPointerLeave } = useCursor()
 
@@ -33,7 +33,7 @@
 </script>
 
 {#if focused && width > 0}
-  <Rect width={width + 16} height={height + 10} radius={(height + 10) / 2} color={PALETTE.accent} opacity={0.18} x={left + width / 2} {y} z={z - 0.01} />
+  <Rect width={width + 16} height={height + 10} radius={(height + 10) / 2} color={PALETTE.brand} opacity={0.18} x={left + width / 2} {y} z={z - 0.01} />
 {/if}
 <T.Group onclick={() => onnavigate(link.href)} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
   <MeasuredText

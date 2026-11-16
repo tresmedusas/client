@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bob, columnWidth, grid, medusas, rows, stack } from './layout.js'
+import { bob, columnWidth, flow, grid, medusas, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -61,5 +61,19 @@ describe('bob', () => {
       const { dy } = bob(m!, t)
       expect(Math.abs(dy)).toBeLessThanOrEqual(m!.height * 0.08 + 1e-9)
     }
+  })
+})
+
+describe('flow', () => {
+  it('pasa a la fila siguiente lo que no entra', () => {
+    expect(flow([100, 100, 100], 250, 10)).toEqual({ x: [0, 110, 0], row: [0, 0, 1], rows: 2 })
+  })
+
+  it('una caja más ancha que la fila igual empieza en su fila', () => {
+    expect(flow([300], 250, 10)).toEqual({ x: [0], row: [0], rows: 1 })
+  })
+
+  it('sin cajas no hay filas', () => {
+    expect(flow([], 250, 10).rows).toBe(0)
   })
 })
