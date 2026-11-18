@@ -13,8 +13,8 @@ export const MAX_COLUMN = 1080
 export const COMPACT_BELOW = 760
 /** Alto de la navbar fija más su margen: lo que tapa arriba. */
 export const NAV_SPACE = 88
-/** Separación vertical entre secciones. */
-export const SECTION_GAP = 140
+/** Margen de abajo de cada escena. */
+export const SCENE_BOTTOM = 40
 
 /** Alto de los botones (píldoras de vidrio). */
 export const CTA_HEIGHT = 52
@@ -30,9 +30,6 @@ export const gutter = (vw: number) => (isCompact(vw) ? 16 : 40)
 export function columnWidth(vw: number): number {
   return Math.max(240, Math.min(MAX_COLUMN, vw - gutter(vw) * 2))
 }
-
-/** Separación entre secciones según el ancho de la ventana. */
-export const sectionGap = (vw: number) => (isCompact(vw) ? 88 : SECTION_GAP)
 
 /**
  * Tope de cada sección (distancia desde el tope de la página, hacia abajo) y
@@ -75,7 +72,7 @@ export function rows(cellHeights: readonly number[], columns: number, gap: numbe
   return { tops, heights, total }
 }
 
-/** Una medusa del hero, en el espacio del hero (origen arriba a la izquierda de la columna). */
+/** Una medusa del hero, en el espacio de la columna (origen arriba a la izquierda, bajo el tope de la ventana). */
 export interface Medusa {
   x: number
   y: number
@@ -84,28 +81,28 @@ export interface Medusa {
   /** Fase propia, para que no se muevan al unísono. */
   phase: number
   /** Color del tinte. */
-  tint: 'accent' | 'glow'
+  tint: 'brand' | 'light'
 }
 
 /**
- * Dónde flotan las tres medusas. En escritorio, a la derecha del título y
- * sobre su final (el vidrio refracta las letras); en una columna, arriba a la
- * derecha, más chicas.
+ * Dónde flotan las tres medusas del hero, para una ventana de `heroHeight` de
+ * alto. En escritorio, a la derecha del título y sobre su final (el vidrio
+ * refracta las letras); en una columna, arriba a la derecha, más chicas.
  */
 export function medusas(width: number, heroHeight: number, compact: boolean): Medusa[] {
   if (compact) {
     const s = Math.min(1, width / 420)
     return [
-      { x: width - 70 * s, y: -NAV_SPACE - 40 * s, width: 110 * s, height: 86 * s, phase: 0, tint: 'glow' },
-      { x: width - 170 * s, y: -NAV_SPACE - 10 * s, width: 70 * s, height: 56 * s, phase: 2.1, tint: 'accent' },
-      { x: width - 30 * s, y: -NAV_SPACE - 150 * s, width: 56 * s, height: 44 * s, phase: 4.2, tint: 'accent' },
+      { x: width - 70 * s, y: -NAV_SPACE - 40 * s, width: 110 * s, height: 86 * s, phase: 0, tint: 'light' },
+      { x: width - 170 * s, y: -NAV_SPACE - 10 * s, width: 70 * s, height: 56 * s, phase: 2.1, tint: 'brand' },
+      { x: width - 30 * s, y: -NAV_SPACE - 150 * s, width: 56 * s, height: 44 * s, phase: 4.2, tint: 'brand' },
     ]
   }
   const s = Math.min(1.15, Math.max(0.75, heroHeight / 820))
   return [
-    { x: width * 0.8, y: -heroHeight * 0.3, width: 240 * s, height: 190 * s, phase: 0, tint: 'glow' },
-    { x: width * 0.7, y: -heroHeight * 0.6, width: 150 * s, height: 118 * s, phase: 2.1, tint: 'accent' },
-    { x: width * 0.95, y: -heroHeight * 0.66, width: 100 * s, height: 80 * s, phase: 4.2, tint: 'accent' },
+    { x: width * 0.8, y: -heroHeight * 0.3, width: 240 * s, height: 190 * s, phase: 0, tint: 'light' },
+    { x: width * 0.7, y: -heroHeight * 0.6, width: 150 * s, height: 118 * s, phase: 2.1, tint: 'brand' },
+    { x: width * 0.95, y: -heroHeight * 0.66, width: 100 * s, height: 80 * s, phase: 4.2, tint: 'brand' },
   ]
 }
 
@@ -126,4 +123,26 @@ export function bob(medusa: Medusa, time: number): { dx: number; dy: number } {
     dx: Math.sin(time * 0.31 + medusa.phase * 1.7) * amp * 0.6,
     dy: Math.sin(time * 0.62 + medusa.phase) * amp,
   }
+}
+
+/**
+ * Acomoda en filas cajas de ancho `widths` dentro de `maxWidth`, como texto:
+ * cada una a la derecha de la anterior y, si no entra, en la fila siguiente.
+ * Devuelve el borde izquierdo y la fila de cada caja, y la cantidad de filas.
+ */
+export function flow(widths: readonly number[], maxWidth: number, gap: number): { x: number[]; row: number[]; rows: number } {
+  const x: number[] = []
+  const row: number[] = []
+  let cursor = 0
+  let line = 0
+  widths.forEach((w, i) => {
+    if (i > 0 && cursor + w > maxWidth) {
+      line += 1
+      cursor = 0
+    }
+    x.push(cursor)
+    row.push(line)
+    cursor += w + gap
+  })
+  return { x, row, rows: widths.length === 0 ? 0 : line + 1 }
 }

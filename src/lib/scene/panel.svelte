@@ -26,12 +26,12 @@
     {width}
     {height}
     radius={24}
-    tint={accent ? PALETTE.accent : PALETTE.deep}
-    tintOpacity={accent ? 0.1 : 0.5}
-    tintMode={accent ? 'overlay' : 'dye'}
+    tint={accent ? PALETTE.brand : '#ffffff'}
+    tintOpacity={accent ? 0.1 : 0.45}
+    brightness={accent ? 0 : 0.04}
     blur={10}
-    rim={accent ? 0.35 : 0.18}
-    shadowOpacity={0}
+    rim={accent ? 0.35 : 0.3}
+    shadowOpacity={0.1}
     x={x + width / 2}
     y={y - height / 2}
     z={1}

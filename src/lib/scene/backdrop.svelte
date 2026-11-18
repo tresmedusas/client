@@ -1,21 +1,24 @@
 <script lang="ts">
+  // Fondo del sitio: papel blanco con grano (ver backdrop.frag.glsl).
   import { T, useThrelte } from '@threlte/core'
   import { useEngine } from 'essentia-core'
   import { Color, ShaderMaterial, Vector2, Vector4 } from 'three'
   import { PALETTE } from '$lib/tokens.js'
-  import fragmentShader from './ocean.frag.glsl'
+  import fragmentShader from './backdrop.frag.glsl'
   import type { MedusaRect } from './layout.js'
-  import vertexShader from './ocean.vert.glsl'
+  import vertexShader from './backdrop.vert.glsl'
 
   interface Props {
-    /** Píxeles CSS que bajó la página. */
-    scroll: number
+    /** Escena que se ve, con decimales en la transición. */
+    depth: number
+    /** Velocidad del deck, escenas/s. */
+    speed: number
     /** Segundos del reloj de la escena. */
     time: number
     medusas: readonly MedusaRect[]
   }
 
-  let { scroll, time, medusas }: Props = $props()
+  let { depth, speed, time, medusas }: Props = $props()
 
   const engine = useEngine()
   const { invalidate } = useThrelte()
@@ -25,21 +28,23 @@
 
   const uniforms = {
     u_size: { value: new Vector2() },
-    u_scroll: { value: 0 },
+    u_depth: { value: 0 },
+    u_speed: { value: 0 },
     u_time: { value: 0 },
-    u_surface: { value: new Color(PALETTE.deep) },
-    u_abyss: { value: new Color(PALETTE.abyss) },
-    u_light: { value: new Color(PALETTE.text) },
+    u_paper: { value: new Color(PALETTE.paper) },
+    u_speck: { value: new Color(PALETTE.brandDeep) },
     u_glow: { value: [new Color(), new Color(), new Color()] },
-    u_haze: { value: new Color(PALETTE.accent) },
     u_medusa: { value: [new Vector4(), new Vector4(), new Vector4()] },
+    /** Amplitud del grano, en sRGB: ±3 % alrededor del papel. */
+    u_grain: { value: 0.06 },
   }
   // Un quad y un draw call; detrás de todo, sin escribir profundidad.
   const material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms, depthWrite: false })
 
   $effect(() => {
     uniforms.u_size.value.set(vw, vh)
-    uniforms.u_scroll.value = scroll
+    uniforms.u_depth.value = depth
+    uniforms.u_speed.value = speed
     uniforms.u_time.value = time
     for (let i = 0; i < 3; i++) {
       const m = medusas[i]

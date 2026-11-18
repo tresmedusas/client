@@ -1,24 +1,28 @@
 <script lang="ts">
+  import { T } from '@threlte/core'
   import { HERO } from '$lib/content.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
-  import Cta from './cta.svelte'
-  import { CTA_GAP, CTA_HEIGHT, NAV_SPACE } from './layout.js'
+  import CtaGroup from './cta-group.svelte'
+  import type { SceneFrame } from './deck-logic.js'
   import MeasuredText from './measured-text.svelte'
 
+  /** Hero provisorio (se trabaja aparte): eyebrow, título, bajada y botones. */
   interface Props {
     width: number
-    /** Alto de la ventana: el hero la ocupa entera, salvo que el texto pida más. */
     viewportHeight: number
     compact: boolean
+    /** Corrimiento de la escena (0 = en pantalla). */
+    d: number
+    frame: SceneFrame
     focusedHref: string | null
     onmeasure: (height: number) => void
     onnavigate: (href: string) => void
   }
 
-  let { width, viewportHeight, compact, focusedHref, onmeasure, onnavigate }: Props = $props()
+  let { width, viewportHeight, compact, d, frame, focusedHref, onmeasure, onnavigate }: Props = $props()
 
   const EYEBROW_SIZE = 14
-  const titleSize = $derived(compact ? Math.max(34, Math.min(48, width * 0.105)) : Math.max(48, Math.min(80, width * 0.072)))
+  const titleSize = $derived(compact ? Math.max(34, Math.min(48, width * 0.105)) : Math.max(48, Math.min(84, width * 0.075)))
   const leadSize = $derived(compact ? 18 : 21)
   /** En escritorio el título deja lugar a las medusas a la derecha (y las toca). */
   const titleWidth = $derived(compact ? width : width * 0.8)
@@ -26,46 +30,38 @@
   let eyebrowHeight = $state(0)
   let titleHeight = $state(0)
   let leadHeight = $state(0)
-  let primaryWidth = $state(0)
-  let secondaryWidth = $state(0)
-
-  /** Los dos botones van en fila si entran; si no, uno abajo del otro. */
-  const ctaRow = $derived(primaryWidth + CTA_GAP + secondaryWidth <= width)
-  const ctaHeight = $derived(ctaRow ? CTA_HEIGHT : CTA_HEIGHT * 2 + CTA_GAP)
+  let ctaHeight = $state(0)
 
   const titleY = $derived(-(eyebrowHeight + 20))
   const leadY = $derived(titleY - titleHeight - 28)
   const ctaY = $derived(leadY - leadHeight - 40)
-  const blockHeight = $derived(-ctaY + ctaHeight)
-
-  const height = $derived(Math.max(viewportHeight, blockHeight + NAV_SPACE * 2 + 40))
-  /** El bloque se centra en lo que queda bajo la navbar, un poco más arriba que la mitad. */
-  const top = $derived(-(NAV_SPACE + Math.max(24, (height - NAV_SPACE - blockHeight) * 0.42)))
 
   $effect(() => {
-    if (titleHeight > 0) onmeasure(height)
+    if (titleHeight > 0 && leadHeight > 0 && ctaHeight > 0) onmeasure(-ctaY + ctaHeight)
   })
+
+  /** Parallax de salida: lo de abajo se va antes. */
+  const lag = (k: number) => d * viewportHeight * k
 </script>
 
 <MeasuredText
   text={HERO.eyebrow.toUpperCase()}
   fontSize={EYEBROW_SIZE}
-  color={PALETTE.accent}
-  font={FONT.semibold}
+  color={PALETTE.brandInk}
+  font={FONT.bold}
   letterSpacing={1.8}
   lineHeight={1.2}
-  y={top}
   onmeasure={(_, h) => (eyebrowHeight = h)}
 />
 <MeasuredText
   text={HERO.title}
   fontSize={titleSize}
-  color={PALETTE.text}
-  font={FONT.bold}
-  lineHeight={1.06}
+  color={PALETTE.ink}
+  font={FONT.black}
+  lineHeight={1.04}
   letterSpacing={-titleSize * 0.025}
   maxWidth={titleWidth}
-  y={top + titleY}
+  y={titleY + lag(0.08)}
   onmeasure={(_, h) => (titleHeight = h)}
 />
 <MeasuredText
@@ -74,25 +70,24 @@
   color={PALETTE.muted}
   lineHeight={1.55}
   maxWidth={compact ? width : Math.min(width * 0.6, 600)}
-  y={top + leadY}
+  y={leadY + lag(0.16)}
   onmeasure={(_, h) => (leadHeight = h)}
 />
-{#if leadHeight > 0}
-  <Cta
-    link={HERO.primary}
-    x={0}
-    y={top + ctaY}
-    focused={focusedHref === HERO.primary.href}
-    onmeasure={(w) => (primaryWidth = w)}
-    {onnavigate}
-  />
-  <Cta
-    link={HERO.secondary}
-    variant="secondary"
-    x={ctaRow ? primaryWidth + CTA_GAP : 0}
-    y={top + ctaY - (ctaRow ? 0 : CTA_HEIGHT + CTA_GAP)}
-    focused={focusedHref === HERO.secondary.href}
-    onmeasure={(w) => (secondaryWidth = w)}
-    {onnavigate}
+<T.Group position.y={lag(0.24)}>
+  <CtaGroup links={[HERO.primary, HERO.secondary]} {width} y={ctaY} {focusedHref} onmeasure={(h) => (ctaHeight = h)} {onnavigate} />
+</T.Group>
+
+<!-- La pista para seguir, pegada al borde de abajo de la ventana. -->
+{#if !compact || viewportHeight > 640}
+  <MeasuredText
+    text={HERO.hint.toUpperCase()}
+    fontSize={12}
+    color={PALETTE.muted}
+    font={FONT.bold}
+    letterSpacing={2}
+    lineHeight={1.2}
+    anchorX={0.5}
+    x={width / 2}
+    y={frame.top - viewportHeight + 64 + lag(0.4)}
   />
 {/if}

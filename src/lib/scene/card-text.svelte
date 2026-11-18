@@ -41,8 +41,8 @@
   <MeasuredText
     text={index}
     fontSize={INDEX_SIZE}
-    color={PALETTE.accent}
-    font={FONT.bold}
+    color={PALETTE.brandInk}
+    font={FONT.black}
     letterSpacing={1}
     lineHeight={1.2}
     {x}
@@ -54,8 +54,8 @@
 <MeasuredText
   text={item.title}
   fontSize={titleSize}
-  color={PALETTE.text}
-  font={FONT.semibold}
+  color={PALETTE.ink}
+  font={FONT.bold}
   lineHeight={1.3}
   maxWidth={width}
   {x}
