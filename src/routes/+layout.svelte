@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, type Component, type Snippet } from 'svelte'
+  import { page } from '$app/state'
   import { FOOTER, NAV, SITE } from '$lib/content.js'
   import { FONT, LOGO, TOKENS_CSS } from '$lib/tokens.js'
   import '../app.css'
@@ -62,7 +63,7 @@
     </a>
     <nav aria-label="Principal">
       {#each NAV as link (link.href)}
-        <a href={link.href}>{link.label}</a>
+        <a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
       {/each}
     </nav>
   </header>

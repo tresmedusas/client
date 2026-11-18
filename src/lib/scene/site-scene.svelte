@@ -67,6 +67,7 @@
    1    vidrios del contenido: medusas, botones, paneles y lentes → nivel 1
    1.01 texto sobre los paneles
   10    navbar fija → nivel 2; indicador de escenas
+  11    lente del link activo de la navbar → nivel 3 (el último)
 -->
 {#if home && deck.position < 1.2}
   <T.Group>

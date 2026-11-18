@@ -43,19 +43,41 @@ body {
   padding: 1.25rem 1rem 3rem;
 }
 
+/* La navbar de la escena: una pastilla clara centrada que envuelve el imagotipo y los links. */
 .semantic header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  padding-bottom: 1rem;
+  justify-content: center;
+  gap: 0.75rem 2.5rem;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto 2rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: 1.75rem;
+  /* El tinte de la barra de vidrio: #F0F0F0 al 90 % sobre el papel. */
+  background: #f0f0f0;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
 }
 
 .semantic header nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
+  justify-content: center;
+  gap: 0.5rem 1.75rem;
+}
+
+.semantic header nav a {
+  color: #1c1c1c;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.semantic header nav a:hover,
+.semantic header nav a[aria-current='page'] {
+  text-decoration: underline;
 }
 
 .semantic a {
@@ -69,7 +91,7 @@ body {
 
 .semantic .brand img {
   display: block;
-  height: 1.75rem;
+  height: 1.4rem;
   width: auto;
 }
 
