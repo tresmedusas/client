@@ -8,6 +8,7 @@
   import { bob, columnWidth, isCompact, medusas, type MedusaRect } from './layout.js'
   import Nav from './nav.svelte'
   import Backdrop from './backdrop.svelte'
+  import EdgeWarp from './edge-warp.svelte'
   import SceneDots from './scene-dots.svelte'
   import ShowcaseScene from './showcase-scene.svelte'
 
@@ -66,6 +67,7 @@
    0    texto, líneas y placas del contenido
    1    vidrios del contenido: medusas, botones, paneles y lentes → nivel 1
    1.01 texto sobre los paneles
+   9.9995 bordes de arriba y abajo: curva, aberración, blur y líquido → nivel 2 (con la navbar)
   10    navbar fija → nivel 2; indicador de escenas
   11    lente del link activo de la navbar → nivel 3 (el último)
 -->
@@ -100,6 +102,9 @@
     <ShowcaseScene {deck} {width} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}
 {/key}
+
+<!-- La fase del líquido sigue al contenido: el paso de escena, el scroll interno y el reloj del hero. -->
+<EdgeWarp phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
 
 <Nav {width} {compact} {focusedHref} {activeHref} {onnavigate} />
 {#if !compact && deck.count > 1}

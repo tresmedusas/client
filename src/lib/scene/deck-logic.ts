@@ -7,44 +7,100 @@
  * escena que no entra en la ventana, en píxeles CSS.
  */
 
-/** Rueda acumulada (px) que pasa a la escena siguiente. */
-export const WHEEL_THRESHOLD = 48
 /**
- * Silencio (ms) que separa dos gestos de rueda. La inercia de un trackpad
- * manda eventos por casi un segundo: el gesto que cambió de escena no puede
- * cambiar otra hasta que pare.
+ * Frecuencia natural (rad/s) del resorte con el que el scroll sigue a la rueda
+ * y al teclado: alcanza el destino en ~0,2 s. Suaviza los saltos de un mouse
+ * (100 px por muesca) sin que un trackpad, que ya manda deltas suaves, se
+ * sienta atrasado.
  */
-export const WHEEL_GAP = 200
-/** Fracción de pantalla arrastrada que, al soltar, pasa de escena. */
-export const DRAG_COMMIT = 0.16
-/** Velocidad de arrastre (escenas/s) que pasa de escena aunque el tramo sea corto. */
-export const FLING_COMMIT = 0.6
-/** Resistencia del arrastre más allá de la primera o la última escena. */
-export const EDGE_RESISTANCE = 0.25
+export const SCROLL_STIFFNESS = 24
+/**
+ * Frecuencia natural (rad/s) para ir a una escena (links, marcas, Home/End):
+ * un recorrido largo, ~0,6 s.
+ */
+export const DECK_STIFFNESS = 9
+/**
+ * Constante de tiempo (s) de la inercia al soltar un arrastre: la velocidad
+ * decae como e^(−t/τ) y el contenido recorre velocidad · τ, como el scroll
+ * nativo de un teléfono.
+ */
+export const MOMENTUM = 0.45
+/** Resistencia del arrastre más allá del principio o el final de la página. */
+export const EDGE_RESISTANCE = 0.3
 
 export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 /**
- * A qué escena va el deck al soltar un arrastre: `offset` es cuánto se corrió
- * desde `index` (en escenas, positivo hacia la siguiente) y `velocity` la
- * velocidad al soltar (escenas/s).
+ * Velocidad inicial (px/s) del resorte al soltar un arrastre: la del dedo,
+ * para que el scroll siga el gesto sin frenar en seco. Solo cuenta si va
+ * hacia el target y se limita a `stiffness · |remaining|`, lo que un resorte
+ * críticamente amortiguado puede absorber sin pasarse. `remaining` es target −
+ * posición.
  */
-export function releaseTarget(index: number, offset: number, velocity: number, count: number): number {
-  let target = index
-  if (offset > DRAG_COMMIT || (offset > 0.02 && velocity > FLING_COMMIT)) target = index + 1
-  else if (offset < -DRAG_COMMIT || (offset < -0.02 && velocity < -FLING_COMMIT)) target = index - 1
-  return clamp(target, 0, count - 1)
+export function launchVelocity(remaining: number, velocity: number, stiffness: number): number {
+  if (remaining === 0 || Math.sign(velocity) !== Math.sign(remaining)) return 0
+  return Math.sign(velocity) * Math.min(Math.abs(velocity), stiffness * Math.abs(remaining))
 }
 
 /**
- * Corrimiento del deck mientras se arrastra `pixels` más allá del scroll
- * interno, para una ventana de `viewport` px: sigue al dedo, con resistencia
- * si no hay escena de ese lado.
+ * La página como un solo scroll, en píxeles CSS: cada escena recorre primero
+ * su scroll interno (`overflows[i]`, lo que no entra en la ventana) y después
+ * la transición a la siguiente (`travels[i]`). Así todo se mueve 1:1 con la
+ * rueda o el dedo, como una página.
  */
-export function dragOffset(index: number, pixels: number, viewport: number, count: number): number {
-  const raw = pixels / Math.max(1, viewport)
-  const blocked = (raw > 0 && index >= count - 1) || (raw < 0 && index <= 0)
-  return clamp(blocked ? raw * EDGE_RESISTANCE : raw, -1, 1)
+export interface PageLayout {
+  /** Scroll en el que la escena `i` queda en pantalla con su scroll interno en 0. */
+  starts: number[]
+  overflows: number[]
+  /** Recorrido de la transición entre la escena `i` y la siguiente (una menos que escenas). */
+  travels: number[]
+  /** Scroll máximo: la última escena con todo su scroll interno. */
+  total: number
+}
+
+export function pageLayout(overflows: readonly number[], travels: readonly number[]): PageLayout {
+  const starts: number[] = []
+  let at = 0
+  for (let i = 0; i < overflows.length; i++) {
+    starts.push(at)
+    at += Math.max(0, overflows[i] ?? 0) + (i < overflows.length - 1 ? Math.max(1, travels[i] ?? 1) : 0)
+  }
+  return { starts, overflows: overflows.map((o) => Math.max(0, o)), travels: [...travels], total: at }
+}
+
+/** Qué se ve con un scroll dado. */
+export interface PageSpot {
+  /** Escena que se ve, con decimales durante la transición (como `Deck.position`). */
+  position: number
+  /** Escena cuyo tramo contiene el scroll: la de arriba durante una transición. */
+  scene: number
+  /** Scroll interno de `scene`, en px. */
+  inner: number
+}
+
+export function locate(layout: PageLayout, scroll: number): PageSpot {
+  const { starts, overflows, travels, total } = layout
+  const s = clamp(scroll, 0, total)
+  let scene = 0
+  while (scene < starts.length - 1 && starts[scene + 1]! <= s) scene++
+  const local = s - starts[scene]!
+  const overflow = overflows[scene] ?? 0
+  if (local <= overflow || scene >= travels.length) return { position: scene, scene, inner: Math.min(local, overflow) }
+  return { position: scene + (local - overflow) / travels[scene]!, scene, inner: overflow }
+}
+
+/** El scroll de una escena: el de su comienzo, más `inner` de su scroll interno. */
+export function scrollOf(layout: PageLayout, scene: number, inner = 0): number {
+  const i = clamp(Math.round(scene), 0, layout.starts.length - 1)
+  return layout.starts[i]! + clamp(inner, 0, layout.overflows[i] ?? 0)
+}
+
+/** El scroll de un `PageSpot` (la inversa de `locate`), para mantenerlo si cambia el layout. */
+export function scrollAt(layout: PageLayout, spot: PageSpot): number {
+  const scene = clamp(spot.scene, 0, layout.starts.length - 1)
+  const transition = spot.position - scene
+  if (transition <= 0 || scene >= layout.travels.length) return scrollOf(layout, scene, spot.inner)
+  return layout.starts[scene]! + (layout.overflows[scene] ?? 0) + Math.min(1, transition) * layout.travels[scene]!
 }
 
 /**
