@@ -176,6 +176,10 @@ body {
   border-radius: 999px;
   background: var(--color-brand);
   color: var(--color-on-brand);
+  /* El brand es blanco: el botón se separa del papel con un borde y una sombra suaves. */
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.08),
+    0 2px 8px rgb(17 17 17 / 0.1);
   font-weight: 700;
   text-decoration: none;
 }
@@ -183,6 +187,7 @@ body {
 .semantic .button.secondary {
   background: transparent;
   color: var(--color-ink);
+  box-shadow: none;
   outline: 1px solid var(--color-muted);
 }
 
@@ -283,4 +288,13 @@ body {
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
+}
+
+/* Lead-in text highlight (DESIGN.md): la primera oración en tinta, el resto apagado, mismo peso. */
+.lead-in {
+  color: var(--color-ink);
+}
+
+.lead-in-rest {
+  color: var(--color-muted);
 }

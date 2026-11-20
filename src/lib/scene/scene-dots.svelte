@@ -4,7 +4,7 @@
 
   /**
    * Indicador de escenas: una marca por escena en el borde derecho de la
-   * ventana. La de la escena que se ve se estira y va en el brand; el click
+   * ventana. La de la escena que se ve se estira y se oscurece; el click
    * lleva a esa escena. La capa semántica no lo necesita: tiene las anclas.
    */
   interface Props {
@@ -33,7 +33,7 @@
     width={WIDTH}
     height={WIDTH + a * 14}
     radius={WIDTH / 2}
-    color={a > 0.5 ? PALETTE.brand : PALETTE.ink}
+    color={PALETTE.ink}
     opacity={0.35 + a * 0.65}
     {x}
     {y}
