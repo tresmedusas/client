@@ -15,12 +15,10 @@
 
 <!-- Una sección por escena del deck, en el orden de HOME_SCENES. -->
 <section id={HERO.id} class="hero">
-  <p class="eyebrow">{HERO.eyebrow}</p>
-  <h1>{HERO.title}</h1>
-  <p class="lead">{HERO.lead}</p>
+  <h1><LeadIn text={HERO.title} /></h1>
+  <p class="lead"><LeadIn text={HERO.lead} /></p>
   <p class="actions">
     <a class="button" href={HERO.primary.href} rel="noopener" target="_blank">{HERO.primary.label}</a>
-    <a class="button secondary" href={HERO.secondary.href}>{HERO.secondary.label}</a>
   </p>
 </section>
 

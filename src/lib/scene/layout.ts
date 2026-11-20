@@ -106,56 +106,114 @@ export function rows(cellHeights: readonly number[], columns: number, gap: numbe
   return { tops, heights, total }
 }
 
-/** Una medusa del hero, en el espacio de la columna (origen arriba a la izquierda, bajo el tope de la ventana). */
-export interface Medusa {
-  x: number
-  y: number
-  width: number
-  height: number
-  /** Fase propia, para que no se muevan al unísono. */
-  phase: number
-  /** Color del tinte. */
-  tint: 'brand' | 'light'
-}
+/** Proporción del dibujo de la medusa del hero (`static/brand/medusa.svg`, 687 × 1030). */
+export const MEDUSA_ASPECT = 687 / 1030
 
-/**
- * Dónde flotan las tres medusas del hero, para una ventana de `heroHeight` de
- * alto. En escritorio, a la derecha del título y sobre su final (el vidrio
- * refracta las letras); en una columna, arriba a la derecha, más chicas.
- */
-export function medusas(width: number, heroHeight: number, compact: boolean): Medusa[] {
-  if (compact) {
-    const s = Math.min(1, width / 420)
-    return [
-      { x: width - 70 * s, y: -SCENE_TOP - 40 * s, width: 110 * s, height: 86 * s, phase: 0, tint: 'light' },
-      { x: width - 170 * s, y: -SCENE_TOP - 10 * s, width: 70 * s, height: 56 * s, phase: 2.1, tint: 'brand' },
-      { x: width - 30 * s, y: -SCENE_TOP - 150 * s, width: 56 * s, height: 44 * s, phase: 4.2, tint: 'brand' },
-    ]
-  }
-  const s = Math.min(1.15, Math.max(0.75, heroHeight / 820))
-  return [
-    { x: width * 0.8, y: -heroHeight * 0.3, width: 240 * s, height: 190 * s, phase: 0, tint: 'light' },
-    { x: width * 0.7, y: -heroHeight * 0.6, width: 150 * s, height: 118 * s, phase: 2.1, tint: 'brand' },
-    { x: width * 0.95, y: -heroHeight * 0.66, width: 100 * s, height: 80 * s, phase: 4.2, tint: 'brand' },
-  ]
-}
+/** Cuántas medusas dibuja el fondo (igual que MEDUSA_COUNT en `backdrop.frag.glsl`). */
+export const MEDUSA_COUNT = 3
 
-/** Una medusa en pantalla, para el fondo (su brillo y sus tentáculos). */
+/** Una medusa del hero en pantalla, para el fondo que la dibuja. */
 export interface MedusaRect {
   /** Centro en píxeles CSS, con el origen en el centro de la ventana y la y hacia arriba. */
   x: number
   y: number
   width: number
   height: number
-  color: string
+  /** Adelanto de su reloj, en segundos: cada una late y nada a su ritmo. */
+  phase: number
+  /** Opacidad relativa (1 = la principal); las lejanas, más tenues. */
+  opacity: number
+  /** Dibujo espejado, para que no parezcan copias. */
+  mirror: boolean
+  /** Cuánto se va con el hero al pasar de escena (las lejanas, menos). */
+  parallax: number
 }
 
-/** Desplazamiento de flotación de una medusa a los `time` segundos. */
-export function bob(medusa: Medusa, time: number): { dx: number; dy: number } {
-  const amp = medusa.height * 0.08
+/** Medidas del hero: el texto arriba y la medusa debajo (la navbar flota abajo, sobre los tentáculos). */
+export interface HeroLayout {
+  titleSize: number
+  leadSize: number
+  /** Separación título → bajada y bajada → botón. */
+  gaps: [number, number]
+  /** Borde de arriba del título, desde el tope de la ventana. */
+  textTop: number
+  /** Borde de abajo del botón (estimado: el título y la bajada van en una línea). */
+  textBottom: number
+  /** De atrás hacia adelante: las dos acompañantes y la principal, al final. */
+  medusas: MedusaRect[]
+}
+
+export const TITLE_LINE = 1.0
+export const LEAD_LINE = 1.35
+
+/**
+ * Para una columna de `width` en una ventana de `vh` de alto. El texto va
+ * centrado arriba; la campana de la medusa empieza justo debajo del botón y
+ * los tentáculos salen por el borde de abajo de la ventana.
+ */
+/** Ancho medio de un carácter de Lato Black, en em (con el interletrado del display). */
+const TITLE_CHAR = 0.56
+
+/**
+ * Texto arriba y medusa debajo. `title` puede traer saltos de línea: cada
+ * línea tiene que entrar entera en el ancho, así que el tamaño baja si hace falta.
+ */
+export function heroLayout(width: number, vh: number, compact: boolean, title: string): HeroLayout {
+  const lines = title.split('\n')
+  const longest = Math.max(...lines.map((line) => line.length))
+  const fit = width / (longest * TITLE_CHAR)
+  const titleSize = Math.min(fit, compact ? Math.min(46, width * 0.12) : Math.max(48, Math.min(72, width * 0.066)))
+  const leadSize = compact ? 17 : 20
+  const gaps: [number, number] = compact ? [10, 24] : [14, 30]
+  // En móvil la bajada va en una medida corta (ver `hero.svelte`): dos líneas.
+  const leadLines = compact ? 2 : 1
+  // La navbar va abajo: arriba solo el margen de la escena y algo de aire.
+  const textTop = SCENE_TOP + vh * (compact ? 0.06 : 0.1)
+  const textBottom = textTop + titleSize * TITLE_LINE * lines.length + gaps[0] + leadSize * LEAD_LINE * leadLines + gaps[1] + CTA_HEIGHT
+
+  // La campana ocupa del 8 % al 45 % del dibujo. Es lo bastante grande para
+  // que la campana y el arranque de los tentáculos llenen lo que queda abajo.
+  // Con margen para lo que sube al nadar (ver `bob`).
+  const bellTop = textBottom + (compact ? 20 : 28) + vh * 0.035
+  const below = Math.max(vh - bellTop, vh * 0.35)
+  const height = Math.min(below * 1.75, (width * (compact ? 1.75 : 0.85)) / MEDUSA_ASPECT)
+  // Una medusa de `size` (fracción de la principal) con la campana `drop`
+  // más abajo que la principal, corrida `x` desde el centro.
+  const place = (x: number, size: number, drop: number, look: Omit<MedusaRect, 'x' | 'y' | 'width' | 'height'>): MedusaRect => {
+    const h = height * size
+    const t = bellTop + drop - h * 0.08
+    return { x, y: vh / 2 - t - h / 2, width: h * MEDUSA_ASPECT, height: h, ...look }
+  }
+  // Las acompañantes, más chicas (más lejos), a los costados de la principal
+  // y más abajo, para no tocar el texto.
+  const side = compact ? 0.44 : 0.38
   return {
-    dx: Math.sin(time * 0.31 + medusa.phase * 1.7) * amp * 0.6,
-    dy: Math.sin(time * 0.62 + medusa.phase) * amp,
+    titleSize,
+    leadSize,
+    gaps,
+    textTop,
+    textBottom,
+    medusas: [
+      place(-width * side, compact ? 0.3 : 0.48, vh * (compact ? 0.16 : 0.1), { phase: 1.7, opacity: 1, mirror: true, parallax: 0.9 }),
+      place(width * (side + 0.02), compact ? 0.24 : 0.38, vh * (compact ? 0.06 : 0.03), { phase: 3.1, opacity: 0.95, mirror: false, parallax: 0.75 }),
+      place(0, 1, 0, { phase: 0, opacity: 1, mirror: false, parallax: 1.15 }),
+    ],
+  }
+}
+
+/** Segundos de un pulso de nado de la medusa (igual que en `backdrop.frag.glsl`). */
+export const PULSE_PERIOD = 4.5
+
+/**
+ * Desplazamiento de la medusa de `height` de alto a los `time` segundos. Lo
+ * que manda es una deriva lenta, arriba y abajo y de costado; cada pulso de
+ * la campana solo le suma un empujón suave, para que avance sin rebotar.
+ */
+export function bob(height: number, time: number): { dx: number; dy: number } {
+  const phase = (time * Math.PI * 2) / PULSE_PERIOD
+  return {
+    dx: Math.sin(time * 0.13 + 1.3) * height * 0.016,
+    dy: (Math.sin(time * 0.17) * 0.024 + Math.sin(phase - 1.4) * 0.008) * height,
   }
 }
 
