@@ -17,10 +17,10 @@ cambie solo `tokens.ts`.
 
 | Token        | Valor     | Uso                                                                 |
 | ------------ | --------- | ------------------------------------------------------------------- |
-| `paper`      | `#F4F4F4` | El fondo: papel blanco liso, sin grano ni tintes de color.              |
+| `paper`      | `#FFFFFF` | El fondo: papel blanco puro y liso, sin grano ni tintes de color.   |
 | `ink`        | `#111111` | Títulos, lead-ins, texto que se lee primero.                        |
 | `muted`      | `#5C6166` | Cuerpo de párrafo después del lead-in, etiquetas, metadatos.        |
-| `brand`      | `#FFFFFF` | La luz: el botón principal y los vidrios destacados. Blanco puro, un punto más claro que el papel. |
+| `brand`      | `#FFFFFF` | La luz: el botón principal y los vidrios destacados. Blanco puro, el mismo del papel: se separa con vidrio, borde o sombra. |
 | `brandLight` | `#FFFFFF` | Lentes y medusas: vidrio blanco.                                    |
 | `brandInk`   | `#111111` | Texto chico «de la marca» (índices, eyebrows, link activo): la tinta. |
 | `brandDeep`  | `#1C1E21` | Superficies oscuras con el isotipo o iniciales en blanco.           |
