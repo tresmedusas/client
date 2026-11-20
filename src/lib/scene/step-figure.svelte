@@ -148,7 +148,9 @@
   // Corre mientras anima, o una vez cuando algo cambió (tamaño, primera vez).
   useTask(
     (delta) => {
-      if (playing) time += Math.min(delta, 0.1)
+      // Tope holgado: con pocos cuadros por segundo la animación no se frena,
+      // y al volver de otra pestaña no salta segundos de golpe.
+      if (playing) time += Math.min(delta, 0.5)
       draw()
       dirty = false
     },
