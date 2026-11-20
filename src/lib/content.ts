@@ -61,13 +61,14 @@ export const NAV: readonly Link[] = [
 /** Hero provisorio: se trabaja aparte. */
 export const HERO = {
   id: 'inicio',
-  eyebrow: 'Software a medida e integraciones',
-  // Frase de posicionamiento vigente, aún por decidir.
-  title: 'Resolvemos operaciones manuales y procesos fragmentados.',
-  lead: 'Construimos el software y las integraciones que conectan lo que hoy se hace a mano, para que tu equipo deje de copiar datos entre sistemas.',
+  /**
+   * Quiénes somos y qué hacemos, con lead-in: el nombre en tinta y lo que
+   * hacemos en gris. El salto de línea fija el corte entre las dos partes.
+   */
+  title: `${SITE.name}.\nSoluciones a medida.`,
+  /** Qué resolvemos (sale de `SITE.description`): el problema, no la tecnología. */
+  lead: 'Resolvemos operaciones manuales y procesos fragmentados.',
   primary: MEETING,
-  secondary: { label: 'Cómo trabajamos', href: '#como-trabajamos' } satisfies Link,
-  hint: 'Desliza para seguir',
 } as const
 
 export const HOW_WORK = {
