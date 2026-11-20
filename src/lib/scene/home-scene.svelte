@@ -38,7 +38,7 @@
 
 <SceneSlot i={2} {...common} height={heights[2]!}>
   {#snippet children(d)}
-    <About {width} {viewportHeight} {compact} {d} onmeasure={(h) => (heights[2] = h)} />
+    <About {width} {viewportHeight} {compact} {d} {focusedHref} onmeasure={(h) => (heights[2] = h)} />
   {/snippet}
 </SceneSlot>
 

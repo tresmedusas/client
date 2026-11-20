@@ -33,6 +33,7 @@ cambie solo `tokens.ts`.
   - en HTML, un borde de 1 px de tinta al 8 %.
   - Nunca un bloque blanco plano sin borde, porque desaparece.
 - **Sin color.** No uses hex de color en un componente, ni siquiera "temporal". Si hace falta un acento, es tinta: un trazo más grueso, un peso mayor o una superficie `brandDeep`.
+  - Excepción pedida por el usuario (2026-11-19): la card holográfica de los fundadores (`scene/holo-card.frag.glsl`) y el haz de luz de su modal (`light-beam.ts`) usan el espectro. El color sale solo de esos shaders, nunca de un hex en un componente, y no se extiende a otros componentes.
 
 ## 2. Tipografía
 
@@ -172,7 +173,7 @@ El contenido de todo componente va **centrado**:
 
 | Componente | Alineación | Pedido |
 | ---------- | ---------- | ------ |
-| —          | —          | —      |
+| Card de fundador (`scene/founder-card.svelte`) | El contenido de cada card a la izquierda, como la referencia holográfica; las cards van centradas como bloque. | 2026-11-19 |
 
 ## Checklist de un componente
 

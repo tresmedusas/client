@@ -106,11 +106,13 @@ export const HOW_WORK = {
 } as const
 
 export interface Person {
+  /** Ancla de la persona en la capa semántica y en su modal. */
+  id: string
   name: string
   role: string
-  /** Bio corta: solo los fundadores la muestran. */
-  bio?: string
-  /** Foto cuadrada en `static/`; sin ella se dibujan las iniciales. */
+  /** Bio corta: de dónde viene y qué hace en Tres Medusas. */
+  bio: string
+  /** Foto cuadrada en `static/founders/` (512 px, sin metadatos); sin ella se dibujan las iniciales. */
   photo?: string
 }
 
@@ -120,23 +122,23 @@ export const ABOUT = {
     index: '02',
     label: 'Nosotros',
     // TODO: copy definitivo.
-    title: 'Tres fundadores y un equipo que construye contigo.',
-    intro: 'Tres Medusas la fundamos tres personas. Hoy trabajamos junto a un equipo pequeño.',
+    title: 'Tres fundadores. Un equipo que construye contigo.',
+    intro: 'Hablas con quien construye. Entendemos tu proceso y construimos tu sistema, de la primera llamada a la entrega.',
   } satisfies Section,
   foundersLabel: 'Fundadores',
-  // TODO: nombres, roles, bios y fotos reales.
+  /** La card de cada fundador y su modal («Conocer a …»). */
+  card: {
+    label: 'Fundador',
+    /** Con el nombre de pila: entra en el pie de la card. */
+    cta: (name: string) => `Conocer a ${name.split(' ')[0]}`,
+    close: 'Cerrar',
+  },
+  // TODO: bios reales. El equipo actual no se muestra por ahora.
+  // Cada bio abre con una oración corta (2 a 6 palabras) que hace de lead-in.
   founders: [
-    { name: 'Fundador Uno', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
-    { name: 'Fundador Dos', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
-    { name: 'Fundador Tres', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
-  ] satisfies Person[] as readonly Person[],
-  teamLabel: 'Equipo',
-  // TODO: equipo actual.
-  team: [
-    { name: 'Integrante Uno', role: 'Rol por definir' },
-    { name: 'Integrante Dos', role: 'Rol por definir' },
-    { name: 'Integrante Tres', role: 'Rol por definir' },
-    { name: 'Integrante Cuatro', role: 'Rol por definir' },
+    { id: 'sofia-dome', name: 'Sofia Dome', role: 'Sr Designer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/sofia-dome.jpg' },
+    { id: 'uriel-rivero', name: 'Uriel Rivero', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/uriel-rivero.jpg' },
+    { id: 'matias-caballero', name: 'Matias Caballero', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/matias-caballero.jpg' },
   ] satisfies Person[] as readonly Person[],
 } as const
 
