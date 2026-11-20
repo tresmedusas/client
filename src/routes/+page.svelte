@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LeadIn from '$lib/lead-in.svelte'
   import { ABOUT, CONTACT_SECTION, HERO, HOW_WORK, SITE } from '$lib/content.js'
 </script>
 
@@ -23,8 +24,8 @@
 
 <section id={HOW_WORK.section.id} aria-labelledby="{HOW_WORK.section.id}-title">
   <p class="eyebrow">{HOW_WORK.section.index} — {HOW_WORK.section.label}</p>
-  <h2 id="{HOW_WORK.section.id}-title">{HOW_WORK.section.title}</h2>
-  <p>{HOW_WORK.section.intro}</p>
+  <h2 id="{HOW_WORK.section.id}-title"><LeadIn text={HOW_WORK.section.title} /></h2>
+  <p><LeadIn text={HOW_WORK.section.intro} /></p>
   <ol class="steps">
     {#each HOW_WORK.steps as step (step.title)}
       <li>
@@ -43,8 +44,8 @@
 
 <section id={ABOUT.section.id} aria-labelledby="{ABOUT.section.id}-title">
   <p class="eyebrow">{ABOUT.section.index} — {ABOUT.section.label}</p>
-  <h2 id="{ABOUT.section.id}-title">{ABOUT.section.title}</h2>
-  <p>{ABOUT.section.intro}</p>
+  <h2 id="{ABOUT.section.id}-title"><LeadIn text={ABOUT.section.title} /></h2>
+  <p><LeadIn text={ABOUT.section.intro} /></p>
   <h3 class="label">{ABOUT.foundersLabel}</h3>
   <ul class="cards">
     {#each ABOUT.founders as person (person.name)}
@@ -65,8 +66,8 @@
 
 <section id={CONTACT_SECTION.section.id} aria-labelledby="{CONTACT_SECTION.section.id}-title">
   <p class="eyebrow">{CONTACT_SECTION.section.index} — {CONTACT_SECTION.section.label}</p>
-  <h2 id="{CONTACT_SECTION.section.id}-title">{CONTACT_SECTION.section.title}</h2>
-  <p>{CONTACT_SECTION.section.intro}</p>
+  <h2 id="{CONTACT_SECTION.section.id}-title"><LeadIn text={CONTACT_SECTION.section.title} /></h2>
+  <p><LeadIn text={CONTACT_SECTION.section.intro} /></p>
   <p class="actions">
     <a class="button" href={CONTACT_SECTION.primary.href} rel="noopener" target="_blank">{CONTACT_SECTION.primary.label}</a>
     <a class="button secondary" href={CONTACT_SECTION.secondary.href}>{CONTACT_SECTION.secondary.label}</a>

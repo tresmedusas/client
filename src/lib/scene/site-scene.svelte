@@ -63,7 +63,7 @@
 <Backdrop depth={deck.position} speed={deck.velocity} {time} medusas={onScreen} />
 
 <!-- ── Capas (z) y niveles de captura ───────────────────────────
-  -1    fondo: papel con grano (fijo a la ventana)
+  -1    fondo: papel liso (fijo a la ventana)
    0    texto, líneas y placas del contenido
    1    vidrios del contenido: medusas, botones, paneles y lentes → nivel 1
    1.01 texto sobre los paneles

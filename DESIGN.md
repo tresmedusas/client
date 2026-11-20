@@ -17,7 +17,7 @@ cambie solo `tokens.ts`.
 
 | Token        | Valor     | Uso                                                                 |
 | ------------ | --------- | ------------------------------------------------------------------- |
-| `paper`      | `#F4F4F4` | El fondo: papel blanco con grano, sin tintes de color.              |
+| `paper`      | `#F4F4F4` | El fondo: papel blanco liso, sin grano ni tintes de color.              |
 | `ink`        | `#111111` | Títulos, lead-ins, texto que se lee primero.                        |
 | `muted`      | `#5C6166` | Cuerpo de párrafo después del lead-in, etiquetas, metadatos.        |
 | `brand`      | `#FFFFFF` | La luz: el botón principal y los vidrios destacados. Blanco puro, un punto más claro que el papel. |
@@ -40,19 +40,25 @@ Lato, en tres pesos: 400 (`FONT.regular`), 700 (`FONT.bold`) y 900 (`FONT.black`
 
 | Rol                 | Peso | Color       | Notas                                         |
 | ------------------- | ---- | ----------- | --------------------------------------------- |
-| Display (hero, cierre) | 900 | `ink`     | Interletrado −2 % del tamaño.                  |
-| Título de sección   | 700  | `ink`       |                                               |
+| Display (hero, cierre) | 900 | lead-in   | Interletrado −2 % del tamaño. Sin lead-in, todo en `ink`. |
+| Título de sección   | 700  | lead-in     | Sin lead-in, todo en `ink`.                   |
 | Etiqueta / eyebrow  | 700  | `brandInk` o `muted` | Mayúsculas, 12–14 px, interletrado amplio. |
 | Párrafo             | 400  | lead-in     | Siempre con `LeadInText` / `LeadIn`.          |
 
 ## 3. Lead-in text highlight
 
-Todo párrafo de cuerpo usa lead-in: la primera oración va en `ink` y el resto
-en `muted`, **con el mismo peso (400)**. El contraste lo hace solo el color.
+Títulos y párrafos usan lead-in: la primera oración va en `ink` y el resto en
+`muted`, **con el mismo peso**. El contraste lo hace solo el color. En un
+título es donde más se luce.
 
 > **Entendemos el problema.** <span style="color:#5C6166">Antes de escribir código, mapeamos cómo trabaja hoy tu equipo.</span>
 
+**Pesos**
+- En un párrafo, todo va en 400.
+- En un título, todo va en el peso del título: 700 o 900.
+
 **Dónde va**
+- Títulos: hero, secciones, cierre y nombre de proyecto si tiene dos partes. Por ejemplo, «**Software a medida.** <span style="color:#5C6166">Para lo que hoy se hace a mano.</span>»
 - Bajadas de hero y secciones.
 - Pasos de HowWork.
 - Bios de fundadores.
@@ -60,18 +66,26 @@ en `muted`, **con el mismo peso (400)**. El contraste lo hace solo el color.
 - El texto del contacto.
 
 **Dónde no va**
-- Títulos y etiquetas.
+- Etiquetas y eyebrows.
 - Botones y chips.
-- Textos de una sola oración: el párrafo va entero en `muted`, o en `ink` si es protagonista.
+
+**Una sola oración**
+- Si el texto tiene una sola oración, no hay lead-in.
+- Un título va entero en `ink`.
+- Un párrafo va entero en `muted`, o en `ink` si es protagonista.
 
 **Cómo escribir el texto**
 - El lead-in es la primera oración, cerrada por `.`, `?`, `!` o `:`.
 - Tiene que ser corta, de 2 a 6 palabras: una afirmación que se entienda sola.
+- En un título, la segunda parte la completa o la matiza; también es corta.
 - Si pasa de 72 caracteres, el párrafo no se resalta.
 
 **Cómo usarlo**
-- En la escena: `<LeadInText text={...} fontSize={...} maxWidth={...} />` desde `$lib/scene/lead-in-text.svelte`. Acepta los mismos props que `MeasuredText`, salvo el color y la fuente.
-- En la capa semántica: `<p><LeadIn text={...} /></p>` desde `$lib/lead-in.svelte`.
+- En la escena: `<LeadInText text={...} fontSize={...} maxWidth={...} />` desde `$lib/scene/lead-in-text.svelte`.
+  - Acepta los mismos props que `MeasuredText`, salvo el color.
+  - En un título pasa `font={FONT.bold}` o `FONT.black` y `plain="ink"`, para que una sola oración vaya en tinta.
+  - `section-head.svelte` ya lo usa en el título y la intro.
+- En la capa semántica: `<h2><LeadIn text={...} /></h2>` o `<p><LeadIn text={...} /></p>` desde `$lib/lead-in.svelte`.
 - No se arma a mano con dos textos. `LeadInText` es un solo texto de troika con tramos de color, así el ajuste de línea es el del párrafo entero.
 
 ## 4. Imágenes y figuras: estética Linear
@@ -107,7 +121,7 @@ valores salen de `FIGURE` en `tokens.ts`.
 
 **Materia**
 - El único efecto rico es el vidrio de Essentia (`Glass`): una lente o un panel que refracta la figura.
-- Sin sombras duras, brillos ni texturas extra (el grano ya está en el papel).
+- Sin sombras duras, brillos ni texturas: el papel es liso.
 
 **Imágenes**
 - Las capturas de producto van en un marco con radio de 16 px, borde de 1 px de tinta al 10 % y sin sombra.
@@ -140,10 +154,31 @@ valores salen de `FIGURE` en `tokens.ts`.
 - Las transiciones son del deck. Los componentes acompañan con parallax (`lag(k)`), sin animaciones propias que compitan.
 - Todo respeta `prefers-reduced-motion`.
 
+## 6. Alineación: centrado por convención
+
+El contenido de todo componente va **centrado**:
+- la columna, centrada en la ventana;
+- el texto, alineado al centro (`alignment="center"` y `anchorX={0.5}` en la escena, `text-align: center` en la capa semántica);
+- los botones, chips y grupos, centrados en su fila;
+- las grillas, centradas como bloque.
+
+**Lectura**
+- Un párrafo centrado necesita una medida corta: como máximo unos 60 caracteres por línea (`maxWidth` acorde al tamaño).
+- Si no entra, se acorta el texto o se parte en más párrafos, no se alinea a la izquierda.
+
+**Excepciones**
+- Alinear a la izquierda (u otra disposición) es una decisión intencional, y **solo se hace si el usuario lo pide explícitamente para ese componente**. No se decide por estética ni por comodidad del layout.
+- Cada excepción pedida se anota acá, con el componente y la fecha:
+
+| Componente | Alineación | Pedido |
+| ---------- | ---------- | ------ |
+| —          | —          | —      |
+
 ## Checklist de un componente
 
+- [ ] Contenido centrado, salvo una excepción pedida y anotada en la sección 6.
 - [ ] Colores desde `PALETTE`, sin hex sueltos.
-- [ ] Párrafos con `LeadInText` en la escena y `LeadIn` en la capa semántica.
+- [ ] Títulos y párrafos con `LeadInText` en la escena y `LeadIn` en la capa semántica.
 - [ ] Ningún color fuera de la paleta: sin azul ni otro tono hasta que la identidad lo defina.
 - [ ] Las superficies `brand` (blancas) se separan del papel con vidrio, borde o sombra.
 - [ ] Figuras con `FIGURE`: monocromo, un acento y línea fina.

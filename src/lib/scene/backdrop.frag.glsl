@@ -1,14 +1,12 @@
-// Fondo del sitio, en un solo draw call y fijo a la ventana: papel blanco con
-// grano. Cada escena del deck es un nivel más hondo, y el paso de una a otra
+// Fondo del sitio, en un solo draw call y fijo a la ventana: papel blanco
+// liso. Cada escena del deck es un nivel más hondo, y el paso de una a otra
 // se siente como un buceo:
 // - partículas finas en tres capas de parallax, que se estiran en estela
 //   mientras el deck se mueve;
 // - el halo y los tentáculos de las tres medusas del hero. Las campanas son
-//   vidrio (<Glass>) y refractan este fondo: el tentáculo nace debajo del vidrio;
-// - el grano, fijo a los píxeles de la pantalla y quieto (no pide frames).
+//   vidrio (<Glass>) y refractan este fondo: el tentáculo nace debajo del vidrio.
 //
-// Los colores llegan en lineal y se codifican con colorspace_fragment; el
-// grano va después, en sRGB, para que sea parejo en todo el papel.
+// Los colores llegan en lineal y se codifican con colorspace_fragment.
 
 uniform vec2 u_size;          // píxeles CSS
 uniform float u_depth;        // escena que se ve, con decimales en la transición
@@ -18,7 +16,6 @@ uniform vec3 u_paper;         // color del papel
 uniform vec3 u_speck;         // color de las partículas
 uniform vec3 u_glow[3];       // color de cada medusa
 uniform vec4 u_medusa[3];     // píxeles CSS, origen abajo a la izquierda: x, y del centro, ancho, alto
-uniform float u_grain;        // amplitud del grano en sRGB [0..1]
 
 varying vec2 v_uv;
 
@@ -98,10 +95,4 @@ void main() {
 
   gl_FragColor = vec4(color, 1.0);
   #include <colorspace_fragment>
-
-  // Grano de papel: un valor por píxel CSS más uno más grueso, para que no
-  // se vea como ruido de pantalla.
-  vec2 cell = floor(p);
-  float grain = hash(cell) * 0.65 + hash(floor(p * 0.5) + 17.0) * 0.35;
-  gl_FragColor.rgb += (grain - 0.5) * u_grain;
 }
