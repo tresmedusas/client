@@ -152,6 +152,7 @@ valores salen de `FIGURE` en `tokens.ts`.
 
 **Movimiento**
 - Las transiciones son del deck. Los componentes acompañan con parallax (`lag(k)`), sin animaciones propias que compitan.
+- `/showcase` es una galería: en vez de subir, las escenas cuelgan a lo largo de un pasillo y el deck mueve la cámara hacia el punto de fuga (`scene/gallery.ts`). Pedido por el usuario (2026-11-16). En reposo cada escena se ve centrada; entre proyectos la cámara gira de una pared a la otra.
 - Todo respeta `prefers-reduced-motion`.
 
 ## 6. Alineación: centrado por convención

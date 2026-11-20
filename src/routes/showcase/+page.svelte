@@ -26,15 +26,15 @@
 {#each SHOWCASE.projects as project, i (project.id)}
   <section id={project.id} aria-labelledby="{project.id}-title">
     <p class="eyebrow">{String(i + 1).padStart(2, '0')} / {String(SHOWCASE.projects.length).padStart(2, '0')}</p>
-    <h2 id="{project.id}-title">{project.name}</h2>
-    <p>{project.client} · {project.tags.join(', ')}</p>
+    <h2 id="{project.id}-title"><LeadIn text={project.name} /></h2>
+    <p>{[project.client, ...project.tags].join(' · ')}</p>
     {#if project.image}
       <img src={project.image} alt="" />
     {/if}
     <h3 class="label">{SHOWCASE.problemLabel}</h3>
-    <p>{project.problem}</p>
+    <p><LeadIn text={project.problem} /></p>
     <h3 class="label">{SHOWCASE.solutionLabel}</h3>
-    <p>{project.solution}</p>
+    <p><LeadIn text={project.solution} /></p>
   </section>
 {/each}
 
@@ -47,3 +47,19 @@
     <a class="button secondary" href={SHOWCASE.closing.secondary.href}>{SHOWCASE.closing.secondary.label}</a>
   </p>
 </section>
+
+<style>
+  /* Centrado por convención (DESIGN.md, sección 6), como la escena. */
+  section {
+    text-align: center;
+  }
+
+  section .index {
+    padding-left: 0;
+    list-style-position: inside;
+  }
+
+  section .actions {
+    justify-content: center;
+  }
+</style>
