@@ -4,6 +4,7 @@
   import { FONT, PALETTE } from '$lib/tokens.js'
   import CtaGroup from './cta-group.svelte'
   import type { SceneFrame } from './deck-logic.js'
+  import { NAV_SPACE } from './layout.js'
   import MeasuredText from './measured-text.svelte'
 
   /** Hero provisorio (se trabaja aparte): eyebrow, título, bajada y botones. */
@@ -77,7 +78,7 @@
   <CtaGroup links={[HERO.primary, HERO.secondary]} {width} y={ctaY} {focusedHref} onmeasure={(h) => (ctaHeight = h)} {onnavigate} />
 </T.Group>
 
-<!-- La pista para seguir, pegada al borde de abajo de la ventana. -->
+<!-- La pista para seguir, abajo de todo, justo encima de la navbar. -->
 {#if !compact || viewportHeight > 640}
   <MeasuredText
     text={HERO.hint.toUpperCase()}
@@ -88,6 +89,6 @@
     lineHeight={1.2}
     anchorX={0.5}
     x={width / 2}
-    y={frame.top - viewportHeight + 64 + lag(0.4)}
+    y={frame.top - viewportHeight + NAV_SPACE + 24 + lag(0.4)}
   />
 {/if}

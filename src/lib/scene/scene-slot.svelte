@@ -3,10 +3,10 @@
   import { T } from '@threlte/core'
   import type { Deck } from './deck.svelte.js'
   import { sceneFrame, type SceneFrame } from './deck-logic.js'
-  import { NAV_SPACE, SCENE_BOTTOM } from './layout.js'
+  import { NAV_SPACE, SCENE_TOP } from './layout.js'
 
   /**
-   * Una escena del deck. Ubica su contenido en la ventana (centrado bajo la
+   * Una escena del deck. Ubica su contenido en la ventana (centrado sobre la
    * navbar, o arriba con scroll interno si no entra) y lo corre lo que diga el
    * deck: la escena que viene sube desde abajo y la que se va sale por arriba.
    * El contenido recibe el corrimiento en escenas (`d`) para su propio parallax.
@@ -26,7 +26,7 @@
   let { i, deck, width, viewportHeight, height, children }: Props = $props()
 
   const d = $derived(deck.position - i)
-  const frame = $derived(sceneFrame(height, viewportHeight, NAV_SPACE, SCENE_BOTTOM))
+  const frame = $derived(sceneFrame(height, viewportHeight, SCENE_TOP, NAV_SPACE))
 
   $effect(() => {
     if (height <= 0) return

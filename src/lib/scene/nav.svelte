@@ -63,10 +63,10 @@
     refraction: 1.15,
     dispersion: 0.15,
     magnify: 0.92,
-    blur: 4,
+    blur: 6,
     edgeSharpness: 0,
     tint: '#f0f0f0',
-    tintOpacity: 0.9,
+    tintOpacity: 0.4,
     tintMode: 'overlay',
     brightness: 0.2,
     saturation: 0.8,
@@ -74,7 +74,7 @@
     specular: 0.5,
     rim: 0.01,
     softness: 0,
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.01,
     shadowSpread: 12,
     shadowOffsetY: 2,
     tilt: 0.5,
@@ -93,7 +93,8 @@
   /** La pastilla envuelve el imagotipo y los links, centrada; nunca más ancha que la columna. */
   const linksWidth = $derived(links.reduce((sum, l) => sum + (itemWidths[l.href] ?? 0), 0) + LINK_GAP * (links.length - 1))
   const barWidth = $derived(Math.min(width, PADDING * 2 + logoWidth + LOGO_GAP + linksWidth))
-  const y = $derived(engine.viewport.height / 2 - MARGIN - HEIGHT / 2)
+  /** Pegada al borde de abajo de la ventana. */
+  const y = $derived(-engine.viewport.height / 2 + MARGIN + HEIGHT / 2)
   const logoX = $derived(-barWidth / 2 + PADDING)
 
   /** Centro del item `i`: se acomodan de izquierda a derecha, después del imagotipo. */

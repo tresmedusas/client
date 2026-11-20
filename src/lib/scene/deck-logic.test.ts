@@ -13,7 +13,7 @@ import {
 } from './deck-logic.js'
 
 describe('sceneFrame', () => {
-  it('centra bajo la navbar lo que entra', () => {
+  it('centra en el área lo que entra', () => {
     expect(sceneFrame(400, 900, 88, 40)).toEqual({ top: 88 + (900 - 88 - 40 - 400) / 2, overflow: 0 })
   })
 
