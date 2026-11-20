@@ -309,3 +309,42 @@ body {
 .lead-in-rest {
   color: var(--color-muted);
 }
+
+/* Cómo trabajamos: centrado (DESIGN.md §6), etapas sin tarjeta y cada una con su figura 3D en reposo. */
+.semantic #como-trabajamos {
+  text-align: center;
+}
+
+/* Las etapas van una debajo de la otra, como en la escena: figura, número, título y texto. */
+.semantic #como-trabajamos .steps {
+  grid-template-columns: 1fr;
+  gap: 4.5rem;
+  max-width: 640px;
+  margin: 3rem auto 0;
+}
+
+.semantic #como-trabajamos .steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 0;
+  padding: 0;
+}
+
+.semantic #como-trabajamos .steps li::before {
+  margin: 1.5rem 0 0.75rem;
+}
+
+.semantic #como-trabajamos .steps img {
+  order: -1;
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin: 0 auto 0.75rem;
+  /* Como en la escena: lo que llega al borde del marco se desvanece en 40 px. */
+  mask-image:
+    linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent),
+    linear-gradient(to bottom, transparent, black 40px, black calc(100% - 40px), transparent);
+  mask-composite: intersect;
+}

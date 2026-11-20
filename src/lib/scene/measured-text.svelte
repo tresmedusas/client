@@ -25,7 +25,7 @@
     x?: number
     y?: number
     z?: number
-    /** Opacidad del relleno, 0..1 (la galería del showcase la usa para la niebla). @default 1 */
+    /** Opacidad del relleno, 0..1, sin re-maquetar: fundidos y la niebla de la galería del showcase. @default 1 */
     opacity?: number
     /** Avisa la caja del texto cuando troika termina de maquetarlo. */
     onmeasure?: (width: number, height: number) => void

@@ -1,85 +1,161 @@
 <script lang="ts">
-  import { T } from '@threlte/core'
+  import { Rect } from 'essentia-primitives'
   import { HOW_WORK } from '$lib/content.js'
-  import { FONT, PALETTE } from '$lib/tokens.js'
-  import CardText from './card-text.svelte'
-  import Chips from './chips.svelte'
-  import { grid, rows } from './layout.js'
+  import { FIGURE, FONT, PALETTE } from '$lib/tokens.js'
+  import { ASPECT } from './figures/how-work.js'
+  import LeadInText from './lead-in-text.svelte'
   import MeasuredText from './measured-text.svelte'
-  import Panel from './panel.svelte'
   import SectionHead from './section-head.svelte'
+  import StepFigure from './step-figure.svelte'
 
-  /** Cómo trabajamos: los cuatro pasos en paneles de vidrio y los problemas que más resolvemos. */
+  /**
+   * Cómo trabajamos: las etapas una debajo de la otra, centradas (DESIGN.md
+   * §6). La escena es más alta que la ventana y se scrollea de corrido (scroll
+   * interno del deck, sin pausas): cada etapa aparece con un fundido a medida
+   * que entra en la ventana.
+   *
+   * Cada etapa es una figura 3D line art (DESIGN.md §4, `figures/how-work.ts`)
+   * que lleva el protagonismo, su número, su título y su texto con lead-in. Un
+   * trazo fino en tinta (FIGURE) une una etapa con la siguiente.
+   */
   interface Props {
     width: number
     viewportHeight: number
     compact: boolean
     d: number
+    /** Distancia del borde de arriba de la ventana al tope del contenido, en px (crece hacia abajo). */
+    top: number
+    /** El movimiento continuo está permitido: las figuras se animan mientras se ven. */
+    motion: boolean
     onmeasure: (height: number) => void
   }
 
-  let { width, viewportHeight, compact, d, onmeasure }: Props = $props()
+  let { width, viewportHeight, compact, top, motion, onmeasure }: Props = $props()
 
-  const HEAD_GAP = 44
-  const GAP = 16
-  const PROBLEMS_GAP = 40
-  const LABEL_GAP = 14
-  const padding = $derived(compact ? 22 : 26)
-  const columns = $derived(compact ? 1 : width < 900 ? 2 : 4)
+  const STEPS = HOW_WORK.steps
+
+  // ── Medidas (múltiplos de 8) ───────────────────────────────────
+  const HEAD_GAP = $derived(compact ? 48 : 72)
+  /** Separación entre dos etapas; el trazo que las une ocupa el medio. */
+  const STAGE_GAP = $derived(compact ? 72 : 96)
+  const LINK_MARGIN = 16
+  const FIGURE_GAP = $derived(compact ? 24 : 32)
+  const INDEX_GAP = 16
+  const TITLE_GAP = 16
+
+  const titleSize = $derived(compact ? 22 : 28)
+  const bodySize = $derived(compact ? 17 : 19)
+
+  const cx = $derived(width / 2)
+  /** Medida del texto centrado: ~60 caracteres por línea como mucho. */
+  const textWidth = $derived(Math.min(width, compact ? 360 : 520))
+  /** La figura es lo primero que se lee: ocupa la columna, hasta 640 px. */
+  const figureWidth = $derived(Math.min(width, 640))
+  const figureHeight = $derived(figureWidth / ASPECT)
 
   let headHeight = $state(0)
-  let textHeights = $state<number[]>(HOW_WORK.steps.map(() => 0))
-  let labelHeight = $state(0)
-  let chipsHeight = $state(0)
+  let indexHeights = $state<number[]>(STEPS.map(() => 0))
+  let titleHeights = $state<number[]>(STEPS.map(() => 0))
+  let bodyHeights = $state<number[]>(STEPS.map(() => 0))
 
-  const cells = $derived(grid(width, columns, GAP))
-  const measured = $derived(textHeights.every((h) => h > 0))
-  const layout = $derived(rows(textHeights.map((h) => h + padding * 2), columns, GAP))
-  const stepsTop = $derived(-(headHeight + HEAD_GAP))
-  const labelY = $derived(stepsTop - layout.total - PROBLEMS_GAP)
-  const chipsY = $derived(labelY - labelHeight - LABEL_GAP)
+  const measured = $derived(
+    headHeight > 0 && [indexHeights, titleHeights, bodyHeights].every((list) => list.every((h) => h > 0)),
+  )
+
+  /** Alto de cada etapa: figura, número, título y texto. */
+  const stageHeights = $derived(
+    STEPS.map((_, k) => figureHeight + FIGURE_GAP + indexHeights[k]! + INDEX_GAP + titleHeights[k]! + TITLE_GAP + bodyHeights[k]!),
+  )
+  /** Tope de cada etapa, en px hacia abajo desde el tope del contenido. */
+  const stageTops = $derived.by(() => {
+    let y = headHeight + HEAD_GAP
+    return stageHeights.map((h) => {
+      const at = y
+      y += h + STAGE_GAP
+      return at
+    })
+  })
+  const total = $derived(stageTops[STEPS.length - 1]! + stageHeights[STEPS.length - 1]!)
 
   $effect(() => {
-    if (headHeight > 0 && measured && labelHeight > 0 && chipsHeight > 0) onmeasure(-chipsY + chipsHeight)
+    if (measured) onmeasure(total)
   })
 
-  const cellLeft = (i: number) => cells.x(i) - cells.cellWidth / 2
-  const rowOf = (i: number) => Math.floor(i / columns)
-  /** Parallax: cada paso entra un poco después del anterior. */
-  const lag = (k: number) => d * viewportHeight * k
+  // ── Fundido al entrar ──────────────────────────────────────────
+  // Una etapa empieza a aparecer cuando su tope cruza el 90 % de la ventana y
+  // está entera al subir otro 30 %. Al volver hacia arriba se va igual.
+  const REVEAL_FROM = 0.9
+  const REVEAL_SPAN = 0.3
+  const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+  const reveal = (k: number) =>
+    measured ? clamp01((viewportHeight * REVEAL_FROM - (top + stageTops[k]!)) / (viewportHeight * REVEAL_SPAN)) : 0
+  /** La figura de la etapa está en la ventana (solo entonces se anima). */
+  const onScreen = (k: number) => top + stageTops[k]! < viewportHeight && top + stageTops[k]! + figureHeight > 0
 </script>
 
-<SectionHead section={HOW_WORK.section} {width} {compact} onmeasure={(h) => (headHeight = h)} />
+<SectionHead section={HOW_WORK.section} {width} {compact} align="center" onmeasure={(h) => (headHeight = h)} />
 
-{#each HOW_WORK.steps as step, i (step.title)}
-  {@const top = stepsTop - (layout.tops[rowOf(i)] ?? 0)}
-  <T.Group position.y={lag(0.1 + (i % columns) * 0.06 + rowOf(i) * 0.04)}>
-    {#if measured && headHeight > 0}
-      <Panel x={cellLeft(i)} y={top} width={cells.cellWidth} height={layout.heights[rowOf(i)] ?? 0} />
-    {/if}
-    <CardText
-      item={step}
-      index={String(i + 1).padStart(2, '0')}
-      x={cellLeft(i) + padding}
-      y={top - padding}
-      width={cells.cellWidth - padding * 2}
-      titleSize={compact ? 19 : 20}
-      bodySize={compact ? 15 : 16}
-      onmeasure={(h) => (textHeights[i] = h)}
+{#each STEPS as item, k (item.title)}
+  {@const opacity = reveal(k)}
+  {@const y0 = -(stageTops[k] ?? 0)}
+  {@const indexY = y0 - figureHeight - FIGURE_GAP}
+  {@const titleY = indexY - indexHeights[k]! - INDEX_GAP}
+
+  {#if measured && k > 0}
+    <!-- Trazo que une esta etapa con la anterior: aparece con ella. -->
+    {@const length = STAGE_GAP - LINK_MARGIN * 2}
+    <Rect
+      width={FIGURE.strokeWidth}
+      height={length}
+      radius={0}
+      color={FIGURE.stroke}
+      opacity={FIGURE.strokeOpacity * opacity}
+      x={cx}
+      y={y0 + LINK_MARGIN + length / 2}
     />
-  </T.Group>
-{/each}
-
-<T.Group position.y={lag(0.4)}>
+  {/if}
+  {#if measured}
+    <StepFigure index={k} width={figureWidth} x={cx} y={y0 - figureHeight / 2} {opacity} playing={motion && onScreen(k)} />
+  {/if}
   <MeasuredText
-    text={HOW_WORK.problemsLabel.toUpperCase()}
-    fontSize={12}
-    color={PALETTE.muted}
-    font={FONT.bold}
+    text={String(k + 1).padStart(2, '0')}
+    fontSize={13}
+    color={PALETTE.brandInk}
+    font={FONT.black}
     letterSpacing={1.6}
     lineHeight={1.2}
-    y={labelY}
-    onmeasure={(_, h) => (labelHeight = h)}
+    alignment="center"
+    anchorX={0.5}
+    x={cx}
+    y={indexY}
+    {opacity}
+    onmeasure={(_, h) => (indexHeights[k] = h)}
   />
-  <Chips labels={HOW_WORK.problems} {width} y={chipsY} onmeasure={(h) => (chipsHeight = h)} />
-</T.Group>
+  <MeasuredText
+    text={item.title}
+    fontSize={titleSize}
+    color={PALETTE.ink}
+    font={FONT.bold}
+    lineHeight={1.2}
+    letterSpacing={-titleSize * 0.01}
+    maxWidth={textWidth}
+    alignment="center"
+    anchorX={0.5}
+    x={cx}
+    y={titleY}
+    {opacity}
+    onmeasure={(_, h) => (titleHeights[k] = h)}
+  />
+  <LeadInText
+    text={item.body}
+    fontSize={bodySize}
+    lineHeight={1.55}
+    maxWidth={textWidth}
+    alignment="center"
+    anchorX={0.5}
+    x={cx}
+    y={titleY - titleHeights[k]! - TITLE_GAP}
+    {opacity}
+    onmeasure={(_, h) => (bodyHeights[k] = h)}
+  />
+{/each}
