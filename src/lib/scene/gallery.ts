@@ -22,7 +22,7 @@ export interface GalleryView {
   spacing: number
   /** Cuánto se corre la cámara hacia cada pared, en px. */
   lateral: number
-  /** El punto de fuga: el centro del área de contenido (bajo la navbar). */
+  /** El punto de fuga: el centro del área de contenido (sobre la navbar). */
   vanishY: number
   /** Ancho y alto del pasillo, para los marcos que lo dibujan. */
   hallWidth: number
@@ -30,17 +30,17 @@ export interface GalleryView {
 }
 
 /**
- * Medidas del pasillo para una ventana de `vw` × `vh`. `navSpace` y `bottom`
- * son lo que tapan la navbar y el margen de abajo: el punto de fuga queda en
+ * Medidas del pasillo para una ventana de `vw` × `vh`. `top` y `bottom` son
+ * el margen de arriba y lo que tapa la navbar abajo: el punto de fuga queda en
  * el medio de lo que se ve.
  */
-export function galleryView(vw: number, vh: number, compact: boolean, navSpace: number, bottom: number): GalleryView {
+export function galleryView(vw: number, vh: number, compact: boolean, top: number, bottom: number): GalleryView {
   const focal = Math.max(600, Math.min(1400, Math.max(vw, vh) * 0.75))
   return {
     focal,
     spacing: focal * 1.5,
     lateral: compact ? vw * 0.14 : Math.min(vw * 0.26, 420),
-    vanishY: (bottom - navSpace) / 2,
+    vanishY: (bottom - top) / 2,
     // El marco más cercano queda apenas fuera de la ventana: la cámara está
     // parada en una puerta y la siguiente enmarca lo que viene.
     hallWidth: vw * (compact ? 1.9 : 2.3),
