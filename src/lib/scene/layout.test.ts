@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bob, columnWidth, flow, grid, medusas, rows, stack } from './layout.js'
+import { MEDUSA_ASPECT, MEDUSA_COUNT, SCENE_TOP, bob, columnWidth, flow, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -41,25 +41,67 @@ describe('rows', () => {
   })
 })
 
-describe('medusas', () => {
-  it('son tres y quedan dentro de la columna', () => {
-    for (const compact of [true, false]) {
-      const list = medusas(800, 800, compact)
-      expect(list).toHaveLength(3)
-      for (const m of list) {
-        expect(m.x - m.width / 2).toBeGreaterThanOrEqual(0)
-        expect(m.x).toBeLessThanOrEqual(800)
+describe('heroLayout', () => {
+  it('pone el texto arriba y la campana debajo del botón, dentro de la ventana', () => {
+    for (const [width, vh, compact] of [
+      [1080, 900, false],
+      [1080, 680, false],
+      [343, 812, true],
+      [288, 568, true],
+    ] as const) {
+      const { textTop, textBottom, medusas } = heroLayout(width, vh, compact, 'Tres Medusas.\nSoluciones a medida.')
+      expect(medusas).toHaveLength(MEDUSA_COUNT)
+      const m = medusas.at(-1)!
+      expect(textTop).toBeGreaterThanOrEqual(SCENE_TOP)
+      expect(m.x).toBe(0)
+      expect(m.width / m.height).toBeCloseTo(MEDUSA_ASPECT)
+      // Tope de la campana (8 % del dibujo), medido desde el tope de la ventana.
+      const bellTop = vh / 2 - (m.y + m.height / 2) + m.height * 0.08
+      expect(bellTop).toBeGreaterThan(textBottom)
+      expect(bellTop).toBeLessThan(vh * 0.75)
+      // Las acompañantes: más chicas, a los costados y también debajo del texto.
+      for (const c of medusas.slice(0, -1)) {
+        expect(c.height).toBeLessThan(m.height * 0.5)
+        expect(c.width / c.height).toBeCloseTo(MEDUSA_ASPECT)
+        expect(Math.abs(c.x)).toBeGreaterThan(width * 0.3)
+        expect(vh / 2 - (c.y + c.height / 2) + c.height * 0.08).toBeGreaterThan(textBottom)
       }
     }
+  })
+
+  it('achica el título hasta que cada línea entra en el ancho', () => {
+    const title = 'Tres Medusas.\nSoluciones a medida.'
+    // En escritorio entra sin achicarse: el mismo tamaño que con una línea.
+    expect(heroLayout(1080, 900, false, title).titleSize).toBe(heroLayout(1080, 900, false, 'Tres Medusas').titleSize)
+    const { titleSize } = heroLayout(288, 568, true, title)
+    expect(titleSize * 0.56 * 'Soluciones a medida.'.length).toBeLessThanOrEqual(288)
+    // Dos líneas empujan la medusa más abajo que una.
+    const one = heroLayout(1080, 900, false, 'Tres Medusas')
+    const two = heroLayout(1080, 900, false, title)
+    expect(two.textBottom).toBeGreaterThan(one.textBottom)
+    expect(two.medusas.at(-1)!.y).toBeLessThan(one.medusas.at(-1)!.y)
   })
 })
 
 describe('bob', () => {
-  it('flota menos que una décima de su alto', () => {
-    const [m] = medusas(1000, 800, false)
-    for (let t = 0; t < 20; t += 0.37) {
-      const { dy } = bob(m!, t)
-      expect(Math.abs(dy)).toBeLessThanOrEqual(m!.height * 0.08 + 1e-9)
+  it('se mueve a la vista pero sin irse más de un 4 % de su alto', () => {
+    let min = Infinity
+    let max = -Infinity
+    for (let t = 0; t < 60; t += 0.05) {
+      const { dx, dy } = bob(1000, t)
+      expect(Math.abs(dy)).toBeLessThanOrEqual(32 + 1e-9)
+      expect(Math.abs(dx)).toBeLessThanOrEqual(16 + 1e-9)
+      min = Math.min(min, dy)
+      max = Math.max(max, dy)
+    }
+    expect(max - min).toBeGreaterThan(40)
+  })
+
+  it('avanza sin saltos: en un cuadro (1/60 s) se mueve menos de un píxel', () => {
+    for (let t = 0; t < 30; t += 0.05) {
+      const a = bob(1000, t)
+      const b = bob(1000, t + 1 / 60)
+      expect(Math.abs(b.dy - a.dy)).toBeLessThan(1)
     }
   })
 })
