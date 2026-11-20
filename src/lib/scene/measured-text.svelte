@@ -2,7 +2,7 @@
   import { untrack } from 'svelte'
   import { T, useThrelte } from '@threlte/core'
   import { useEngine } from 'essentia-core'
-  import { TextNode, type AnchorNormalized, type TextAlignment } from 'essentia-primitives'
+  import { TextNode, type AnchorNormalized, type TextAlignment, type TextColorRange } from 'essentia-primitives'
   import { FONT } from '$lib/tokens.js'
 
   interface Props {
@@ -16,6 +16,8 @@
     lineHeight?: number
     letterSpacing?: number
     alignment?: TextAlignment
+    /** Tramos con color propio (índices de `text`), como el lead-in. */
+    colorRanges?: readonly TextColorRange[] | null
     /** 0 = el borde izquierdo cae en `x`, 0.5 = el centro. @default 0 */
     anchorX?: AnchorNormalized
     /** 0 = el borde de arriba cae en `y`, 0.5 = el centro. @default 0 */
@@ -23,6 +25,8 @@
     x?: number
     y?: number
     z?: number
+    /** Opacidad del relleno, 0..1, sin re-maquetar: fundidos y la niebla de la galería del showcase. @default 1 */
+    opacity?: number
     /** Avisa la caja del texto cuando troika termina de maquetarlo. */
     onmeasure?: (width: number, height: number) => void
   }
@@ -36,11 +40,13 @@
     lineHeight = 1.5,
     letterSpacing = 0,
     alignment = 'left',
+    colorRanges = null,
     anchorX = 0,
     anchorY = 0,
     x = 0,
     y = 0,
     z = 0,
+    opacity = 1,
     onmeasure,
   }: Props = $props()
 
@@ -65,6 +71,7 @@
     node.setFontSize(fontSize)
     node.setDpr(engine.viewport.dpr)
     node.setColor(color)
+    node.setColorRanges(colorRanges)
     node.setFont(font)
     node.setMaxWidth(maxWidth)
     node.setLineHeight(lineHeight)
@@ -72,6 +79,14 @@
     node.setAlignment(alignment)
     node.setAnchorX(anchorX)
     node.setAnchorY(anchorY)
+    invalidate()
+  })
+
+  // Aparte: la opacidad cambia en cada frame de una transición, sin re-sincronizar.
+  $effect(() => {
+    // troika la tiene, pero sus tipos no la declaran.
+    ;(node.mesh as typeof node.mesh & { fillOpacity: number }).fillOpacity = opacity
+    node.mesh.visible = opacity > 0.001
     invalidate()
   })
 

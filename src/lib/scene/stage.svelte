@@ -36,6 +36,12 @@
   let pageVisible = $state(document.visibilityState === 'visible')
   const motion = $derived(!reducedMotion && pageVisible)
 
+  // Con movimiento reducido, la rueda, el arrastre y las teclas cambian de
+  // escena sin transición.
+  $effect(() => {
+    deck.instant = reducedMotion
+  })
+
   $effect(() => {
     const onChange = () => (reducedMotion = reduced.matches)
     reduced.addEventListener('change', onChange)
@@ -154,7 +160,7 @@
   onhashchange={onHashChange}
   onkeydown={onKeyDown}
   onpointermove={(e) => deck.dragMove(e.clientY, e.timeStamp)}
-  onpointerup={() => deck.dragEnd()}
+  onpointerup={(e) => deck.dragEnd(e.timeStamp)}
   onpointercancel={() => deck.dragEnd()}
 />
 <svelte:document onvisibilitychange={() => (pageVisible = document.visibilityState === 'visible')} />

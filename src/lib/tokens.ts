@@ -3,9 +3,11 @@
  * como variables CSS para el primer paint, y three y troika no pueden entrar a
  * ese JS. La escena los lee de acá también.
  *
- * Identidad: blanco, negro y el azul de la marca, sobre papel blanco con
- * grano. Las variantes del azul (`brandInk`, `brandLight`, `brandDeep`) son
- * provisorias, derivadas del brand hasta que la identidad las defina.
+ * Identidad: blanco y negro sobre papel blanco liso. El color de la
+ * marca todavía no está definido, así que el brand es el blanco: superficies
+ * de luz (vidrio blanco, el botón principal) sobre el papel, y la tinta para
+ * todo lo que se lee. Los nombres `brand*` se mantienen para que, cuando haya
+ * un color, cambie solo este archivo.
  */
 
 export const PALETTE = {
@@ -19,18 +21,19 @@ export const PALETTE = {
   ink: '#111111',
   /** Texto secundario: el negro al ~65 % sobre el papel (5.6:1). */
   muted: '#5C6166',
-  /** Azul de la marca: botón principal, marcas, brillos. */
-  brand: '#01A3E8',
   /**
-   * Variante oscura del brand (provisoria) para texto chico sobre el papel:
-   * el brand puro no llega a 3:1 sobre el blanco, este da 5:1.
+   * Brand (provisorio): el blanco. Es blanco puro, un punto más claro que el
+   * papel, para que una superficie de la marca se lea como luz sobre él.
+   * Botón principal, vidrios destacados, brillos.
    */
-  brandInk: '#006FA6',
-  /** Variante clara del brand (provisoria): la segunda medusa y las lentes. */
-  brandLight: '#7CD2F7',
-  /** Variante profunda del brand (provisoria): avatares y paneles de proyecto. */
-  brandDeep: '#0B4F70',
-  /** Texto sobre el brand: el negro (6.5:1; el blanco no llega a 3:1). */
+  brand: '#FFFFFF',
+  /** Texto chico «de la marca» (índices, eyebrows, link activo): la tinta mientras no haya color. */
+  brandInk: '#111111',
+  /** Variante clara del brand: lentes y medusas, vidrio blanco. */
+  brandLight: '#FFFFFF',
+  /** Variante profunda: superficies oscuras con el isotipo o iniciales en blanco (avatares, paneles de proyecto). */
+  brandDeep: '#1C1E21',
+  /** Texto sobre el brand: la tinta. */
   onBrand: '#111111',
 } as const
 
@@ -47,11 +50,39 @@ export const FONT = {
 
 export const FONT_FAMILY = "Lato, system-ui, -apple-system, 'Segoe UI', sans-serif"
 
-/** Logo provisorio: imagotipo en negro para el papel, isotipo blanco para los paneles del brand. */
+/** Logo provisorio: imagotipo en negro para el papel, isotipo blanco para las superficies oscuras. */
 export const LOGO = {
   /** Imagotipo a 4× (viewBox 345 × 88): la textura sale nítida con DPR 2. */
   imagotipo: { src: '/brand/imagotipo-negro.svg', aspect: 345 / 88 },
   isotipo: { src: '/brand/isotipo.svg', aspect: 60 / 79 },
+} as const
+
+/**
+ * Figuras e imágenes con estética Linear (ver DESIGN.md): líneas finas en tinta
+ * con poca opacidad, grilla apenas visible y un solo acento del brand. Toda
+ * figura dibujada en la escena o en SVG sale de estos valores.
+ */
+export const FIGURE = {
+  /** Color de los trazos: la tinta, nunca un gris propio. */
+  stroke: PALETTE.ink,
+  /** Opacidad de un trazo normal y de uno destacado. */
+  strokeOpacity: 0.22,
+  strokeStrongOpacity: 0.6,
+  /** Grosor del trazo en px CSS; el destacado, para el único elemento que importa. */
+  strokeWidth: 1,
+  strokeStrongWidth: 1.5,
+  /** Grilla o puntos de fondo: se intuye, no se lee. */
+  gridOpacity: 0.06,
+  gridStep: 24,
+  /**
+   * El único acento por figura. Sin color de marca definido, el acento es el
+   * trazo destacado en tinta; cuando haya color, pasa a `PALETTE.brand`.
+   */
+  accent: PALETTE.ink,
+  /** Relleno de superficies: la tinta casi transparente, sin degradados de color. */
+  fillOpacity: 0.03,
+  /** Radio de esquina de marcos y tarjetas de imagen. */
+  radius: 16,
 } as const
 
 /** Regla `:root` con la paleta como variables CSS (`--color-brand-light`), para el `<head>`. */

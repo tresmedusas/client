@@ -76,41 +76,46 @@ export const HOW_WORK = {
     index: '01',
     label: 'Cómo trabajamos',
     title: 'Empezamos por el problema, no por la herramienta.',
-    intro: 'Cada proyecto recorre los mismos pasos, y nada llega a tu sistema sin tu aprobación.',
+    intro: 'Todos los proyectos recorren los mismos cuatro pasos, y nada llega a tu sistema sin tu aprobación.',
   } satisfies Section,
+  /**
+   * Las etapas van una debajo de la otra y cada una aparece con un fundido al
+   * entrar en la ventana. Cuerpos con lead-in y una figura 3D line art
+   * (DESIGN.md §4, `scene/figures/how-work.ts`). `figure` es su cuadro en
+   * reposo, de 640 × 427, para la capa semántica.
+   */
   steps: [
     {
       title: 'Entendemos tu operación',
-      body: 'Vemos cómo lo hacen hoy, dónde se pierde el tiempo y qué sistemas ya usas.',
+      body: 'Primero, escuchamos. Vemos cómo se hace hoy, dónde se pierde el tiempo y con qué sistemas trabajas.',
+      figure: '/figures/como-trabajamos-1.webp',
     },
     {
       title: 'Lo dividimos en hitos',
-      body: 'Acordamos qué entrega cada hito antes de empezar a construir.',
+      body: 'Hitos claros. Antes de construir, acordamos contigo qué entrega cada hito.',
+      figure: '/figures/como-trabajamos-2.webp',
     },
     {
       title: 'Construimos con verificación',
-      body: 'Cada cambio pasa por tests automáticos y una revisión independiente.',
+      body: 'Nada sin verificar. Cada cambio pasa por tests automáticos y por una revisión independiente.',
+      figure: '/figures/como-trabajamos-3.webp',
     },
     {
       title: 'Lo apruebas tú',
-      body: 'Solo con tu ok llega a tu sistema, con un reporte de evidencia por hito.',
+      body: 'Tú tienes la última palabra. Cada hito llega con un reporte de evidencia, y solo con tu ok pasa a tu sistema.',
+      figure: '/figures/como-trabajamos-4.webp',
     },
-  ] satisfies Item[],
-  problemsLabel: 'Lo que más resolvemos',
-  problems: [
-    'Datos que se copian a mano',
-    'Procesos en hojas de cálculo y correos',
-    'Reportes armados cada semana',
-    'Sistemas que no hablan entre sí',
-  ],
+  ] satisfies (Item & { figure: string })[],
 } as const
 
 export interface Person {
+  /** Ancla de la persona en la capa semántica y en su modal. */
+  id: string
   name: string
   role: string
-  /** Bio corta: solo los fundadores la muestran. */
-  bio?: string
-  /** Foto cuadrada en `static/`; sin ella se dibujan las iniciales. */
+  /** Bio corta: de dónde viene y qué hace en Tres Medusas. */
+  bio: string
+  /** Foto cuadrada en `static/founders/` (512 px, sin metadatos); sin ella se dibujan las iniciales. */
   photo?: string
 }
 
@@ -120,23 +125,23 @@ export const ABOUT = {
     index: '02',
     label: 'Nosotros',
     // TODO: copy definitivo.
-    title: 'Tres fundadores y un equipo que construye contigo.',
-    intro: 'Tres Medusas la fundamos tres personas. Hoy trabajamos junto a un equipo pequeño.',
+    title: 'Tres fundadores. Un equipo que construye contigo.',
+    intro: 'Hablas con quien construye. Entendemos tu proceso y construimos tu sistema, de la primera llamada a la entrega.',
   } satisfies Section,
   foundersLabel: 'Fundadores',
-  // TODO: nombres, roles, bios y fotos reales.
+  /** La card de cada fundador y su modal («Conocer a …»). */
+  card: {
+    label: 'Fundador',
+    /** Con el nombre de pila: entra en el pie de la card. */
+    cta: (name: string) => `Conocer a ${name.split(' ')[0]}`,
+    close: 'Cerrar',
+  },
+  // TODO: bios reales. El equipo actual no se muestra por ahora.
+  // Cada bio abre con una oración corta (2 a 6 palabras) que hace de lead-in.
   founders: [
-    { name: 'Fundador Uno', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
-    { name: 'Fundador Dos', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
-    { name: 'Fundador Tres', role: 'Rol por definir', bio: 'Bio breve por definir: de dónde viene y qué hace en Tres Medusas.' },
-  ] satisfies Person[] as readonly Person[],
-  teamLabel: 'Equipo',
-  // TODO: equipo actual.
-  team: [
-    { name: 'Integrante Uno', role: 'Rol por definir' },
-    { name: 'Integrante Dos', role: 'Rol por definir' },
-    { name: 'Integrante Tres', role: 'Rol por definir' },
-    { name: 'Integrante Cuatro', role: 'Rol por definir' },
+    { id: 'sofia-dome', name: 'Sofia Dome', role: 'Sr Designer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/sofia-dome.jpg' },
+    { id: 'uriel-rivero', name: 'Uriel Rivero', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/uriel-rivero.jpg' },
+    { id: 'matias-caballero', name: 'Matias Caballero', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/matias-caballero.jpg' },
   ] satisfies Person[] as readonly Person[],
 } as const
 

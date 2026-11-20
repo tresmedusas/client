@@ -41,18 +41,18 @@
 -->
 {#if labelWidth > 0}
   {#if focused}
-    <!-- Anillo de foco del teclado: un halo detrás del vidrio, que lo refracta en el canto. -->
-    <Rect width={width + 10} height={HEIGHT + 10} radius={(HEIGHT + 10) / 2} color={PALETTE.brand} opacity={0.55} x={x + width / 2} y={y - HEIGHT / 2} z={0.5} />
+    <!-- Anillo de foco del teclado: un halo de tinta detrás del vidrio, que lo refracta en el canto. -->
+    <Rect width={width + 10} height={HEIGHT + 10} radius={(HEIGHT + 10) / 2} color={PALETTE.ink} opacity={0.3} x={x + width / 2} y={y - HEIGHT / 2} z={0.5} />
   {/if}
   <Glass
     preset="pill"
     width={width}
     height={HEIGHT}
     tint={primary ? PALETTE.brand : '#ffffff'}
-    tintOpacity={primary ? 0.82 : 0.06}
-    brightness={focused ? 0.12 : 0}
-    rim={focused ? 0.9 : primary ? 0.15 : 0.25}
-    shadowOpacity={0}
+    tintOpacity={primary ? 0.9 : 0.06}
+    brightness={focused ? 0.12 : primary ? 0.06 : 0}
+    rim={focused ? 0.9 : primary ? 0.35 : 0.25}
+    shadowOpacity={primary ? 0.14 : 0}
     hoverable
     pressable
     cursor="pointer"

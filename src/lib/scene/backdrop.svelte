@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Fondo del sitio: papel blanco con grano (ver backdrop.frag.glsl).
+  // Fondo del sitio: papel blanco liso (ver backdrop.frag.glsl).
   import { T, useThrelte } from '@threlte/core'
   import { useEngine } from 'essentia-core'
   import { Color, ShaderMaterial, Vector2, Vector4 } from 'three'
@@ -35,8 +35,6 @@
     u_speck: { value: new Color(PALETTE.brandDeep) },
     u_glow: { value: [new Color(), new Color(), new Color()] },
     u_medusa: { value: [new Vector4(), new Vector4(), new Vector4()] },
-    /** Amplitud del grano, en sRGB: ±3 % alrededor del papel. */
-    u_grain: { value: 0.06 },
   }
   // Un quad y un draw call; detrás de todo, sin escribir profundidad.
   const material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms, depthWrite: false })
