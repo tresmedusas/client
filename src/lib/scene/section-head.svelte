@@ -11,11 +11,13 @@
     compact: boolean
     /** `display`: el título grande de una escena de apertura o de cierre. @default 'section' */
     size?: 'section' | 'display'
+    /** `center`: etiqueta, título e intro centrados en `width` (DESIGN.md §6). @default 'start' */
+    align?: 'start' | 'center'
     /** Alto del encabezado (etiqueta, título e intro) cuando está medido. */
     onmeasure: (height: number) => void
   }
 
-  let { section, width, compact, size = 'section', onmeasure }: Props = $props()
+  let { section, width, compact, size = 'section', align = 'start', onmeasure }: Props = $props()
 
   const LABEL_SIZE = 13
   const LABEL_GAP = 18
@@ -23,6 +25,10 @@
   const display = $derived(size === 'display')
   const titleSize = $derived(display ? (compact ? Math.max(36, Math.min(48, width * 0.11)) : Math.min(76, width * 0.068)) : compact ? 30 : 46)
   const introSize = $derived(compact ? 17 : display ? 21 : 19)
+  const centered = $derived(align === 'center')
+  const x = $derived(centered ? width / 2 : 0)
+  const anchorX = $derived(centered ? 0.5 : 0)
+  const alignment = $derived(centered ? 'center' : 'left')
 
   let labelHeight = $state(0)
   let titleHeight = $state(0)
@@ -45,6 +51,9 @@
   font={FONT.bold}
   letterSpacing={1.6}
   lineHeight={1.2}
+  {x}
+  {anchorX}
+  {alignment}
   onmeasure={(_, h) => (labelHeight = h)}
 />
 <!-- Título e intro con lead-in: si el texto tiene dos partes, la primera va en tinta y el resto apagado. -->
@@ -56,7 +65,10 @@
   lineHeight={display ? 1.04 : 1.12}
   letterSpacing={-titleSize * 0.02}
   maxWidth={Math.min(width, display ? 900 : 780)}
+  {x}
   y={titleY}
+  {anchorX}
+  {alignment}
   onmeasure={(_, h) => (titleHeight = h)}
 />
 {#if section.intro}
@@ -65,7 +77,10 @@
     fontSize={introSize}
     lineHeight={1.55}
     maxWidth={Math.min(width, 640)}
+    {x}
     y={introY}
+    {anchorX}
+    {alignment}
     onmeasure={(_, h) => (introHeight = h)}
   />
 {/if}

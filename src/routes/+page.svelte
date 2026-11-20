@@ -1,6 +1,8 @@
 <script lang="ts">
   import LeadIn from '$lib/lead-in.svelte'
   import { ABOUT, CONTACT_SECTION, HERO, HOW_WORK, SITE } from '$lib/content.js'
+  import FounderDialog from '$lib/founder-dialog.svelte'
+  import { openFounder } from '$lib/founder-dialog.svelte.js'
 </script>
 
 <svelte:head>
@@ -47,21 +49,27 @@
   <h2 id="{ABOUT.section.id}-title"><LeadIn text={ABOUT.section.title} /></h2>
   <p><LeadIn text={ABOUT.section.intro} /></p>
   <h3 class="label">{ABOUT.foundersLabel}</h3>
-  <ul class="cards">
-    {#each ABOUT.founders as person (person.name)}
-      <li>
+  <ul class="cards founders">
+    {#each ABOUT.founders as person (person.id)}
+      <li id={person.id}>
+        {#if person.photo}<img class="portrait" src={person.photo} alt="" width="240" height="336" loading="lazy" />{/if}
+        <p class="eyebrow">{ABOUT.card.label}</p>
         <h4>{person.name}</h4>
         <p class="role">{person.role}</p>
-        <p>{person.bio}</p>
+        <p><LeadIn text={person.bio} /></p>
+        <!-- Con JS abre el modal del fundador; la escena le dibuja el foco a su card. -->
+        <a
+          class="more"
+          href="#{person.id}"
+          onclick={(e) => {
+            e.preventDefault()
+            openFounder(person.id)
+          }}>{ABOUT.card.cta(person.name)}</a
+        >
       </li>
     {/each}
   </ul>
-  <h3 class="label">{ABOUT.teamLabel}</h3>
-  <ul class="team">
-    {#each ABOUT.team as person (person.name)}
-      <li><strong>{person.name}</strong> <span>{person.role}</span></li>
-    {/each}
-  </ul>
+  <FounderDialog />
 </section>
 
 <section id={CONTACT_SECTION.section.id} aria-labelledby="{CONTACT_SECTION.section.id}-title">
