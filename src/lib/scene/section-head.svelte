@@ -2,6 +2,7 @@
   import { untrack } from 'svelte'
   import type { Section } from '$lib/content.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
+  import LeadInText from './lead-in-text.svelte'
   import MeasuredText from './measured-text.svelte'
 
   interface Props {
@@ -46,10 +47,11 @@
   lineHeight={1.2}
   onmeasure={(_, h) => (labelHeight = h)}
 />
-<MeasuredText
+<!-- Título e intro con lead-in: si el texto tiene dos partes, la primera va en tinta y el resto apagado. -->
+<LeadInText
   text={section.title}
+  plain="ink"
   fontSize={titleSize}
-  color={PALETTE.ink}
   font={display ? FONT.black : FONT.bold}
   lineHeight={display ? 1.04 : 1.12}
   letterSpacing={-titleSize * 0.02}
@@ -58,10 +60,9 @@
   onmeasure={(_, h) => (titleHeight = h)}
 />
 {#if section.intro}
-  <MeasuredText
+  <LeadInText
     text={section.intro}
     fontSize={introSize}
-    color={PALETTE.muted}
     lineHeight={1.55}
     maxWidth={Math.min(width, 640)}
     y={introY}

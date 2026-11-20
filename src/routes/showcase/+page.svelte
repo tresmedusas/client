@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LeadIn from '$lib/lead-in.svelte'
   import { SHOWCASE } from '$lib/content.js'
 </script>
 
@@ -13,8 +14,8 @@
 <!-- Una sección por escena del deck, en el orden de SHOWCASE_SCENES. -->
 <section id={SHOWCASE.section.id} class="hero" aria-labelledby="{SHOWCASE.section.id}-title">
   <p class="eyebrow">{SHOWCASE.section.label}</p>
-  <h1 id="{SHOWCASE.section.id}-title">{SHOWCASE.section.title}</h1>
-  <p class="lead">{SHOWCASE.section.intro}</p>
+  <h1 id="{SHOWCASE.section.id}-title"><LeadIn text={SHOWCASE.section.title} /></h1>
+  <p class="lead"><LeadIn text={SHOWCASE.section.intro} /></p>
   <ol class="index">
     {#each SHOWCASE.projects as project (project.id)}
       <li><a href="#{project.id}">{project.name}</a></li>
@@ -39,8 +40,8 @@
 
 <section id={SHOWCASE.closing.section.id} aria-labelledby="{SHOWCASE.closing.section.id}-title">
   <p class="eyebrow">{SHOWCASE.closing.section.label}</p>
-  <h2 id="{SHOWCASE.closing.section.id}-title">{SHOWCASE.closing.section.title}</h2>
-  <p>{SHOWCASE.closing.section.intro}</p>
+  <h2 id="{SHOWCASE.closing.section.id}-title"><LeadIn text={SHOWCASE.closing.section.title} /></h2>
+  <p><LeadIn text={SHOWCASE.closing.section.intro} /></p>
   <p class="actions">
     <a class="button" href={SHOWCASE.closing.primary.href} rel="noopener" target="_blank">{SHOWCASE.closing.primary.label}</a>
     <a class="button secondary" href={SHOWCASE.closing.secondary.href}>{SHOWCASE.closing.secondary.label}</a>

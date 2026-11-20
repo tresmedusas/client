@@ -3,7 +3,7 @@
  * como variables CSS para el primer paint, y three y troika no pueden entrar a
  * ese JS. La escena los lee de acá también.
  *
- * Identidad: blanco y negro sobre papel blanco con grano. El color de la
+ * Identidad: blanco y negro sobre papel blanco liso. El color de la
  * marca todavía no está definido, así que el brand es el blanco: superficies
  * de luz (vidrio blanco, el botón principal) sobre el papel, y la tinta para
  * todo lo que se lee. Los nombres `brand*` se mantienen para que, cuando haya

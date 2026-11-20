@@ -1,6 +1,6 @@
 /*
   Hoja de la capa semántica. Es lo que se ve sin JS o sin WebGL 2: una versión
-  sobria y legible de la landing, sin efectos (el vidrio, el grano y el fondo
+  sobria y legible de la landing, sin efectos (el vidrio y el fondo
   animado son de la escena).
 */
 @font-face {
