@@ -25,6 +25,8 @@
     x?: number
     y?: number
     z?: number
+    /** Opacidad del relleno, 0..1 (la galería del showcase la usa para la niebla). @default 1 */
+    opacity?: number
     /** Avisa la caja del texto cuando troika termina de maquetarlo. */
     onmeasure?: (width: number, height: number) => void
   }
@@ -44,6 +46,7 @@
     x = 0,
     y = 0,
     z = 0,
+    opacity = 1,
     onmeasure,
   }: Props = $props()
 
@@ -76,6 +79,14 @@
     node.setAlignment(alignment)
     node.setAnchorX(anchorX)
     node.setAnchorY(anchorY)
+    invalidate()
+  })
+
+  // Aparte: la opacidad cambia en cada frame de una transición, sin re-sincronizar.
+  $effect(() => {
+    // troika la tiene, pero sus tipos no la declaran.
+    ;(node.mesh as typeof node.mesh & { fillOpacity: number }).fillOpacity = opacity
+    node.mesh.visible = opacity > 0.001
     invalidate()
   })
 

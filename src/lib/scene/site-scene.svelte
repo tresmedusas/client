@@ -99,7 +99,7 @@
   {#if home}
     <HomeScene {deck} {width} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {:else}
-    <ShowcaseScene {deck} {width} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
+    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}
 {/key}
 
