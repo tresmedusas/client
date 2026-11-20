@@ -11,10 +11,10 @@
 export const MAX_COLUMN = 1080
 /** Por debajo de este ancho de ventana el layout pasa a una columna. */
 export const COMPACT_BELOW = 760
-/** Alto de la navbar fija más su margen: lo que tapa arriba. */
+/** Alto de la navbar fija más su margen: lo que tapa abajo. */
 export const NAV_SPACE = 88
-/** Margen de abajo de cada escena. */
-export const SCENE_BOTTOM = 40
+/** Margen de arriba de cada escena (la navbar va abajo). */
+export const SCENE_TOP = 40
 
 /** Alto de los botones (píldoras de vidrio). */
 export const CTA_HEIGHT = 52
@@ -93,9 +93,9 @@ export function medusas(width: number, heroHeight: number, compact: boolean): Me
   if (compact) {
     const s = Math.min(1, width / 420)
     return [
-      { x: width - 70 * s, y: -NAV_SPACE - 40 * s, width: 110 * s, height: 86 * s, phase: 0, tint: 'light' },
-      { x: width - 170 * s, y: -NAV_SPACE - 10 * s, width: 70 * s, height: 56 * s, phase: 2.1, tint: 'brand' },
-      { x: width - 30 * s, y: -NAV_SPACE - 150 * s, width: 56 * s, height: 44 * s, phase: 4.2, tint: 'brand' },
+      { x: width - 70 * s, y: -SCENE_TOP - 40 * s, width: 110 * s, height: 86 * s, phase: 0, tint: 'light' },
+      { x: width - 170 * s, y: -SCENE_TOP - 10 * s, width: 70 * s, height: 56 * s, phase: 2.1, tint: 'brand' },
+      { x: width - 30 * s, y: -SCENE_TOP - 150 * s, width: 56 * s, height: 44 * s, phase: 4.2, tint: 'brand' },
     ]
   }
   const s = Math.min(1.15, Math.max(0.75, heroHeight / 820))

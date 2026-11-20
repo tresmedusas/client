@@ -104,8 +104,8 @@ export function scrollAt(layout: PageLayout, spot: PageSpot): number {
 }
 
 /**
- * Área de contenido de una escena: arranca bajo la navbar y termina un margen
- * antes del borde de abajo. Un contenido más alto que el área scrollea adentro
+ * Área de contenido de una escena: arranca un margen (`top`) bajo el borde de
+ * arriba y termina `bottom` antes del de abajo, donde va la navbar. Un contenido más alto que el área scrollea adentro
  * de su escena antes de pasar a la siguiente.
  */
 export interface SceneFrame {
@@ -115,10 +115,10 @@ export interface SceneFrame {
   overflow: number
 }
 
-export function sceneFrame(contentHeight: number, viewport: number, navSpace: number, bottom: number): SceneFrame {
-  const area = viewport - navSpace - bottom
-  if (contentHeight <= area) return { top: navSpace + (area - contentHeight) * 0.5, overflow: 0 }
-  return { top: navSpace + 8, overflow: contentHeight - area + 8 }
+export function sceneFrame(contentHeight: number, viewport: number, top: number, bottom: number): SceneFrame {
+  const area = viewport - top - bottom
+  if (contentHeight <= area) return { top: top + (area - contentHeight) * 0.5, overflow: 0 }
+  return { top: top + 8, overflow: contentHeight - area + 8 }
 }
 
 /** Separación mínima entre dos escenas mientras pasan juntas. */
