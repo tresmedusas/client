@@ -9,16 +9,12 @@
   import vertexShader from './backdrop.vert.glsl'
 
   interface Props {
-    /** Escena que se ve, con decimales en la transición. */
-    depth: number
-    /** Velocidad del deck, escenas/s. */
-    speed: number
     /** Segundos del reloj de la escena. */
     time: number
     medusas: readonly MedusaRect[]
   }
 
-  let { depth, speed, time, medusas }: Props = $props()
+  let { time, medusas }: Props = $props()
 
   const engine = useEngine()
   const { invalidate } = useThrelte()
@@ -28,11 +24,8 @@
 
   const uniforms = {
     u_size: { value: new Vector2() },
-    u_depth: { value: 0 },
-    u_speed: { value: 0 },
     u_time: { value: 0 },
     u_paper: { value: new Color(PALETTE.paper) },
-    u_speck: { value: new Color(PALETTE.brandDeep) },
     u_glow: { value: [new Color(), new Color(), new Color()] },
     u_medusa: { value: [new Vector4(), new Vector4(), new Vector4()] },
   }
@@ -41,8 +34,6 @@
 
   $effect(() => {
     uniforms.u_size.value.set(vw, vh)
-    uniforms.u_depth.value = depth
-    uniforms.u_speed.value = speed
     uniforms.u_time.value = time
     for (let i = 0; i < 3; i++) {
       const m = medusas[i]

@@ -60,7 +60,7 @@
   const onScreen = $derived<MedusaRect[]>(placed.map((m) => ({ x: m.x, y: m.y, width: m.width, height: m.height, color: GLOW[m.tint] })))
 </script>
 
-<Backdrop depth={deck.position} speed={deck.velocity} {time} medusas={onScreen} />
+<Backdrop {time} medusas={onScreen} />
 
 <!-- ── Capas (z) y niveles de captura ───────────────────────────
   -1    fondo: papel liso (fijo a la ventana)
