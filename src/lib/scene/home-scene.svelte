@@ -16,9 +16,11 @@
     year: number
     focusedHref: string | null
     onnavigate: (href: string) => void
+    /** El movimiento continuo está permitido. @default true */
+    motion?: boolean
   }
 
-  let { deck, width, viewportHeight, compact, year, focusedHref, onnavigate }: Props = $props()
+  let { deck, width, viewportHeight, compact, year, focusedHref, onnavigate, motion = true }: Props = $props()
 
   let heights = $state(HOME_SCENES.map(() => 0))
   const common = $derived({ deck, width, viewportHeight })
@@ -31,8 +33,17 @@
 </SceneSlot>
 
 <SceneSlot i={1} {...common} height={heights[1]!}>
-  {#snippet children(d)}
-    <HowWork {width} {viewportHeight} {compact} {d} onmeasure={(h) => (heights[1] = h)} />
+  {#snippet children(d, frame)}
+    <!-- Cuánto subió el contenido (transición más scroll interno): las etapas aparecen según dónde quedan en la ventana. -->
+    <HowWork
+      {width}
+      {viewportHeight}
+      {compact}
+      {d}
+      top={frame.top - deck.shift(1) - deck.innerOf(1)}
+      {motion}
+      onmeasure={(h) => (heights[1] = h)}
+    />
   {/snippet}
 </SceneSlot>
 

@@ -309,3 +309,26 @@ body {
 .lead-in-rest {
   color: var(--color-muted);
 }
+
+/* Cómo trabajamos: centrado (DESIGN.md §6), etapas sin tarjeta y cada una con su figura 3D en reposo. */
+.semantic #como-trabajamos {
+  text-align: center;
+}
+
+.semantic #como-trabajamos .steps li {
+  border: 0;
+  padding: 0;
+}
+
+.semantic #como-trabajamos .steps img {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin: 0 auto 0.75rem;
+  /* Como en la escena: lo que llega al borde del marco se desvanece en 40 px. */
+  mask-image:
+    linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent),
+    linear-gradient(to bottom, transparent, black 40px, black calc(100% - 40px), transparent);
+  mask-composite: intersect;
+}

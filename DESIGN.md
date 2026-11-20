@@ -137,6 +137,15 @@ valores salen de `FIGURE` en `tokens.ts`.
 **Formato**
 - Las figuras estáticas van en SVG en `static/figures/`, con `stroke` y `fill` según `FIGURE`, y `vector-effect="non-scaling-stroke"` para que el grosor no cambie al escalar.
 - Las figuras dibujadas en la escena usan los mismos tokens.
+- Un SVG que la escena carga como textura (`<Image>`) va con el `viewBox` en px CSS y `width`/`height` a 3×, como el logo, y **sin** `vector-effect`: la textura se rasteriza a 3×, y un trazo que no escala quedaría en un tercio de píxel. Así los trazos de 1 y 1,5 px se ven de 1 y 1,5 px.
+
+**Figuras 3D**
+- Cuando una figura tiene que cargar la idea (las etapas de HowWork), va en 3D: vista isométrica ortográfica (azimut 45°, elevación ~32°), armada con el kit de [`scene/figures/kit.ts`](src/lib/scene/figures/kit.ts).
+- Mismas reglas de línea: trazos de 1 px (`LineMaterial`, en px CSS) con la tinta al 22 % ya mezclada con el papel, opacos, para que la profundidad tape las líneas de atrás. El acento, 1.5 px al 60 % o una superficie `brandDeep`.
+- Caras: arriba blanco (`brand`, la luz) y los lados un desvanecido de la tinta (5 % y 9 %). Grilla de puntos en el piso y sombras suaves de tinta hacia el papel.
+- Cada figura se dibuja en su propio render target y entra a la escena como un quad transparente: se funde con su opacidad y los vidrios la refractan. Lo que llega al borde del marco (grilla, sombras) se desvanece en 40 px: nada se corta en seco. Una lente va con el `Glass` de Essentia (preset `lens`), a z 1 como los demás vidrios del contenido.
+- Movimiento lento y en bucle (un vaivén y la acción que cuenta la idea), solo mientras se ve; con movimiento reducido, un cuadro fijo (`REST`).
+- La capa semántica muestra ese cuadro fijo exportado en WebP (`static/figures/`), con fondo transparente.
 
 ## 5. Vidrio, espacio y movimiento
 
@@ -154,6 +163,7 @@ valores salen de `FIGURE` en `tokens.ts`.
 **Movimiento**
 - Las transiciones son del deck. Los componentes acompañan con parallax (`lag(k)`), sin animaciones propias que compitan.
 - `/showcase` es una galería: en vez de subir, las escenas cuelgan a lo largo de un pasillo y el deck mueve la cámara hacia el punto de fuga (`scene/gallery.ts`). Pedido por el usuario (2026-11-16). En reposo cada escena se ve centrada; entre proyectos la cámara gira de una pared a la otra.
+- La excepción son las figuras 3D (§4): un bucle lento que cuenta la idea, solo mientras la figura se ve.
 - Todo respeta `prefers-reduced-motion`.
 
 ## 6. Alineación: centrado por convención

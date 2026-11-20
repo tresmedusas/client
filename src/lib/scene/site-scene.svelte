@@ -97,7 +97,7 @@
 
 {#key page}
   {#if home}
-    <HomeScene {deck} {width} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
+    <HomeScene {deck} {width} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
   {:else}
     <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}

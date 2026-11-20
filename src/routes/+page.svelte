@@ -31,17 +31,12 @@
   <ol class="steps">
     {#each HOW_WORK.steps as step (step.title)}
       <li>
+        <img src={step.figure} alt="" width="640" height="427" loading="lazy" />
         <h3>{step.title}</h3>
-        <p>{step.body}</p>
+        <p><LeadIn text={step.body} /></p>
       </li>
     {/each}
   </ol>
-  <h3 class="label">{HOW_WORK.problemsLabel}</h3>
-  <ul class="chips">
-    {#each HOW_WORK.problems as problem (problem)}
-      <li>{problem}</li>
-    {/each}
-  </ul>
 </section>
 
 <section id={ABOUT.section.id} aria-labelledby="{ABOUT.section.id}-title">
