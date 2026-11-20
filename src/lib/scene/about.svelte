@@ -50,7 +50,7 @@
   const lag = (k: number) => d * viewportHeight * k
 </script>
 
-<SectionHead section={ABOUT.section} {width} {compact} onmeasure={(h) => (headHeight = h)} />
+<SectionHead section={ABOUT.section} {width} {compact} align="center" onmeasure={(h) => (headHeight = h)} />
 
 {#if headHeight > 0}
   {#each ABOUT.founders as person, i (person.id)}

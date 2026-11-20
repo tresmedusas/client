@@ -12,9 +12,9 @@
   /**
    * Card holográfica de un fundador (pedido del usuario, ver DESIGN.md §6):
    * oscura, con la textura de una huella, un holograma que sigue la luz y un
-   * tilt 3D hacia el puntero. El contenido va a la izquierda, como en la
-   * referencia: la foto a sangre, «Fundador» y la cruz arriba, el nombre y la
-   * profesión abajo, y al pie «Conocer a …», que abre su modal.
+   * tilt 3D hacia el puntero. La foto va a sangre y el contenido, centrado
+   * (DESIGN.md §6): «Fundador» arriba, el nombre y la profesión abajo, y al
+   * pie «Conocer a …», que abre su modal.
    *
    * El texto se dibuja una vez en una textura (`content`) y la card entera es
    * un solo quad: así se inclina con perspectiva sin que sus partes se
@@ -40,7 +40,7 @@
   /** Margen del quad alrededor de la card, para la sombra y el anillo de foco. */
   const MARGIN = 28
   const RADIUS = 20
-  /** Borde interior del contenido (alinea «Fundador» con la cruz). */
+  /** Borde interior del contenido: el pie y el ancho máximo del texto. */
   const INSET = 23
   /** Inclinación máxima, en radianes (~11°). */
   const MAX_TILT = 0.2
@@ -62,14 +62,13 @@
 
   const nodes = untrack(() => {
     const cta = ABOUT.card.cta(person.name).toUpperCase()
-    const footer = { fontSize: 10.5, font: FONT.bold, letterSpacing: 1.8, lineHeight: 1.2, anchorY: 1, dpr }
+    const center = { anchorX: 0.5, alignment: 'center', anchorY: 1 } as const
     return {
-      label: new TextNode({ text: ABOUT.card.label, fontSize: 18, color: PALETTE.white, font: FONT.bold, letterSpacing: -0.2, anchorY: 0.5, dpr }),
+      label: new TextNode({ text: ABOUT.card.label, fontSize: 18, color: PALETTE.white, font: FONT.bold, letterSpacing: -0.2, anchorX: 0.5, anchorY: 0.5, dpr }),
       initials: new TextNode({ text: initials(person.name), fontSize: 30, color: PALETTE.white, font: FONT.bold, letterSpacing: 1, anchorX: 0.5, anchorY: 0.5, dpr }),
-      name: new TextNode({ text: person.name, fontSize: 26, color: PALETTE.white, font: FONT.regular, lineHeight: 1.15, letterSpacing: -0.3, anchorY: 1, dpr }),
-      role: new TextNode({ text: person.role, fontSize: 13, color: dim(0.4), font: FONT.regular, lineHeight: 1.35, anchorY: 1, dpr }),
-      cta: new TextNode({ text: cta, color: dim(0.35), ...footer }),
-      index: new TextNode({ text: String(index).padStart(3, '0'), color: dim(0.5), anchorX: 1, ...footer }),
+      name: new TextNode({ text: person.name, fontSize: 26, color: PALETTE.white, font: FONT.regular, lineHeight: 1.15, letterSpacing: -0.3, ...center, dpr }),
+      role: new TextNode({ text: person.role, fontSize: 13, color: dim(0.4), font: FONT.regular, lineHeight: 1.35, ...center, dpr }),
+      cta: new TextNode({ text: cta, color: dim(0.35), fontSize: 10.5, font: FONT.bold, letterSpacing: 1.8, lineHeight: 1.2, ...center, dpr }),
     }
   })
   const all = Object.values(nodes)
@@ -89,12 +88,11 @@
     const nameBottom = roleBottom + heightOf(nodes.role) + 6
     nodes.initials.setFontSize(Math.round(width * 0.28))
 
-    nodes.label.setPosition(INSET, -30, 0)
+    nodes.label.setPosition(width / 2, -30, 0)
     nodes.initials.setPosition(width / 2, -height / 2, 0)
-    nodes.name.setPosition(INSET, nameBottom, 0)
-    nodes.role.setPosition(INSET, roleBottom, 0)
-    nodes.cta.setPosition(INSET, footerY, 0)
-    nodes.index.setPosition(width - INSET, footerY, 0)
+    nodes.name.setPosition(width / 2, nameBottom, 0)
+    nodes.role.setPosition(width / 2, roleBottom, 0)
+    nodes.cta.setPosition(width / 2, footerY, 0)
 
     const previous = renderer.getRenderTarget()
     const clearColor = renderer.getClearColor(new Color())

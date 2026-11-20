@@ -173,7 +173,7 @@ El contenido de todo componente va **centrado**:
 
 | Componente | Alineación | Pedido |
 | ---------- | ---------- | ------ |
-| Card de fundador (`scene/founder-card.svelte`) | El contenido de cada card a la izquierda, como la referencia holográfica; las cards van centradas como bloque. | 2026-11-19 |
+| — | Ninguna por ahora. | — |
 
 ## Checklist de un componente
 
