@@ -184,7 +184,7 @@ El contenido de todo componente va **centrado**:
 
 | Componente | Alineación | Pedido |
 | ---------- | ---------- | ------ |
-| — | Ninguna por ahora. | — |
+| Pie (`scene/footer.svelte`, `footer` del layout) | El logo va centrado. La franja de abajo, en escritorio, a los costados: «Powered by Essentia» a la izquierda; copyright y términos a la derecha. En una columna vuelve a centrado y apilado. | 2026-11-23, con el rediseño del pie. |
 
 ## Checklist de un componente
 
