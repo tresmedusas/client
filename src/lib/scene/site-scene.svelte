@@ -2,6 +2,7 @@
   import { T, useTask } from '@threlte/core'
   import { useEngine } from 'essentia-core'
   import { Glass } from 'essentia-crystal'
+  import type { Page } from '$lib/content.js'
   import { PALETTE } from '$lib/tokens.js'
   import type { Deck } from './deck.svelte.js'
   import HomeScene from './home-scene.svelte'
@@ -11,11 +12,12 @@
   import EdgeWarp from './edge-warp.svelte'
   import SceneDots from './scene-dots.svelte'
   import ShowcaseScene from './showcase-scene.svelte'
+  import TermsScene from './terms-scene.svelte'
 
   interface Props {
     deck: Deck
     /** Qué página se dibuja. */
-    page: 'home' | 'showcase'
+    page: Page
     /** El movimiento continuo (medusas, haces, nieve) está permitido. */
     motion: boolean
     focusedHref: string | null
@@ -97,9 +99,11 @@
 
 {#key page}
   {#if home}
-    <HomeScene {deck} {width} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
-  {:else}
+    <HomeScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
+  {:else if page === 'showcase'}
     <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
+  {:else}
+    <TermsScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}
 {/key}
 

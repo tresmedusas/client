@@ -34,13 +34,15 @@
 body {
   margin: 0;
   background: var(--color-paper);
+  /* El pie sangra a todo el ancho (100vw cuenta la barra de scroll). */
+  overflow-x: clip;
 }
 
 .semantic {
   box-sizing: border-box;
   max-width: 52rem;
   margin: 0 auto;
-  padding: 1.25rem 1rem 3rem;
+  padding: 1.25rem 1rem 0;
 }
 
 /* La navbar de la escena: una pastilla clara centrada que envuelve el imagotipo y los links. */
@@ -93,11 +95,6 @@ body {
   display: block;
   height: 1.4rem;
   width: auto;
-}
-
-.semantic .brand-name {
-  font-weight: 700;
-  color: var(--color-ink);
 }
 
 .semantic section {
@@ -273,14 +270,94 @@ body {
   border-radius: 1rem;
 }
 
-.semantic footer {
-  margin-top: 3rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--color-muted) 30%, transparent);
+/*
+  Pie: dos franjas a todo el ancho (la blanca, separada del papel con tinta al
+  8 %, y la de abajo un punto más gris), con el contenido en la columna. El
+  logo va centrado; la franja de abajo, en escritorio, a los costados (pedido
+  por el usuario, DESIGN.md §6), y en una columna, apilada y centrada.
+*/
+.semantic .site-footer {
+  margin: 4rem calc(50% - 50vw) 0;
+  background: var(--color-brand);
+  border-top: 1px solid rgb(17 17 17 / 0.08);
 }
 
-.semantic footer p {
-  margin: 0 0 0.25rem;
+.semantic .site-footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  /* El contenido en la columna de la capa (52rem), las franjas a todo el ancho. */
+  padding: 0 max(1rem, calc((100% - 52rem) / 2));
+}
+
+.semantic .site-footer > .footer-main {
+  justify-content: center;
+  min-height: 140px;
+}
+
+.semantic .footer-legal {
+  min-height: 64px;
+  /* La tinta al 2 % sobre el blanco. */
+  background: color-mix(in srgb, var(--color-ink) 2%, var(--color-brand));
+}
+
+.semantic .footer-legal .legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1.5rem;
+}
+
+.semantic .footer-legal a {
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.semantic .footer-legal a:hover,
+.semantic .footer-legal a[aria-current='page'] {
+  text-decoration: underline;
+}
+
+.semantic .footer-brand img {
+  display: block;
+  height: 32px;
+  width: auto;
+  border-radius: 0;
+}
+
+.semantic .footer-legal p {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.semantic .footer-legal .powered {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.semantic .footer-legal .powered img {
+  display: block;
+  height: 18px;
+  width: auto;
+  border-radius: 0;
+}
+
+@media (max-width: 759px) {
+  .semantic .site-footer > div {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding-block: 1.5rem;
+  }
+
+  /* Como la escena: el copyright y los términos arriba, Essentia abajo. */
+  .semantic .site-footer > .footer-legal {
+    flex-direction: column-reverse;
+  }
 }
 
 /*

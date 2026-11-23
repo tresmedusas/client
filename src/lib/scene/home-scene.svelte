@@ -11,6 +11,7 @@
   interface Props {
     deck: Deck
     width: number
+    viewportWidth: number
     viewportHeight: number
     compact: boolean
     year: number
@@ -20,7 +21,7 @@
     motion?: boolean
   }
 
-  let { deck, width, viewportHeight, compact, year, focusedHref, onnavigate, motion = true }: Props = $props()
+  let { deck, width, viewportWidth, viewportHeight, compact, year, focusedHref, onnavigate, motion = true }: Props = $props()
 
   let heights = $state(HOME_SCENES.map(() => 0))
   const common = $derived({ deck, width, viewportHeight })
@@ -59,6 +60,7 @@
       section={CONTACT_SECTION.section}
       links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary, CONTACT_SECTION.tertiary]}
       {width}
+      {viewportWidth}
       {viewportHeight}
       {compact}
       {d}
