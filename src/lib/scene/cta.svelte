@@ -44,11 +44,16 @@
     <!-- Anillo de foco del teclado: un halo de tinta detrás del vidrio, que lo refracta en el canto. -->
     <Rect width={width + 10} height={HEIGHT + 10} radius={(HEIGHT + 10) / 2} color={PALETTE.ink} opacity={0.3} x={x + width / 2} y={y - HEIGHT / 2} z={0.5} />
   {/if}
+  {#if !primary}
+    <!-- Borde de 1 px de tinta: sobre el papel blanco, el vidrio limpio solo no se ve (DESIGN.md §1). -->
+    <Rect width={width + 2} height={HEIGHT + 2} radius={(HEIGHT + 2) / 2} color={PALETTE.ink} opacity={0.12} x={x + width / 2} y={y - HEIGHT / 2} z={0.3} />
+    <Rect width={width} height={HEIGHT} radius={HEIGHT / 2} color={PALETTE.paper} x={x + width / 2} y={y - HEIGHT / 2} z={0.4} />
+  {/if}
   <Glass
     preset="pill"
     width={width}
     height={HEIGHT}
-    tint={primary ? PALETTE.brand : '#ffffff'}
+    tint={PALETTE.brand}
     tintOpacity={primary ? 0.9 : 0.06}
     brightness={focused ? 0.12 : primary ? 0.06 : 0}
     rim={focused ? 0.9 : primary ? 0.35 : 0.25}

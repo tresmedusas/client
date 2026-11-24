@@ -11,12 +11,14 @@
  * Lo marcado con TODO es provisorio: placeholders hasta tener el contenido real.
  */
 
-/** Contacto. TODO: dominio, página de empresa y agenda reales. */
+/** Contacto. TODO: dominio, página de empresa y número de WhatsApp reales. */
 export const CONTACT = {
   email: 'hola@tresmedusas.com',
   linkedin: 'https://www.linkedin.com/company/tres-medusas',
-  /** Agenda provisoria: la experiencia de reunión todavía no está definida. */
-  calendly: 'https://calendly.com/tres-medusas',
+  /** Número con código de país, solo dígitos (formato de wa.me). TODO: el real. */
+  whatsapp: '10000000000',
+  /** Mensaje con el que se abre la conversación. */
+  whatsappMessage: 'Hola, quiero contarles un proceso que hoy hacemos a mano.',
 } as const
 
 export const SITE = {
@@ -46,7 +48,14 @@ export interface Item {
   body: string
 }
 
-const MEETING: Link = { label: 'Agenda una reunión', href: CONTACT.calendly }
+/**
+ * El contacto principal: no hay agenda, se escribe por WhatsApp y desde ahí se
+ * coordina la llamada.
+ */
+const WRITE_US: Link = {
+  label: 'Escríbenos por WhatsApp',
+  href: `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappMessage)}`,
+}
 
 /** Navegación fija. Las anclas de la home funcionan también desde otra página. */
 export const NAV: readonly Link[] = [
@@ -65,7 +74,7 @@ export const HERO = {
   // Frase de posicionamiento vigente, aún por decidir.
   title: 'Resolvemos operaciones manuales y procesos fragmentados.',
   lead: 'Construimos el software y las integraciones que conectan lo que hoy se hace a mano, para que tu equipo deje de copiar datos entre sistemas.',
-  primary: MEETING,
+  primary: WRITE_US,
   secondary: { label: 'Cómo trabajamos', href: '#como-trabajamos' } satisfies Link,
   hint: 'Desliza para seguir',
 } as const
@@ -150,10 +159,10 @@ export const CONTACT_SECTION = {
     id: 'contacto',
     index: '03',
     label: 'Contacto',
-    title: 'Agenda una reunión.',
-    intro: 'Cuéntanos qué proceso te quita tiempo. En una llamada corta vemos si podemos ayudarte.',
+    title: 'Cuéntanos tu proceso.',
+    intro: 'Una llamada corta basta. Escríbenos qué se hace hoy a mano y vemos si podemos ayudarte.',
   } satisfies Section,
-  primary: MEETING,
+  primary: WRITE_US,
   secondary: { label: CONTACT.email, href: `mailto:${CONTACT.email}` } satisfies Link,
   tertiary: { label: 'LinkedIn', href: CONTACT.linkedin } satisfies Link,
 } as const
@@ -222,7 +231,7 @@ export const SHOWCASE = {
       title: '¿El próximo es el tuyo?',
       intro: 'Cuéntanos qué proceso te quita tiempo.',
     } satisfies Section,
-    primary: MEETING,
+    primary: WRITE_US,
     secondary: { label: 'Volver al inicio', href: '/' } satisfies Link,
   },
 } as const

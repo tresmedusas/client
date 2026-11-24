@@ -76,4 +76,8 @@ describe('flow', () => {
   it('sin cajas no hay filas', () => {
     expect(flow([], 250, 10).rows).toBe(0)
   })
+
+  it('centrado: cada fila queda al medio de la columna', () => {
+    expect(flow([100, 100, 100], 250, 10, 'center')).toEqual({ x: [20, 130, 75], row: [0, 0, 1], rows: 2 })
+  })
 })

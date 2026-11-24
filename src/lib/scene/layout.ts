@@ -129,10 +129,18 @@ export function bob(medusa: Medusa, time: number): { dx: number; dy: number } {
  * Acomoda en filas cajas de ancho `widths` dentro de `maxWidth`, como texto:
  * cada una a la derecha de la anterior y, si no entra, en la fila siguiente.
  * Devuelve el borde izquierdo y la fila de cada caja, y la cantidad de filas.
+ * Con `align: 'center'` cada fila queda centrada en `maxWidth` (DESIGN.md §6).
  */
-export function flow(widths: readonly number[], maxWidth: number, gap: number): { x: number[]; row: number[]; rows: number } {
+export function flow(
+  widths: readonly number[],
+  maxWidth: number,
+  gap: number,
+  align: 'start' | 'center' = 'start',
+): { x: number[]; row: number[]; rows: number } {
   const x: number[] = []
   const row: number[] = []
+  /** Ancho ocupado por cada fila, para centrarla. */
+  const used: number[] = []
   let cursor = 0
   let line = 0
   widths.forEach((w, i) => {
@@ -142,7 +150,9 @@ export function flow(widths: readonly number[], maxWidth: number, gap: number): 
     }
     x.push(cursor)
     row.push(line)
+    used[line] = cursor + w
     cursor += w + gap
   })
+  if (align === 'center') x.forEach((left, i) => (x[i] = left + (maxWidth - used[row[i]!]!) / 2))
   return { x, row, rows: widths.length === 0 ? 0 : line + 1 }
 }
