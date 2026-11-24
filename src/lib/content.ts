@@ -67,17 +67,14 @@ export const NAV: readonly Link[] = [
 
 // ── Home ─────────────────────────────────────────────────────────
 
-/** Hero provisorio: se trabaja aparte. */
+/** Hero: la marca, qué hacemos y un botón que lleva a cómo trabajamos. Va a la izquierda, con el logo animado a la derecha. */
 export const HERO = {
   id: 'inicio',
-  /**
-   * Quiénes somos y qué hacemos, con lead-in: el nombre en tinta y lo que
-   * hacemos en gris. El salto de línea fija el corte entre las dos partes.
-   */
-  title: `${SITE.name}.\nSoluciones a medida.`,
-  /** Qué resolvemos (sale de `SITE.description`): el problema, no la tecnología. */
-  lead: 'Resolvemos operaciones manuales y procesos fragmentados.',
-  primary: WRITE_US,
+  /** La marca, escrita como en el logo. */
+  title: 'tresmedusas',
+  lead: 'Encontramos la solución a tu problema.',
+  /** Lleva a la escena siguiente; el mismo href que en `NAV`, para que el foco del teclado encuentre el botón. */
+  primary: { label: 'Conocer más', href: '/#como-trabajamos' } satisfies Link,
 } as const
 
 export const HOW_WORK = {

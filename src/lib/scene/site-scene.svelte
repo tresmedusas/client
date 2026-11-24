@@ -1,10 +1,10 @@
 <script lang="ts">
   import { useTask } from '@threlte/core'
   import { useEngine } from 'essentia-core'
-  import { HERO, type Page } from '$lib/content.js'
+  import type { Page } from '$lib/content.js'
   import type { Deck } from './deck.svelte.js'
   import HomeScene from './home-scene.svelte'
-  import { bob, columnWidth, heroLayout, isCompact, type MedusaRect } from './layout.js'
+  import { columnWidth, isCompact } from './layout.js'
   import Nav from './nav.svelte'
   import Backdrop from './backdrop.svelte'
   import EdgeWarp from './edge-warp.svelte'
@@ -54,24 +54,12 @@
     const t = Math.min(1, Math.max(0, (deck.position - 0.3) / 0.5))
     return t * t * (3 - 2 * t)
   })
-
-  // ── Medusas del hero ───────────────────────────────────────────
-  // Impresas en el papel (las dibuja el fondo) debajo del texto del hero.
-  // Cada una flota a su ritmo y se va con el hero según su distancia: la
-  // principal, un poco más rápido que él (está más cerca). En el showcase no hay.
-  const medusas = $derived.by<MedusaRect[]>(() => {
-    if (!home || deck.position >= 1.2) return []
-    return heroLayout(width, vh, compact, HERO.title).medusas.map((m) => {
-      const { dx, dy } = bob(m.height, time + m.phase)
-      return { ...m, x: m.x + dx, y: m.y + dy + deck.shift(0) * m.parallax }
-    })
-  })
 </script>
 
-<Backdrop {time} {medusas} />
+<Backdrop />
 
 <!-- ── Capas (z) y niveles de captura ───────────────────────────
-  -1    fondo: papel liso y las medusas del hero (fijo a la ventana)
+  -1    fondo: papel liso (fijo a la ventana)
    0    texto, líneas y placas del contenido
    1    vidrios del contenido: botones, paneles y lentes → nivel 1
    1.01 texto sobre los paneles

@@ -34,6 +34,7 @@ cambie solo `tokens.ts`.
   - Nunca un bloque blanco plano sin borde, porque desaparece.
 - **Sin color.** No uses hex de color en un componente, ni siquiera "temporal". Si hace falta un acento, es tinta: un trazo más grueso, un peso mayor o una superficie `brandDeep`.
   - Excepción pedida por el usuario (2026-11-19): el haz de luz del modal de los fundadores (`light-beam.ts`) usa el espectro. El color sale solo de ese shader, nunca de un hex en un componente, y no se extiende a otros componentes. (La card del fundador ya no lleva holograma ni huella, desde 2026-11-23.)
+  - Excepción pedida por el usuario (2026-11-23): el botón del hero (`scene/prism-cta.svelte`) es una píldora `brandDeep` con una lente circular a la izquierda (el mismo vidrio oscurecido al 78 %, con una flecha en `white`) y el label en `white` al lado; la lente lleva un aro de vidrio por el que se ven tres haces de luz iridiscentes (`scene/prism-beams.glsl` y `scene/prism-ring.frag.glsl`): cada haz deambula por su cuenta, con su propio rango de colores, lleva el espectro a lo ancho con dispersión, bandas finas y núcleo blanco, y sus colores cambian al azar; el aro hace de lente (aumento, desvío y aberración). Los haces solo se ven en el aro, que va pegado al borde de la lente (la píldora no tiene aro), y la luz no sale de la lente. Con el puntero encima solo brillan más los haces. Los valores salen del banco de pruebas que eligió el usuario. El espectro sale solo de esos shaders; en la capa semántica el botón es `brandDeep` liso, con la lente y la flecha. Los mismos haces, con sus propios valores del banco de pruebas (cada shader define los suyos antes de incluir `prism-beams.glsl`) y vistos por un canto de vidrio de 120 px que se desvanece entero hacia abajo, forman una franja arriba de la ventana del hero, a todo el ancho y en el 65 % de su alto, desvanecida hacia abajo y detrás del texto; en todo el hero hay un grano fino y suave sobre el papel (tinta `ink` al 3.5 %) que reacciona a esa luz (donde llega, el grano se tiñe de su color, la desgrana y se marca más) y que se difumina en el último 20 % de abajo hasta el papel liso, para fundirse con lo que sigue (`scene/hero-edge.svelte`, `scene/prism-edge.frag.glsl`; pedido del usuario, 2026-11-23); ahí no hay vidrio oscuro detrás: la luz pinta su color directo sobre el papel (pedido del usuario, 2026-11-23).
 
 ## 2. Tipografía
 
@@ -164,6 +165,7 @@ valores salen de `FIGURE` en `tokens.ts`.
 - Las transiciones son del deck. Los componentes acompañan con parallax (`lag(k)`), sin animaciones propias que compitan.
 - `/showcase` es una galería: en vez de subir, las escenas cuelgan a lo largo de un pasillo y el deck mueve la cámara hacia el punto de fuga (`scene/gallery.ts`). Pedido por el usuario (2026-11-16). En reposo cada escena se ve centrada; entre proyectos la cámara gira de una pared a la otra.
 - La excepción son las figuras 3D (§4): un bucle lento que cuenta la idea, solo mientras la figura se ve.
+- El logo del hero (`static/brand/medusa-s.svg`) trae su propia animación, y los haces de luz de su botón y de la franja de arriba se mueven: todo corre con el reloj del hero, solo mientras se ve.
 - Todo respeta `prefers-reduced-motion`.
 
 ## 6. Alineación: centrado por convención
@@ -185,6 +187,7 @@ El contenido de todo componente va **centrado**:
 | Componente | Alineación | Pedido |
 | ---------- | ---------- | ------ |
 | Pie (`scene/footer.svelte`, `footer` del layout) | El logo va centrado. La franja de abajo, en escritorio, a los costados: «Powered by Essentia» a la izquierda; copyright y términos a la derecha. En una columna vuelve a centrado y apilado. | 2026-11-23, con el rediseño del pie. |
+| Botón del hero (`scene/prism-cta.svelte`) | La lente con la flecha a la izquierda y el label al lado, no centrado. | Usuario, 2026-11-23: variante «Lente» con icono y aro. |
 
 ## Checklist de un componente
 
