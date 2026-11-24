@@ -348,3 +348,17 @@ body {
     linear-gradient(to bottom, transparent, black 40px, black calc(100% - 40px), transparent);
   mask-composite: intersect;
 }
+
+/* Contacto: centrado (DESIGN.md §6). */
+.semantic #contacto {
+  text-align: center;
+}
+
+.semantic #contacto p {
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+.semantic #contacto .actions {
+  justify-content: center;
+}

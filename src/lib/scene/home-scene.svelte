@@ -58,6 +58,7 @@
     <Closing
       section={CONTACT_SECTION.section}
       links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary, CONTACT_SECTION.tertiary]}
+      align="center"
       {width}
       {viewportHeight}
       {compact}
