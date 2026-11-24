@@ -1,8 +1,9 @@
 <script lang="ts">
   // Navbar de burbujas: sin barra. Cada link es una gota de vidrio con su
-  // ícono; la del activo se ensancha en una pastilla que muestra el texto. Con el
-  // puntero cerca, las gotas crecen como un dock. El logo es otra gota más, que
-  // aparece al dejar el hero.
+  // ícono; la del activo se ensancha en una pastilla que muestra el texto. El
+  // logo es otra gota más, que aparece al dejar el hero. Con el puntero encima,
+  // la gota se hincha en su lugar y se corre un poco hacia él, sin mover a las
+  // vecinas.
   import { T, useTask } from '@threlte/core'
   import { useCursor } from '@threlte/extras'
   import { prefersReducedMotion } from 'svelte/motion'
@@ -36,10 +37,10 @@
   const ICON_GAP = 8
   const FONT_SIZE = 13
   const LOGO_HEIGHT = 26
-  /** Cuánto crece una gota con el puntero encima. */
-  const LIFT = 0.16
-  /** Alcance del dock: a esta distancia del puntero la gota ya no crece. */
-  const REACH = 110
+  /** Cuánto se hincha la gota con el puntero encima (cabe en el aire entre gotas). */
+  const SWELL = 0.08
+  /** Cuánto se corre la gota hacia el puntero, en px. */
+  const PULL = 3
 
   const links = $derived(navLinks(compact))
 
@@ -76,17 +77,27 @@
   let labelWidths = $state<Record<string, number>>({})
   const measured = $derived(links.every((l) => labelWidths[l.href] !== undefined))
 
-  // Por gota: cuánto se abrió en pastilla (activo) y cuánto creció (dock).
+  // Por gota: cuánto se abrió en pastilla (activo), cuánto se hinchó (hover) y
+  // hacia dónde se corrió (−1 izquierda, 1 derecha).
   const grows = new Map<string, Osc>()
   const lifts = new Map<string, Osc>()
+  const pulls = new Map<string, Osc>()
   const logoO = osc(0)
   const growOf = (href: string) => grows.get(href) ?? grows.set(href, osc(href === active ? 1 : 0)).get(href)!
   const liftOf = (href: string) => lifts.get(href) ?? lifts.set(href, osc(0)).get(href)!
+  const pullOf = (href: string) => pulls.get(href) ?? pulls.set(href, osc(0)).get(href)!
 
   /** Lo que se dibuja: se copia de los resortes en cada frame. */
-  let frame = $state<{ grow: Record<string, number>; lift: Record<string, number>; wob: Record<string, number>; logo: number }>({
+  let frame = $state<{
+    grow: Record<string, number>
+    lift: Record<string, number>
+    pull: Record<string, number>
+    wob: Record<string, number>
+    logo: number
+  }>({
     grow: {},
     lift: {},
+    pull: {},
     wob: {},
     logo: 0,
   })
@@ -94,7 +105,7 @@
   let animating = $state(false)
   let primed = false
 
-  /** Dónde está el puntero (x de la escena), si está cerca de la barra. */
+  /** Dónde está el puntero (x de la escena), si está a la altura de las gotas. */
   let pointerX = $state<number | null>(null)
   const y = $derived(-engine.viewport.height / 2 + NAV_MARGIN + DROP / 2 + 6)
 
@@ -102,7 +113,7 @@
     const move = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return
       const p = scenePointer(e, engine.viewport)
-      pointerX = Math.abs(p.y - y) < DROP ? p.x : null
+      pointerX = Math.abs(p.y - y) < DROP / 2 ? p.x : null
     }
     const leave = () => (pointerX = null)
     window.addEventListener('pointermove', move)
@@ -115,13 +126,17 @@
 
   const expandedWidth = (href: string) => PAD + ICON + ICON_GAP + (labelWidths[href] ?? 0) + PAD
 
-  /** Ancho y alto de cada gota y dónde va su centro. */
+  /**
+   * Ancho y alto de cada gota y dónde va su centro. El hover no entra acá: la
+   * gota se hincha sobre su lugar (`s`, `dx`) y la fila no se mueve.
+   */
   const layout = $derived.by(() => {
     const l = clamp01(frame.logo)
     const sizes = links.map((link) => {
       const g = frame.grow[link.href] ?? 0
-      const s = 1 + LIFT * (frame.lift[link.href] ?? 0)
-      return { w: lerp(DROP, expandedWidth(link.href), g) * s, h: DROP * s, g }
+      const s = 1 + SWELL * (frame.lift[link.href] ?? 0)
+      const dx = PULL * (frame.pull[link.href] ?? 0)
+      return { w: lerp(DROP, expandedWidth(link.href), g), h: DROP, g, s, dx }
     })
     const logoSize = DROP * l
     const total = sizes.reduce((sum, s) => sum + s.w, 0) + GAP * (links.length - 1) + (logoSize + GAP) * l
@@ -136,30 +151,36 @@
     return { drops, logo: { x: logoX, size: logoSize, scale: l } }
   })
 
-  // Los objetivos: el activo se abre, el dock crece cerca del puntero.
+  // Los objetivos: el activo se abre; la gota bajo el puntero se hincha y se
+  // corre hacia él.
   const goals = $derived.by(() => {
     const grow: Record<string, number> = {}
     const lift: Record<string, number> = {}
+    const pull: Record<string, number> = {}
     links.forEach((link, i) => {
       grow[link.href] = link.href === active ? 1 : 0
-      const cx = layout.drops[i]?.x ?? 0
-      lift[link.href] = pointerX === null ? 0 : smoothstep(1 - Math.abs(pointerX - cx) / REACH)
+      const drop = layout.drops[i]
+      const over = pointerX !== null && drop !== undefined && Math.abs(pointerX - drop.x) <= drop.w / 2
+      lift[link.href] = over ? 1 : 0
+      pull[link.href] = over ? Math.max(-1, Math.min(1, (pointerX! - drop!.x) / (drop!.w / 2))) : 0
     })
-    return { grow, lift, logo }
+    return { grow, lift, pull, logo }
   })
 
   function sync() {
     const grow: Record<string, number> = {}
     const lift: Record<string, number> = {}
+    const pull: Record<string, number> = {}
     const wob: Record<string, number> = {}
     for (const link of links) {
       const g = growOf(link.href)
-      const lf = liftOf(link.href)
       grow[link.href] = g.x
-      lift[link.href] = lf.x
-      wob[link.href] = Math.min(0.08, Math.abs(g.v) * 0.035 + Math.abs(lf.v) * 0.02)
+      lift[link.href] = liftOf(link.href).x
+      pull[link.href] = pullOf(link.href).x
+      // Solo ondula al abrirse o cerrarse; el hover es un gesto chico y quieto.
+      wob[link.href] = Math.min(0.08, Math.abs(g.v) * 0.035)
     }
-    frame = { grow, lift, wob, logo: logoO.x }
+    frame = { grow, lift, pull, wob, logo: logoO.x }
   }
 
   $effect(() => {
@@ -170,6 +191,7 @@
       for (const link of links) {
         snap(growOf(link.href), g.grow[link.href] ?? 0)
         snap(liftOf(link.href), prefersReducedMotion.current ? 0 : (g.lift[link.href] ?? 0))
+        snap(pullOf(link.href), prefersReducedMotion.current ? 0 : (g.pull[link.href] ?? 0))
       }
       snap(logoO, g.logo)
       sync()
@@ -186,12 +208,16 @@
       for (const link of links) {
         const grow = growOf(link.href)
         const lift = liftOf(link.href)
+        const pull = pullOf(link.href)
         const gt = g.grow[link.href] ?? 0
         const lt = g.lift[link.href] ?? 0
+        const pt = g.pull[link.href] ?? 0
         // Se abre con rebote, se cierra sin.
         stepOsc(grow, gt, gt > grow.x ? 12 : 16, gt > grow.x ? 0.5 : 0.9, dt)
-        stepOsc(lift, lt, 20, 0.55, dt)
-        done &&= still(grow, gt, 0.002) && still(lift, lt, 0.002)
+        // El hover: firme, casi sin pasarse, para que no tiemble.
+        stepOsc(lift, lt, 18, 0.8, dt)
+        stepOsc(pull, pt, 14, 0.9, dt)
+        done &&= still(grow, gt, 0.002) && still(lift, lt, 0.002) && still(pull, pt, 0.002)
       }
       stepOsc(logoO, g.logo, 11, 0.45, dt)
       done &&= still(logoO, g.logo, 0.002)
@@ -231,10 +257,10 @@
     {@const wob = frame.wob[link.href] ?? 0}
     <Glass
       {...NAV_GLASS}
-      width={drop.w}
-      height={drop.h}
-      radius={drop.h / 2}
-      x={drop.x}
+      width={drop.w + drop.h * (drop.s - 1)}
+      height={drop.h * drop.s}
+      radius={(drop.h * drop.s) / 2}
+      x={drop.x + drop.dx}
       {y}
       z={10}
       wobble={wob > 0.002 ? { amplitude: wob, frequency: 0.6, phase: phase + i * 1.3 } : null}
@@ -251,8 +277,8 @@
     <T.Group onclick={() => choose(link.href)} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
       <Rect width={drop.w} height={drop.h} radius={drop.h / 2} color={PALETTE.ink} opacity={0} x={drop.x} {y} z={10.04} />
     </T.Group>
-    {@const iconX = lerp(drop.x, drop.x - drop.w / 2 + PAD + ICON / 2, drop.g)}
-    {@const iconSize = ICON * (drop.h / DROP)}
+    {@const iconX = lerp(drop.x, drop.x - drop.w / 2 + PAD + ICON / 2, drop.g) + drop.dx}
+    {@const iconSize = ICON * drop.s}
     <Image src={navIcon(link.href)} width={iconSize} height={iconSize} opacity={1 - drop.g} x={iconX} {y} z={10.05} />
     <Image src={navIcon(link.href, true)} width={iconSize} height={iconSize} opacity={drop.g} x={iconX} {y} z={10.05} />
   {/if}
@@ -265,7 +291,7 @@
       lineHeight={1.2}
       anchorX={0}
       anchorY={0.5}
-      x={drop ? drop.x - drop.w / 2 + PAD + ICON + ICON_GAP : 0}
+      x={drop ? drop.x + drop.dx - drop.w / 2 + PAD + ICON + ICON_GAP : 0}
       {y}
       z={10.05}
       opacity={drop ? smoothstep((drop.g - 0.55) / 0.45) : 0}
