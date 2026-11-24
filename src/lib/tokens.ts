@@ -52,6 +52,8 @@ export const FONT_FAMILY = "Lato, system-ui, -apple-system, 'Segoe UI', sans-ser
 
 /** Logo provisorio: imagotipo en negro para el papel, isotipo blanco para las superficies oscuras. */
 export const LOGO = {
+  /** Isotipo en negro (#1C1C1C), el de la navbar; recortado a su dibujo (viewBox 366 × 416). */
+  isotipoNegro: { src: '/brand/isotipo-negro.svg', aspect: 366 / 416 },
   /** Imagotipo a 4× (viewBox 345 × 88): la textura sale nítida con DPR 2. */
   imagotipo: { src: '/brand/imagotipo-negro.svg', aspect: 345 / 88 },
   isotipo: { src: '/brand/isotipo.svg', aspect: 60 / 79 },

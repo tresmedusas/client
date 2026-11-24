@@ -46,6 +46,15 @@
   useTask((delta) => (time += delta), { running: () => running })
   useTask((delta) => deck.advance(delta), { running: () => deck.moving })
 
+  // ── Logo de la navbar ──────────────────────────────────────────
+  // Mientras se ve el hero, que ya presenta la marca, la navbar va sin logo:
+  // aparece a medida que el hero se va (posición 0.3 → 0.8).
+  const navLogo = $derived.by(() => {
+    if (!home) return 1
+    const t = Math.min(1, Math.max(0, (deck.position - 0.3) / 0.5))
+    return t * t * (3 - 2 * t)
+  })
+
   // ── Medusas del hero ───────────────────────────────────────────
   // Flotan sobre el título y se van con el hero, un poco más rápido que él
   // (están más cerca). En el showcase no hay.
@@ -106,7 +115,7 @@
 <!-- La fase del líquido sigue al contenido: el paso de escena, el scroll interno y el reloj del hero. -->
 <EdgeWarp phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
 
-<Nav {width} {compact} {focusedHref} {activeHref} {onnavigate} />
+<Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} {onnavigate} />
 {#if !compact && deck.count > 1}
   <SceneDots count={deck.count} position={deck.position} x={vw / 2 - 22} {onselect} />
 {/if}

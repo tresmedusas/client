@@ -59,7 +59,7 @@
 <div bind:this={layer} class="semantic">
   <header>
     <a class="brand" href="/">
-      <img src={LOGO.imagotipo.src} alt={SITE.name} width="138" height="35" />
+      <img src={LOGO.isotipoNegro.src} alt={SITE.name} width="25" height="28" />
     </a>
     <nav aria-label="Principal">
       {#each NAV as link (link.href)}
