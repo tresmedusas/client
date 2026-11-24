@@ -1,289 +1,274 @@
 <script lang="ts">
+  // Navbar de burbujas: sin barra. Cada link es una gota de vidrio con su
+  // ícono; la del activo se ensancha en una pastilla que muestra el texto. Con el
+  // puntero cerca, las gotas crecen como un dock. El logo es otra gota más, que
+  // aparece al dejar el hero.
   import { T, useTask } from '@threlte/core'
   import { useCursor } from '@threlte/extras'
   import { prefersReducedMotion } from 'svelte/motion'
-  import { Spring, useEngine } from 'essentia-core'
+  import { useEngine } from 'essentia-core'
   import { Glass } from 'essentia-crystal'
   import { Image, Rect } from 'essentia-primitives'
-  import { NAV } from '$lib/content.js'
-  import { LOGO, PALETTE } from '$lib/tokens.js'
-  import NavLink from './nav-link.svelte'
+  import { FONT, LOGO, PALETTE } from '$lib/tokens.js'
+  import MeasuredText from './measured-text.svelte'
+  import { NAV_GLASS, NAV_MARGIN, clamp01, lerp, navIcon, navLinks, osc, scenePointer, smoothstep, snap, still, stepOsc, type Osc } from './nav-parts.js'
 
   interface Props {
-    /** Ancho de la columna: la pastilla nunca lo pasa. */
     width: number
     compact: boolean
+    logo?: number
     focusedHref: string | null
-    /** Link de la escena que se ve (o de la página): lo envuelve el lente. */
     activeHref: string | null
     onnavigate: (href: string) => void
   }
 
-  let { width, compact, focusedHref, activeHref, onnavigate }: Props = $props()
+  let { width, compact, logo = 1, focusedHref, activeHref, onnavigate }: Props = $props()
 
   const engine = useEngine()
   const { onPointerEnter, onPointerLeave } = useCursor()
 
-  /** Ícono de cada link, por href; el activo usa su versión `-solid`. */
-  const ICONS: Record<string, string> = {
-    '/#como-trabajamos': 'nav-como-trabajamos',
-    '/#nosotros': 'nav-nosotros',
-    '/showcase': 'nav-showcase',
-    '/#contacto': 'nav-contacto',
-  }
-  const iconName = (href: string) => ICONS[href] ?? ICONS['/showcase']!
+  /** Diámetro de una gota, aire entre gotas y el ícono. */
+  const DROP = 52
+  const GAP = 10
+  const ICON = 24
+  /** Pastilla del activo: aire a los lados y entre el ícono y el texto. */
+  const PAD = 18
+  const ICON_GAP = 8
+  const FONT_SIZE = 13
+  const LOGO_HEIGHT = 26
+  /** Cuánto crece una gota con el puntero encima. */
+  const LIFT = 0.16
+  /** Alcance del dock: a esta distancia del puntero la gota ya no crece. */
+  const REACH = 110
 
-  const HEIGHT = 58
-  const MARGIN = 16
-  const PADDING = 22
-  const LINK_GAP = $derived(compact ? 22 : 30)
-  /** Aire entre el imagotipo y el primer link. */
-  const LOGO_GAP = $derived(compact ? 22 : 34)
-  const LOGO_HEIGHT = $derived(compact ? 20 : 22)
-  const logoWidth = $derived(LOGO_HEIGHT * LOGO.imagotipo.aspect)
-  /** El lente del link activo: más ancho que el item y más alto que la barra. */
-  const LENS_PAD = 14
-  const LENS_OVERHANG = 10
-  const LENS_HEIGHT = HEIGHT + LENS_OVERHANG * 2
-  const LENS_RADIUS = 36
+  const links = $derived(navLinks(compact))
 
-  /**
-   * Vidrio de la barra, tuneado en el playground de crystal: el perfil de
-   * `crystal` con un tinte claro casi opaco. Así el lente, que la refracta,
-   * no se tiñe.
-   */
-  const BAR_GLASS = {
-    profile: 'dome',
-    bevelWidth: 20,
-    bevelDepth: 13,
-    lip: 4,
-    lipSharpness: 8,
-    thickness: 30,
-    ior: 1.5,
-    refraction: 1.15,
-    dispersion: 0.15,
-    magnify: 0.92,
-    blur: 6,
-    edgeSharpness: 0,
-    tint: '#f0f0f0',
-    tintOpacity: 0.4,
-    tintMode: 'overlay',
-    brightness: 0.2,
-    saturation: 0.8,
-    reflection: 0.05,
-    specular: 0.5,
-    rim: 0.01,
-    softness: 0,
-    shadowOpacity: 0.01,
-    shadowSpread: 12,
-    shadowOffsetY: 2,
-    tilt: 0.5,
-    surfaceRoughness: 0,
-  } as const
-
-  /** Íconos y textos: todos en el mismo negro; el activo lo marca el lente. */
-  const INK = '#1C1C1C'
-
-  /** En un teléfono entran el showcase y el contacto. */
-  const links = $derived(compact ? NAV.filter((l) => l.href === '/showcase' || l.href === '/#contacto') : NAV)
-  /** Ancho medido de cada item, por href: sobrevive al cambio entre teléfono y escritorio. */
-  let itemWidths = $state<Record<string, number>>({})
-  const measured = $derived(links.every((l) => itemWidths[l.href] !== undefined))
-
-  /** La pastilla envuelve el imagotipo y los links, centrada; nunca más ancha que la columna. */
-  const linksWidth = $derived(links.reduce((sum, l) => sum + (itemWidths[l.href] ?? 0), 0) + LINK_GAP * (links.length - 1))
-  const barWidth = $derived(Math.min(width, PADDING * 2 + logoWidth + LOGO_GAP + linksWidth))
-  /** Pegada al borde de abajo de la ventana. */
-  const y = $derived(-engine.viewport.height / 2 + MARGIN + HEIGHT / 2)
-  const logoX = $derived(-barWidth / 2 + PADDING)
-
-  /** Centro del item `i`: se acomodan de izquierda a derecha, después del imagotipo. */
-  function itemCenter(i: number): number {
-    let x = logoX + logoWidth + LOGO_GAP
-    for (let j = 0; j < i; j++) x += (itemWidths[links[j]!.href] ?? 0) + LINK_GAP
-    return x + (itemWidths[links[i]!.href] ?? 0) / 2
-  }
-
-  // ── Lente ──────────────────────────────────────────────────────
-  // Viaja de un link a otro como una gota: el contorno ondula (`wobble`) en
-  // proporción a su velocidad y se estira en la dirección del viaje. Aparece y
-  // se va con un fade: Glass no tiene opacidad, así que el fade lleva cada
-  // parámetro visual de `LENS_GLASS` a su valor neutro, el de un vidrio que no
-  // se ve. Los resortes los avanza una task que corre solo mientras algo se
-  // mueve.
-
-  /** Vidrio del lente, tuneado en el playground de crystal: forma fija. */
-  const LENS_SHAPE = {
-    profile: 'squircle',
-    bevelWidth: 16,
-    lip: 16,
-    lipSharpness: 5,
-    thickness: 30,
-    ior: 1.37,
-    blur: 0,
-    edgeSharpness: 0,
-    tint: '#121212',
-    tintMode: 'overlay',
-    softness: 0,
-    shadowSpread: 4,
-    shadowOffsetY: 2,
-    tilt: 0.5,
-    surfaceRoughness: 0,
-  } as const
-  /** …y lo que el fade lleva de neutro (0, o 1 en `magnify`) a estos valores. */
-  const LENS_LOOK = {
-    bevelDepth: 20,
-    refraction: 2.1,
-    dispersion: 0.07,
-    magnify: 0.92,
-    tintOpacity: 0.01,
-    brightness: -0.02,
-    saturation: 0.8,
-    reflection: 0.2,
-    specular: 0.07,
-    rim: 0.15,
-    shadowOpacity: 0.02,
-  } as const
-  const activeIndex = $derived(links.findIndex((l) => l.href === activeHref))
-  const lensTarget = $derived.by(() => {
-    if (activeIndex < 0 || !measured) return null
-    return { x: itemCenter(activeIndex), width: itemWidths[links[activeIndex]!.href]! + LENS_PAD * 2 }
-  })
-
-  const springX = new Spring({ stiffness: 15, precision: 0.05 })
-  const springW = new Spring({ stiffness: 15, precision: 0.05 })
-  const springFade = new Spring({ stiffness: 14, precision: 0.002 })
-  let lensX = $state(0)
-  let lensW = $state(0)
-  /** 0 = vidrio invisible, 1 = el preset entero. */
-  let fade = $state(0)
-  let phase = $state(0)
-  let speed = $state(0)
-  let animating = $state(false)
+  // ── Activo ─────────────────────────────────────────────────────
+  // Lo marca el scroll (`activeHref`), salvo recién después de un click: el deck
+  // pasa por las escenas del medio y la gota que se abre tiene que ser la
+  // elegida, no cada una por la que pasa. El click manda hasta que el deck
+  // llega, hasta que el usuario mueve el scroll él mismo o, por las dudas, 2 s.
+  const CHOSEN_TIMEOUT = 2000
+  let chosen = $state<string | null>(null)
+  const active = $derived(chosen ?? activeHref)
 
   $effect(() => {
-    const target = lensTarget
-    const reduced = prefersReducedMotion.current
-    if (target) {
-      // Si no se veía, aparece en su lugar en vez de viajar desde el anterior.
-      if (springFade.value < 0.01 || reduced) {
-        springX.set(target.x)
-        springW.set(target.width)
-      } else {
-        springX.target = target.x
-        springW.target = target.width
-      }
+    if (chosen === null) return
+    if (activeHref === chosen) {
+      chosen = null
+      return
     }
-    springFade.target = target ? 1 : 0
-    if (reduced) springFade.set(springFade.target)
-    sync()
-    animating = !(springX.settled && springW.settled && springFade.settled)
+    const timer = setTimeout(() => (chosen = null), CHOSEN_TIMEOUT)
+    const release = () => (chosen = null)
+    window.addEventListener('wheel', release, { passive: true })
+    window.addEventListener('keydown', release)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('wheel', release)
+      window.removeEventListener('keydown', release)
+    }
+  })
+
+  function choose(href: string) {
+    chosen = href === '/' ? null : href
+    onnavigate(href)
+  }
+  let labelWidths = $state<Record<string, number>>({})
+  const measured = $derived(links.every((l) => labelWidths[l.href] !== undefined))
+
+  // Por gota: cuánto se abrió en pastilla (activo) y cuánto creció (dock).
+  const grows = new Map<string, Osc>()
+  const lifts = new Map<string, Osc>()
+  const logoO = osc(0)
+  const growOf = (href: string) => grows.get(href) ?? grows.set(href, osc(href === active ? 1 : 0)).get(href)!
+  const liftOf = (href: string) => lifts.get(href) ?? lifts.set(href, osc(0)).get(href)!
+
+  /** Lo que se dibuja: se copia de los resortes en cada frame. */
+  let frame = $state<{ grow: Record<string, number>; lift: Record<string, number>; wob: Record<string, number>; logo: number }>({
+    grow: {},
+    lift: {},
+    wob: {},
+    logo: 0,
+  })
+  let phase = $state(0)
+  let animating = $state(false)
+  let primed = false
+
+  /** Dónde está el puntero (x de la escena), si está cerca de la barra. */
+  let pointerX = $state<number | null>(null)
+  const y = $derived(-engine.viewport.height / 2 + NAV_MARGIN + DROP / 2 + 6)
+
+  $effect(() => {
+    const move = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      const p = scenePointer(e, engine.viewport)
+      pointerX = Math.abs(p.y - y) < DROP ? p.x : null
+    }
+    const leave = () => (pointerX = null)
+    window.addEventListener('pointermove', move)
+    document.documentElement.addEventListener('pointerleave', leave)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      document.documentElement.removeEventListener('pointerleave', leave)
+    }
+  })
+
+  const expandedWidth = (href: string) => PAD + ICON + ICON_GAP + (labelWidths[href] ?? 0) + PAD
+
+  /** Ancho y alto de cada gota y dónde va su centro. */
+  const layout = $derived.by(() => {
+    const l = clamp01(frame.logo)
+    const sizes = links.map((link) => {
+      const g = frame.grow[link.href] ?? 0
+      const s = 1 + LIFT * (frame.lift[link.href] ?? 0)
+      return { w: lerp(DROP, expandedWidth(link.href), g) * s, h: DROP * s, g }
+    })
+    const logoSize = DROP * l
+    const total = sizes.reduce((sum, s) => sum + s.w, 0) + GAP * (links.length - 1) + (logoSize + GAP) * l
+    let x = -Math.min(total, width) / 2
+    const logoX = x + logoSize / 2
+    x += (logoSize + GAP) * l
+    const drops = sizes.map((s) => {
+      const cx = x + s.w / 2
+      x += s.w + GAP
+      return { ...s, x: cx }
+    })
+    return { drops, logo: { x: logoX, size: logoSize, scale: l } }
+  })
+
+  // Los objetivos: el activo se abre, el dock crece cerca del puntero.
+  const goals = $derived.by(() => {
+    const grow: Record<string, number> = {}
+    const lift: Record<string, number> = {}
+    links.forEach((link, i) => {
+      grow[link.href] = link.href === active ? 1 : 0
+      const cx = layout.drops[i]?.x ?? 0
+      lift[link.href] = pointerX === null ? 0 : smoothstep(1 - Math.abs(pointerX - cx) / REACH)
+    })
+    return { grow, lift, logo }
   })
 
   function sync() {
-    lensX = springX.value
-    lensW = springW.value
-    fade = Math.min(1, Math.max(0, springFade.value))
-    speed = Math.abs(springX.velocity)
+    const grow: Record<string, number> = {}
+    const lift: Record<string, number> = {}
+    const wob: Record<string, number> = {}
+    for (const link of links) {
+      const g = growOf(link.href)
+      const lf = liftOf(link.href)
+      grow[link.href] = g.x
+      lift[link.href] = lf.x
+      wob[link.href] = Math.min(0.08, Math.abs(g.v) * 0.035 + Math.abs(lf.v) * 0.02)
+    }
+    frame = { grow, lift, wob, logo: logoO.x }
   }
+
+  $effect(() => {
+    const g = goals
+    if (!measured) return
+    if (!primed || prefersReducedMotion.current) {
+      primed = true
+      for (const link of links) {
+        snap(growOf(link.href), g.grow[link.href] ?? 0)
+        snap(liftOf(link.href), prefersReducedMotion.current ? 0 : (g.lift[link.href] ?? 0))
+      }
+      snap(logoO, g.logo)
+      sync()
+      if (prefersReducedMotion.current) return
+    }
+    animating = true
+  })
 
   useTask(
     (delta) => {
-      springX.step(delta)
-      springW.step(delta)
-      springFade.step(delta)
-      phase += delta * (2 + speed / 120)
-      sync()
-      if (springX.settled && springW.settled && springFade.settled) {
-        speed = 0
-        animating = false
+      const dt = Math.min(delta, 1 / 20)
+      const g = goals
+      let done = true
+      for (const link of links) {
+        const grow = growOf(link.href)
+        const lift = liftOf(link.href)
+        const gt = g.grow[link.href] ?? 0
+        const lt = g.lift[link.href] ?? 0
+        // Se abre con rebote, se cierra sin.
+        stepOsc(grow, gt, gt > grow.x ? 12 : 16, gt > grow.x ? 0.5 : 0.9, dt)
+        stepOsc(lift, lt, 20, 0.55, dt)
+        done &&= still(grow, gt, 0.002) && still(lift, lt, 0.002)
       }
+      stepOsc(logoO, g.logo, 11, 0.45, dt)
+      done &&= still(logoO, g.logo, 0.002)
+      phase += dt * 2.4
+      sync()
+      if (done) animating = false
     },
     { running: () => animating },
   )
-
-  /** Amplitud del blob: crece con la velocidad, quieto es liso. */
-  const wobbleAmplitude = $derived(Math.min(0.08, speed / 10000))
-  /** Se estira en la dirección del viaje. */
-  const stretch = $derived(Math.min(18, speed / 60))
-
-  const mix = (from: number, to: number) => from + (to - from) * fade
-
-  /**
-   * Cuánto envuelve el lente al item `i` (0..1): el ícono sólido aparece a
-   * medida que el lente llega y se apaga cuando se va, no antes.
-   */
-  function solidness(i: number): number {
-    const half = (itemWidths[links[i]!.href] ?? 0) / 2 + LENS_PAD
-    if (half <= LENS_PAD) return 0
-    return fade * Math.min(1, Math.max(0, 1 - Math.abs(lensX - itemCenter(i)) / half))
-  }
-
-  // La barra no deja pasar el puntero al contenido que se mueve debajo.
-  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation()
 </script>
 
-<!--
-  z = 10: la barra, vidrio claro casi opaco (`BAR_GLASS`; nivel 2 de captura).
-  z = 11: el lente del link activo (`LENS_SHAPE` + `LENS_LOOK`), que refracta la barra y
-  lo que pasa por debajo (nivel 3, el último).
-  Sin los anchos medidos la pastilla no sabe cuánto mide: aparece con el texto.
--->
 {#if measured}
-  <Glass {...BAR_GLASS} width={barWidth} height={HEIGHT} radius={HEIGHT / 2} {y}
-    z={10}
-    onclick={stop}
-    onpointermove={stop}
-  />
+  <!-- La gota del logo: lleva al inicio. -->
+  {#if layout.logo.scale > 0.02}
+    <Glass {...NAV_GLASS} width={layout.logo.size} height={layout.logo.size} radius={layout.logo.size / 2} x={layout.logo.x} {y} z={10} />
+    <T.Group onclick={() => choose('/')} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
+      <Rect width={layout.logo.size} height={layout.logo.size} radius={layout.logo.size / 2} color={PALETTE.ink} opacity={0} x={layout.logo.x} {y} z={10.04} />
+      <Image
+        src={LOGO.isotipoNegro.src}
+        width={LOGO_HEIGHT * LOGO.isotipoNegro.aspect * layout.logo.scale}
+        height={LOGO_HEIGHT * layout.logo.scale}
+        opacity={layout.logo.scale}
+        x={layout.logo.x}
+        {y}
+        z={10.05}
+      />
+    </T.Group>
+    {#if focusedHref === '/'}
+      <Rect width={layout.logo.size + 8} height={layout.logo.size + 8} radius={(layout.logo.size + 8) / 2} color={PALETTE.ink} opacity={0.1} x={layout.logo.x} {y} z={10.03} />
+    {/if}
+  {/if}
 {/if}
-
-{#if fade > 0.002}
-  <Glass
-    {...LENS_SHAPE}
-    width={lensW + stretch}
-    height={LENS_HEIGHT - stretch * 0.3}
-    radius={LENS_RADIUS}
-    bevelDepth={mix(0, LENS_LOOK.bevelDepth)}
-    refraction={mix(0, LENS_LOOK.refraction)}
-    dispersion={mix(0, LENS_LOOK.dispersion)}
-    magnify={mix(1, LENS_LOOK.magnify)}
-    tintOpacity={mix(0, LENS_LOOK.tintOpacity)}
-    brightness={mix(0, LENS_LOOK.brightness)}
-    saturation={mix(0, LENS_LOOK.saturation)}
-    reflection={mix(0, LENS_LOOK.reflection)}
-    specular={mix(0, LENS_LOOK.specular)}
-    rim={mix(0, LENS_LOOK.rim)}
-    shadowOpacity={mix(0, LENS_LOOK.shadowOpacity)}
-    wobble={wobbleAmplitude > 0.002 ? { amplitude: wobbleAmplitude, frequency: 0.6, phase } : null}
-    x={lensX}
-    {y}
-    z={11}
-    onclick={stop}
-    onpointermove={stop}
-  />
-{/if}
-
-<!-- El imagotipo lleva al inicio; su nombre lo da el link «Tres Medusas» de la capa semántica. -->
-{#if focusedHref === '/'}
-  <Rect width={logoWidth + 20} height={LOGO_HEIGHT + 14} radius={(LOGO_HEIGHT + 14) / 2} color={PALETTE.brand} opacity={0.22} x={logoX + logoWidth / 2} {y} z={10.04} />
-{/if}
-<T.Group onclick={() => onnavigate('/')} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
-  <Image src={LOGO.imagotipo.src} width={logoWidth} height={LOGO_HEIGHT} x={logoX + logoWidth / 2} {y} z={10.05} />
-</T.Group>
 
 {#each links as link, i (link.href)}
-  <NavLink
-    {link}
-    icon={`/icons/${iconName(link.href)}.svg`}
-    iconSolid={`/icons/${iconName(link.href)}-solid.svg`}
-    solid={solidness(i)}
-    color={INK}
-    x={itemCenter(i)}
-    {y}
-    z={10.05}
-    hitHeight={HEIGHT}
-    focused={focusedHref === link.href}
-    onmeasure={(w) => (itemWidths[link.href] = w)}
-    {onnavigate}
-  />
+  {@const drop = layout.drops[i]}
+  {#if drop && measured}
+    {@const wob = frame.wob[link.href] ?? 0}
+    <Glass
+      {...NAV_GLASS}
+      width={drop.w}
+      height={drop.h}
+      radius={drop.h / 2}
+      x={drop.x}
+      {y}
+      z={10}
+      wobble={wob > 0.002 ? { amplitude: wob, frequency: 0.6, phase: phase + i * 1.3 } : null}
+    />
+    {#if focusedHref === link.href}
+      <Rect width={drop.w + 8} height={drop.h + 8} radius={(drop.h + 8) / 2} color={PALETTE.ink} opacity={0.1} x={drop.x} {y} z={10.03} />
+    {/if}
+  {/if}
+  {#if drop && measured}
+    <!--
+      Lo único que recibe el click es la gota: el raycast no saltea mallas invisibles,
+      y el texto apagado de una gota cerrada cae encima de la vecina.
+    -->
+    <T.Group onclick={() => choose(link.href)} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
+      <Rect width={drop.w} height={drop.h} radius={drop.h / 2} color={PALETTE.ink} opacity={0} x={drop.x} {y} z={10.04} />
+    </T.Group>
+    {@const iconX = lerp(drop.x, drop.x - drop.w / 2 + PAD + ICON / 2, drop.g)}
+    {@const iconSize = ICON * (drop.h / DROP)}
+    <Image src={navIcon(link.href)} width={iconSize} height={iconSize} opacity={1 - drop.g} x={iconX} {y} z={10.05} />
+    <Image src={navIcon(link.href, true)} width={iconSize} height={iconSize} opacity={drop.g} x={iconX} {y} z={10.05} />
+  {/if}
+  <!-- El texto se mide siempre (también apagado): la pastilla necesita su ancho. -->
+  <MeasuredText
+      text={link.label}
+      fontSize={FONT_SIZE}
+      font={FONT.bold}
+      color={PALETTE.ink}
+      lineHeight={1.2}
+      anchorX={0}
+      anchorY={0.5}
+      x={drop ? drop.x - drop.w / 2 + PAD + ICON + ICON_GAP : 0}
+      {y}
+      z={10.05}
+      opacity={drop ? smoothstep((drop.g - 0.55) / 0.45) : 0}
+      onmeasure={(w) => (labelWidths[link.href] = w)}
+    />
 {/each}
