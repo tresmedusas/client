@@ -70,9 +70,26 @@ export const NAV: readonly Link[] = [
 /** Hero: la marca, qué hacemos y un botón que lleva a cómo trabajamos. Va a la izquierda, con el logo animado a la derecha. */
 export const HERO = {
   id: 'inicio',
-  /** La marca, escrita como en el logo. */
-  title: 'tresmedusas',
-  lead: 'Encontramos la solución a tu problema.',
+  /**
+   * El titular: «Construimos el software que tu empresa necesita.», con
+   * palabras que van rotando (pedido del usuario, 2026-11-24). El texto fijo
+   * va en `muted` y regular; las palabras que rotan, en `ink` y black. Arma
+   * el texto `scene/headline.ts`.
+   */
+  headline: {
+    before: 'Construimos',
+    /** Qué construimos: artículo y sustantivo, que concuerdan. */
+    what: [
+      ['el', 'software'],
+      ['la', 'identidad'],
+      ['el', 'diseño'],
+    ],
+    /** En escritorio, la segunda línea empieza acá. */
+    middle: 'que tu',
+    /** Para quién. */
+    who: ['empresa', 'negocio', 'emprendimiento'],
+    after: 'necesita.',
+  },
   /** Lleva a la escena siguiente; el mismo href que en `NAV`, para que el foco del teclado encuentre el botón. */
   primary: { label: 'Conocer más', href: '/#como-trabajamos' } satisfies Link,
 } as const

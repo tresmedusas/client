@@ -106,26 +106,15 @@ export function rows(cellHeights: readonly number[], columns: number, gap: numbe
   return { tops, heights, total }
 }
 
-/** Un rectángulo por su centro, en píxeles CSS. */
-export interface Box {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
-/** Medidas del hero: una columna centrada con el logo arriba y el texto (título, bajada y botón) debajo. */
+/** Medidas del hero: el titular y el botón debajo, centrados en la columna y en el alto libre. */
 export interface HeroLayout {
   titleSize: number
-  leadSize: number
-  /** Separación título → bajada y bajada → botón. */
-  gaps: [number, number]
-  /** Ancho máximo del texto, centrado en la columna. */
+  /** Ancho máximo del titular, centrado en la columna. */
   textWidth: number
-  /** Borde de arriba del título, desde el tope de la ventana. */
+  /** Borde de arriba del titular, desde el tope de la ventana. */
   textTop: number
-  /** El logo: x desde el borde izquierdo de la columna, y desde el tope de la ventana. */
-  logo: Box
+  /** Separación titular → botón. */
+  gap: number
 }
 
 export const TITLE_LINE = 1.0
@@ -134,39 +123,34 @@ export const LEAD_LINE = 1.35
 /** Ancho medio de un carácter de Lato Black, en em (con el interletrado del display). */
 const TITLE_CHAR = 0.56
 
-/** Ancho máximo del texto del hero en escritorio: la bajada centrada se lee corta. */
-const HERO_TEXT_MAX = 720
+/** Ancho máximo del titular del hero en escritorio: el protagonista, en dos líneas. */
+const HERO_TEXT_MAX = 960
 
 /**
- * Para una columna de `width` en una ventana de `vh` de alto. `logoAspect`
- * es ancho / alto del logo. `textHeight` es el alto medido del bloque de
- * texto (título, bajada y botón); mientras no se mide, se estima.
+ * Para una columna de `width` en una ventana de `vh` de alto. `title` es el
+ * titular más ancho que se va a mostrar, con sus cortes de línea (`\n`).
+ * `textHeight` es el alto del titular; mientras no se mide, se estima.
  *
- * Todo va centrado en la columna: el logo arriba y el texto debajo. El
- * bloque entero (logo, separación y texto) queda centrado en el alto libre,
- * entre el margen de arriba y la navbar.
+ * En escritorio el titular toma el tamaño con el que su línea más larga
+ * entra en el ancho; en una columna, el que deja entrar su palabra más larga,
+ * y las líneas se parten. El titular y el botón quedan centrados en el alto
+ * libre, entre el margen de arriba y la navbar.
  */
-export function heroLayout(width: number, vh: number, compact: boolean, title: string, logoAspect: number, textHeight?: number): HeroLayout {
+export function heroLayout(width: number, vh: number, compact: boolean, title: string, textHeight?: number): HeroLayout {
   const textWidth = compact ? width : Math.min(width, HERO_TEXT_MAX)
-  const fit = textWidth / (title.length * TITLE_CHAR)
-  const titleSize = Math.min(fit, compact ? Math.min(44, width * 0.12) : Math.max(48, Math.min(64, width * 0.06)))
-  const leadSize = compact ? 18 : 22
-  const gaps: [number, number] = compact ? [10, 24] : [12, 28]
-  const block = textHeight ?? titleSize * TITLE_LINE + gaps[0] + leadSize * LEAD_LINE * (compact ? 2 : 1) + gaps[1] + CTA_HEIGHT
+  const lines = title.split('\n')
+  const longest = (parts: string[]) => Math.max(...parts.map((p) => p.length))
+  const fit = textWidth / ((compact ? longest(title.split(/\s+/)) : longest(lines)) * TITLE_CHAR)
+  const cap = compact ? Math.min(44, width * 0.12) : Math.max(48, Math.min(80, width * 0.07))
+  const titleSize = Math.min(fit, cap)
+  // Cada línea fija ocupa las líneas que necesite a ese tamaño.
+  const rows = lines.reduce((n, line) => n + Math.max(1, Math.ceil((line.length * TITLE_CHAR * titleSize) / textWidth)), 0)
+  const gap = compact ? 28 : 40
+  const block = (textHeight ?? titleSize * TITLE_LINE * rows) + gap + CTA_HEIGHT
 
   // Lo que queda libre entre el margen de arriba y la navbar.
   const free = vh - SCENE_TOP - NAV_SPACE
-  const height = compact ? Math.min(free * 0.3, width * 0.55) : Math.min(free * 0.26, width * 0.3)
-  const gap = compact ? 28 : 40
-  const top = SCENE_TOP + Math.max(0, (free - height - gap - block) / 2)
-  return {
-    titleSize,
-    leadSize,
-    gaps,
-    textWidth,
-    textTop: top + height + gap,
-    logo: { x: width / 2, y: top + height / 2, width: height * logoAspect, height },
-  }
+  return { titleSize, textWidth, textTop: SCENE_TOP + Math.max(0, (free - block) / 2), gap }
 }
 
 /**

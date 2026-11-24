@@ -2,7 +2,7 @@
   import LeadIn from '$lib/lead-in.svelte'
   import { ABOUT, CONTACT_SECTION, HERO, HOW_WORK, SITE } from '$lib/content.js'
   import FounderDialog from '$lib/founder-dialog.svelte'
-  import { LOGO } from '$lib/tokens.js'
+  import { headlineWords } from '$lib/scene/headline.js'
   import { openFounder } from '$lib/founder-dialog.svelte.js'
 </script>
 
@@ -16,18 +16,17 @@
 
 <!-- Una sección por escena del deck, en el orden de HOME_SCENES. -->
 <section id={HERO.id} class="hero">
-  <img class="hero-logo" src={LOGO.medusa.src} alt="" width="245" height="262" />
-  <div class="hero-text">
-    <h1><LeadIn text={HERO.title} /></h1>
-    <p class="lead"><LeadIn text={HERO.lead} /></p>
-    <p class="actions">
-      <a class="button deep with-lens" href={HERO.primary.href}>
-        <span class="lens" aria-hidden="true">
-          <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" /></svg>
-        </span>{HERO.primary.label}
-      </a>
-    </p>
-  </div>
+  <!-- Como en la escena, quieto en la primera combinación: el texto fijo en `muted` y lo que rota en `ink`. -->
+  <h1>
+    {#each headlineWords(HERO.headline) as w, i (w.key)}{i > 0 ? ' ' : ''}{#if w.accent}<strong>{w.text}</strong>{:else}{w.text}{/if}{/each}
+  </h1>
+  <p class="actions">
+    <a class="button deep with-lens" href={HERO.primary.href}>
+      <span class="lens" aria-hidden="true">
+        <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" /></svg>
+      </span>{HERO.primary.label}
+    </a>
+  </p>
 </section>
 
 <section id={HOW_WORK.section.id} aria-labelledby="{HOW_WORK.section.id}-title">

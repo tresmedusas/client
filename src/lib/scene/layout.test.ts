@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FOOTER_GAP, NAV_SPACE, SCENE_TOP, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
+import { CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_TOP, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -42,37 +42,32 @@ describe('rows', () => {
 })
 
 describe('heroLayout', () => {
-  const ASPECT = 490 / 524.85
+  const TITLE = 'Construimos la identidad\nque tu emprendimiento necesita.'
 
-  it('centra en la columna el logo arriba y el texto debajo, y el bloque en el alto libre', () => {
+  it('centra el titular y el botón en el alto libre, entre el margen de arriba y la navbar', () => {
     for (const [vw, vh, compact] of [[1440, 900, false], [375, 812, true]] as const) {
       const width = columnWidth(vw)
-      const block = 200
-      const h = heroLayout(width, vh, compact, 'tresmedusas', ASPECT, block)
-      // Centrados en la columna.
-      expect(h.logo.x).toBeCloseTo(width / 2)
+      const text = 150
+      const h = heroLayout(width, vh, compact, TITLE, text)
       expect(h.textWidth).toBeLessThanOrEqual(width)
-      expect(h.logo.width / h.logo.height).toBeCloseTo(ASPECT)
-      // El logo arriba del texto, sin tocarlo.
-      expect(h.logo.y + h.logo.height / 2).toBeLessThan(h.textTop)
-      // Todo el bloque centrado entre el margen de arriba y la navbar.
-      const top = h.logo.y - h.logo.height / 2
-      const bottom = h.textTop + block
-      expect(top - SCENE_TOP).toBeCloseTo(vh - NAV_SPACE - bottom)
-      expect(top).toBeGreaterThanOrEqual(SCENE_TOP)
+      const bottom = h.textTop + text + h.gap + CTA_HEIGHT
+      expect(h.textTop - SCENE_TOP).toBeCloseTo(vh - NAV_SPACE - bottom)
+      expect(h.textTop).toBeGreaterThanOrEqual(SCENE_TOP)
     }
   })
 
-  it('en escritorio el texto no pasa de una medida corta', () => {
-    const h = heroLayout(columnWidth(1440), 900, false, 'tresmedusas', ASPECT)
-    expect(h.textWidth).toBe(720)
+  it('en escritorio la línea más larga entra en el ancho', () => {
+    const h = heroLayout(columnWidth(1440), 900, false, TITLE)
+    expect(h.textWidth).toBe(960)
+    expect('que tu emprendimiento necesita.'.length * 0.56 * h.titleSize).toBeLessThanOrEqual(h.textWidth + 0.01)
+    expect(h.titleSize).toBeGreaterThanOrEqual(48)
   })
 
-  it('el título entra en el ancho del texto', () => {
-    for (const [vw, compact] of [[1440, false], [800, false], [375, true], [320, true]] as const) {
-      const h = heroLayout(columnWidth(vw), 800, compact, 'tresmedusas', ASPECT)
-      expect(h.titleSize * 0.56 * 'tresmedusas'.length).toBeLessThanOrEqual(h.textWidth + 0.001)
-    }
+  it('en un teléfono las líneas se parten, pero la palabra más larga entra', () => {
+    const width = columnWidth(375)
+    const h = heroLayout(width, 812, true, TITLE)
+    expect('emprendimiento'.length * 0.56 * h.titleSize).toBeLessThanOrEqual(width)
+    expect(h.titleSize).toBeLessThanOrEqual(44)
   })
 })
 

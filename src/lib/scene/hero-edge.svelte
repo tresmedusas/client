@@ -7,9 +7,9 @@
 
   /**
    * Luz y grano del hero, en un quad que cubre toda su ventana (ver
-   * `prism-edge.frag.glsl`): arriba, una franja de haces de luz como los del
-   * botón, con su color directo sobre el papel; en todo el hero, un grano
-   * fino que reacciona a esa luz.
+   * `prism-edge.frag.glsl`): en los bordes de arriba y de los costados, una
+   * franja de haces de luz como los del botón, con su color directo sobre el
+   * papel; en todo el hero, un grano fino que reacciona a esa luz.
    */
   interface Props {
     /** Centro x de la ventana, en las coordenadas del hero (que van desde la columna, no desde la ventana). */
@@ -20,12 +20,16 @@
     height: number
     /** Segundos del reloj del hero. */
     time: number
+    /** Fondo propio del hero (opaco); sin él, la luz va directo sobre el papel de la página. */
+    background?: string
+    /** Color del grano. @default PALETTE.ink */
+    grain?: string
   }
 
-  let { x, top, height, time }: Props = $props()
+  let { x, top, height, time, background, grain = PALETTE.ink }: Props = $props()
 
-  /** Alto de la franja de luz: esta fracción del alto de la ventana. */
-  const THICKNESS = 0.65
+  /** Grosor de cada franja de luz: esta fracción del lado más corto de la ventana. */
+  const THICKNESS = 0.06
 
   const { size, invalidate } = useThrelte()
   const width = $derived($size.width)
@@ -35,13 +39,18 @@
     u_thickness: { value: 0 },
     u_time: { value: 0 },
     u_ink: { value: new Color(PALETTE.ink) },
+    u_paper: { value: new Color(PALETTE.paper) },
+    u_opaque: { value: 0 },
   }
   const material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms, transparent: true, depthWrite: false })
 
   $effect(() => {
     uniforms.u_box.value.set(width, height)
-    uniforms.u_thickness.value = Math.round(height * THICKNESS)
+    uniforms.u_thickness.value = Math.round(Math.min(width, height) * THICKNESS)
     uniforms.u_time.value = time
+    uniforms.u_ink.value.set(grain)
+    uniforms.u_paper.value.set(background ?? PALETTE.paper)
+    uniforms.u_opaque.value = background ? 1 : 0
     invalidate()
   })
 

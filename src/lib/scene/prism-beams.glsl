@@ -1,7 +1,7 @@
 // Haces de luz iridiscentes, compartidos por el botón del hero
 // (`prism-ring.frag.glsl`) y la franja de arriba del hero (`prism-edge.frag.glsl`).
 //
-// Tres franjas de luz que cruzan lo que iluminan, cada una por su cuenta: su
+// Franjas de luz que cruzan lo que iluminan, cada una por su cuenta: su
 // ángulo, su ancho, su velocidad y su vaivén salen de su propia semilla, y
 // deambulan (van y vuelven al azar) sin coordinarse. Cada haz lleva el
 // espectro a lo ancho, con dispersión (los canales corridos), bandas finas de
@@ -17,6 +17,9 @@
 // `hueRange`, con lo que el usuario eligió en el banco de pruebas para cada uno.
 // Con `#define NO_FLICKER` antes del include, el brillo no titila: cada haz
 // queda parejo, con brillo 1 (y FLOOR, PEAK, FLICKER y PATCH no se usan).
+// Con `#define COLOR_FLOW` (y FLOW_AMT, FLOW_SCALE, FLOW_SPEED, FLOW_WARP y
+// FLOW_DRIFT), los colores además se mueven en manchas que fluyen al azar
+// por el haz, cada una con su propio tono dentro del rango.
 
 const float PI = 3.14159265;
 const float TAU = 6.2831853;
@@ -47,6 +50,27 @@ float noise2(vec2 x) {
   return mix(mix(a, b, u.x), mix(c, e, u.x), u.y);
 }
 
+#ifdef COLOR_FLOW
+// Ruido fractal (tres octavas) de 0 a 1.
+float fbm(vec2 x) {
+  float a = 0.5;
+  float sum = 0.0;
+  for (int o = 0; o < 3; o++) {
+    sum += a * noise2(x);
+    x = x * 2.03 + vec2(17.1, 9.3);
+    a *= 0.5;
+  }
+  return sum / 0.875;
+}
+
+// Manchas de color que fluyen: ruido deformado por otro ruido, que se corre con el tiempo.
+float colorFlow(vec2 p, float t, float seed) {
+  vec2 q = p / FLOW_SCALE;
+  float tt = t * FLOW_SPEED;
+  vec2 warp = vec2(fbm(q + vec2(tt * 0.7, seed)), fbm(q + vec2(5.2 + seed, -tt * 0.6)));
+  return fbm(q + FLOW_WARP * (warp - 0.5) * 2.0 + vec2(tt * FLOW_DRIFT * 2.0, tt * 0.4) + seed);
+}
+#endif
 
 // Perfil del haz a `x` px de su centro.
 float profile(float x, float w) {
@@ -87,6 +111,9 @@ vec3 beams(vec2 p, vec2 extent, float t, float boost) {
     float tr = t * SPEC_RATE;
     float span = SPECTRUM * mix(1.0, 0.3 + 1.4 * noise(tr * 0.9 + seed + 40.0), min(SPEC_VAR, 1.0));
     float raw = x / w * 0.5 * span + SPEC_VAR * (noise(tr + seed * 3.0) * 1.6 + 0.5 * noise(tr * 2.3 + seed)) + 0.25 * SPEC_VAR * noise2(vec2(v / 30.0 + seed, tr * 1.5));
+#ifdef COLOR_FLOW
+    raw += FLOW_AMT * (colorFlow(p, t, seed) - 0.5) * 4.0;
+#endif
     // Dentro del rango del haz, de ida y vuelta.
     float bounce = abs(fract(raw * 0.5) * 2.0 - 1.0);
     vec2 range = hueRange(i);
