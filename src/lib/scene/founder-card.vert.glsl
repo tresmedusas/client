@@ -1,4 +1,4 @@
-// Card holográfica: un quad que se inclina hacia el puntero con perspectiva.
+// Card de un fundador: un quad que se inclina hacia el puntero con perspectiva.
 //
 // La cámara de la escena es ortográfica, así que la perspectiva se arma acá:
 // el quad se rota en x e y alrededor de su centro y la w de salida es la de una

@@ -7,8 +7,8 @@
   import SectionHead from './section-head.svelte'
 
   /**
-   * Nosotros: los tres fundadores como protagonistas, cada uno en su card
-   * holográfica. La fila (o la columna, en un teléfono) va centrada como
+   * Nosotros: los tres fundadores como protagonistas, cada uno en su card con
+   * su foto. La fila (o la columna, en un teléfono) va centrada como
    * bloque; «Conocer a …» abre el modal del fundador.
    */
   interface Props {
@@ -57,7 +57,6 @@
     <T.Group position.y={lag(0.1 + (i % columns) * 0.08 + Math.floor(i / columns) * 0.05)}>
       <FounderCard
         {person}
-        index={i + 1}
         x={centerX(i)}
         y={centerY(i)}
         width={cardWidth}
