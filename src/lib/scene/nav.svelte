@@ -42,6 +42,37 @@
   const REACH = 110
 
   const links = $derived(navLinks(compact))
+
+  // ── Activo ─────────────────────────────────────────────────────
+  // Lo marca el scroll (`activeHref`), salvo recién después de un click: el deck
+  // pasa por las escenas del medio y la gota que se abre tiene que ser la
+  // elegida, no cada una por la que pasa. El click manda hasta que el deck
+  // llega, hasta que el usuario mueve el scroll él mismo o, por las dudas, 2 s.
+  const CHOSEN_TIMEOUT = 2000
+  let chosen = $state<string | null>(null)
+  const active = $derived(chosen ?? activeHref)
+
+  $effect(() => {
+    if (chosen === null) return
+    if (activeHref === chosen) {
+      chosen = null
+      return
+    }
+    const timer = setTimeout(() => (chosen = null), CHOSEN_TIMEOUT)
+    const release = () => (chosen = null)
+    window.addEventListener('wheel', release, { passive: true })
+    window.addEventListener('keydown', release)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('wheel', release)
+      window.removeEventListener('keydown', release)
+    }
+  })
+
+  function choose(href: string) {
+    chosen = href === '/' ? null : href
+    onnavigate(href)
+  }
   let labelWidths = $state<Record<string, number>>({})
   const measured = $derived(links.every((l) => labelWidths[l.href] !== undefined))
 
@@ -49,7 +80,7 @@
   const grows = new Map<string, Osc>()
   const lifts = new Map<string, Osc>()
   const logoO = osc(0)
-  const growOf = (href: string) => grows.get(href) ?? grows.set(href, osc(href === activeHref ? 1 : 0)).get(href)!
+  const growOf = (href: string) => grows.get(href) ?? grows.set(href, osc(href === active ? 1 : 0)).get(href)!
   const liftOf = (href: string) => lifts.get(href) ?? lifts.set(href, osc(0)).get(href)!
 
   /** Lo que se dibuja: se copia de los resortes en cada frame. */
@@ -110,7 +141,7 @@
     const grow: Record<string, number> = {}
     const lift: Record<string, number> = {}
     links.forEach((link, i) => {
-      grow[link.href] = link.href === activeHref ? 1 : 0
+      grow[link.href] = link.href === active ? 1 : 0
       const cx = layout.drops[i]?.x ?? 0
       lift[link.href] = pointerX === null ? 0 : smoothstep(1 - Math.abs(pointerX - cx) / REACH)
     })
@@ -176,7 +207,7 @@
   <!-- La gota del logo: lleva al inicio. -->
   {#if layout.logo.scale > 0.02}
     <Glass {...NAV_GLASS} width={layout.logo.size} height={layout.logo.size} radius={layout.logo.size / 2} x={layout.logo.x} {y} z={10} />
-    <T.Group onclick={() => onnavigate('/')} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
+    <T.Group onclick={() => choose('/')} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
       <Rect width={layout.logo.size} height={layout.logo.size} radius={layout.logo.size / 2} color={PALETTE.ink} opacity={0} x={layout.logo.x} {y} z={10.04} />
       <Image
         src={LOGO.isotipoNegro.src}
@@ -212,16 +243,21 @@
       <Rect width={drop.w + 8} height={drop.h + 8} radius={(drop.h + 8) / 2} color={PALETTE.ink} opacity={0.1} x={drop.x} {y} z={10.03} />
     {/if}
   {/if}
-  <T.Group onclick={() => onnavigate(link.href)} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
-    {#if drop && measured}
+  {#if drop && measured}
+    <!--
+      Lo único que recibe el click es la gota: el raycast no saltea mallas invisibles,
+      y el texto apagado de una gota cerrada cae encima de la vecina.
+    -->
+    <T.Group onclick={() => choose(link.href)} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
       <Rect width={drop.w} height={drop.h} radius={drop.h / 2} color={PALETTE.ink} opacity={0} x={drop.x} {y} z={10.04} />
-      {@const iconX = lerp(drop.x, drop.x - drop.w / 2 + PAD + ICON / 2, drop.g)}
-      {@const iconSize = ICON * (drop.h / DROP)}
-      <Image src={navIcon(link.href)} width={iconSize} height={iconSize} opacity={1 - drop.g} x={iconX} {y} z={10.05} />
-      <Image src={navIcon(link.href, true)} width={iconSize} height={iconSize} opacity={drop.g} x={iconX} {y} z={10.05} />
-    {/if}
-    <!-- El texto se mide siempre (también apagado): la pastilla necesita su ancho. -->
-    <MeasuredText
+    </T.Group>
+    {@const iconX = lerp(drop.x, drop.x - drop.w / 2 + PAD + ICON / 2, drop.g)}
+    {@const iconSize = ICON * (drop.h / DROP)}
+    <Image src={navIcon(link.href)} width={iconSize} height={iconSize} opacity={1 - drop.g} x={iconX} {y} z={10.05} />
+    <Image src={navIcon(link.href, true)} width={iconSize} height={iconSize} opacity={drop.g} x={iconX} {y} z={10.05} />
+  {/if}
+  <!-- El texto se mide siempre (también apagado): la pastilla necesita su ancho. -->
+  <MeasuredText
       text={link.label}
       fontSize={FONT_SIZE}
       font={FONT.bold}
@@ -235,5 +271,4 @@
       opacity={drop ? smoothstep((drop.g - 0.55) / 0.45) : 0}
       onmeasure={(w) => (labelWidths[link.href] = w)}
     />
-  </T.Group>
 {/each}
