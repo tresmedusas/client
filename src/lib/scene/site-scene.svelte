@@ -77,8 +77,8 @@
    1    vidrios del contenido: medusas, botones, paneles y lentes → nivel 1
    1.01 texto sobre los paneles
    9.9995 bordes de arriba y abajo: curva, aberración, blur y líquido → nivel 2 (con la navbar)
-  10    navbar fija → nivel 2; indicador de escenas
-  11    lente del link activo de la navbar → nivel 3 (el último)
+  10    navbar fija (sus gotas de vidrio) → nivel 2; indicador de escenas
+  11    libre: el nivel 3, el último que soporta Glass
 -->
 {#if home && deck.position < 1.2}
   <T.Group>
