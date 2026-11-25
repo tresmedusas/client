@@ -4,7 +4,7 @@
   import { Image, Rect } from 'essentia-primitives'
   import { FOOTER } from '$lib/content.js'
   import { LOGO, PALETTE } from '$lib/tokens.js'
-  import { footerBands, NAV_SPACE } from './layout.js'
+  import { footerBands, SCENE_BOTTOM } from './layout.js'
   import MeasuredText from './measured-text.svelte'
 
   /**
@@ -12,7 +12,7 @@
    * ventana, con el contenido en la columna. Arriba, en blanco, el logo
    * centrado; abajo, un punto más gris, «Powered by Essentia» y, del otro
    * lado, el copyright y los términos. La franja de abajo sigue hasta el borde
-   * de la ventana, bajo la navbar.
+   * de la ventana.
    *
    * En escritorio la franja de abajo va a los costados (pedido por el usuario,
    * ver DESIGN.md §6); en una columna, apilada y centrada.
@@ -53,8 +53,8 @@
   /** Un punto más ancho que la ventana: en las transiciones del showcase el borde no se asoma. */
   const bleed = $derived(viewportWidth + 4)
   const bottomTop = $derived(y - bands.top)
-  /** La franja de abajo, con la de la navbar. */
-  const bottomHeight = $derived(bands.bottom + NAV_SPACE + 2)
+  /** La franja de abajo, con el margen de abajo de la escena. */
+  const bottomHeight = $derived(bands.bottom + SCENE_BOTTOM + 2)
 
   // Centro vertical de cada fila: en una columna, el copyright y los términos arriba y Essentia abajo.
   const legalY = $derived(compact ? bottomTop - 32 : bottomTop - bands.bottom / 2)

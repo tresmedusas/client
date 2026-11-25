@@ -170,7 +170,7 @@
 
 <!-- Sin aria-hidden: la capa del bridge de Essentia vive acá adentro. -->
 <div class="stage" role="presentation" onwheel={onWheel} onpointerdown={onPointerDown}>
-  <!-- Luz global (la que se tuneó con el lente de la navbar anterior): azimut −57°, elevación −83°. -->
+  <!-- Luz global (la del preset del lente de la navbar): azimut −57°, elevación −83°. -->
   <EssentiaRoot background={PALETTE.paper} light={{ direction: [0.0664, -0.1022, -0.9925], intensity: 0.7 }}>
     <SiteScene
       {deck}

@@ -5,7 +5,7 @@
   import { cameraX, galleryView, smoothstep, wallOf, wallX } from './gallery.js'
   import GallerySlot from './gallery-slot.svelte'
   import Hall from './hall.svelte'
-  import { NAV_SPACE, SCENE_TOP } from './layout.js'
+  import { NAV_SPACE, SCENE_BOTTOM } from './layout.js'
   import Project from './project.svelte'
   import ShowcaseIntro from './showcase-intro.svelte'
 
@@ -31,7 +31,7 @@
   const count = SHOWCASE_SCENES.length
   const last = count - 1
 
-  const view = $derived(galleryView(viewportWidth, viewportHeight, compact, SCENE_TOP, NAV_SPACE))
+  const view = $derived(galleryView(viewportWidth, viewportHeight, compact, NAV_SPACE, SCENE_BOTTOM))
   const camX = $derived(cameraX(deck.position, count, view))
   const common = $derived({ deck, width, viewportHeight, view, camX })
   const wall = (k: number) => wallX(k, count, view)

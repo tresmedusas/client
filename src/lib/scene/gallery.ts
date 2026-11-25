@@ -22,7 +22,7 @@ export interface GalleryView {
   spacing: number
   /** Cuánto se corre la cámara hacia cada pared, en px. */
   lateral: number
-  /** El punto de fuga: el centro del área de contenido (sobre la navbar). */
+  /** El punto de fuga: el centro del área de contenido (bajo la navbar). */
   vanishY: number
   /** Ancho y alto del pasillo, para los marcos que lo dibujan. */
   hallWidth: number
@@ -31,7 +31,7 @@ export interface GalleryView {
 
 /**
  * Medidas del pasillo para una ventana de `vw` × `vh`. `top` y `bottom` son
- * el margen de arriba y lo que tapa la navbar abajo: el punto de fuga queda en
+ * lo que tapa la navbar arriba y el margen de abajo: el punto de fuga queda en
  * el medio de lo que se ve.
  */
 export function galleryView(vw: number, vh: number, compact: boolean, top: number, bottom: number): GalleryView {

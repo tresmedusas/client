@@ -13,16 +13,16 @@ import { ASPECT as FIGURE_ASPECT } from './figures/hero.js'
 export const MAX_COLUMN = 1080
 /** Por debajo de este ancho de ventana el layout pasa a una columna. */
 export const COMPACT_BELOW = 760
-/** Alto de la navbar fija más su margen: lo que tapa abajo. */
+/** Alto de la navbar fija más su margen: lo que tapa arriba. */
 export const NAV_SPACE = 88
-/** Margen de arriba de cada escena (la navbar va abajo). */
-export const SCENE_TOP = 40
+/** Margen de abajo de cada escena (la navbar va arriba). */
+export const SCENE_BOTTOM = 40
 
 /** Aire entre el contenido de la última escena y el pie. */
 export const FOOTER_GAP = 72
 
 /**
- * Alto de las dos franjas del pie (sin contar la de la navbar): la blanca, con
+ * Alto de las dos franjas del pie (sin contar el margen de abajo): la blanca, con
  * el logo, y la de abajo, con «Powered by», el copyright y los términos. En
  * una columna, la de abajo apila sus dos filas.
  */
@@ -31,9 +31,9 @@ export function footerBands(compact: boolean): { top: number; bottom: number } {
 }
 
 /**
- * Lo que la última escena reserva bajo su contenido para el pie. La franja de
- * la navbar ya queda fuera del área de la escena: el pie la cubre con su
- * franja de abajo, y la navbar flota encima.
+ * Lo que la última escena reserva bajo su contenido para el pie. El margen de
+ * abajo (`SCENE_BOTTOM`) ya queda fuera del área de la escena: el pie lo cubre
+ * con su franja de abajo.
  */
 export function footerReserve(compact: boolean): number {
   const { top, bottom } = footerBands(compact)
@@ -42,14 +42,14 @@ export function footerReserve(compact: boolean): number {
 
 /**
  * Tope del pie, en la y de la escena (origen en el tope de su contenido, y
- * hacia arriba): pegado sobre la navbar, con la franja de abajo hasta el
- * borde de la ventana, o `FOOTER_GAP` bajo el contenido si este no entra.
+ * hacia arriba): pegado abajo, con la franja de abajo hasta el borde de la
+ * ventana, o `FOOTER_GAP` bajo el contenido si este no entra.
  * `contentBottom` es el borde de abajo del contenido (negativo) y `frameTop`,
  * dónde quedó el tope del contenido en la ventana.
  */
 export function footerTop(contentBottom: number, frameTop: number, viewportHeight: number, compact: boolean): number {
   const { top, bottom } = footerBands(compact)
-  return Math.min(frameTop - viewportHeight + NAV_SPACE + top + bottom, contentBottom - FOOTER_GAP)
+  return Math.min(frameTop - viewportHeight + SCENE_BOTTOM + top + bottom, contentBottom - FOOTER_GAP)
 }
 
 /** Alto de los botones (píldoras de vidrio). */
@@ -156,7 +156,7 @@ const HERO_SPARE_ABOVE = 0.65
  * alto natural si entra y, si no, recortada por abajo, donde igual se
  * difumina (y nada si queda muy baja). Lo que sobra se reparte entre arriba
  * del titular y entre el botón y la figura. Sin figura, el titular y el botón
- * quedan centrados en el alto libre, entre el margen de arriba y la navbar.
+ * quedan centrados en el alto libre, entre la navbar y el margen de abajo.
  */
 export function heroLayout(width: number, vh: number, compact: boolean, title: string, textHeight?: number): HeroLayout {
   const textWidth = compact ? width : Math.min(width, HERO_TEXT_MAX)
@@ -170,16 +170,16 @@ export function heroLayout(width: number, vh: number, compact: boolean, title: s
   const gap = compact ? 28 : 40
   const text = (textHeight ?? titleSize * TITLE_LINE * rows) + gap + CTA_HEIGHT
 
-  // La figura llega hasta el borde de abajo de la ventana (pasa por detrás de la navbar).
+  // La figura llega hasta el borde de abajo de la ventana (pasa el margen de abajo).
   const figureWidth = Math.floor(Math.min(HERO_FIGURE_MAX, width))
-  const below = vh - SCENE_TOP - text - HERO_FIGURE_GAP
+  const below = vh - NAV_SPACE - text - HERO_FIGURE_GAP
   const figureHeight = Math.min(Math.floor(figureWidth / FIGURE_ASPECT), below)
   if (figureHeight >= HERO_FIGURE_MIN_HEIGHT) {
     const spare = below - figureHeight
     return {
       titleSize,
       textWidth,
-      textTop: SCENE_TOP + spare * HERO_SPARE_ABOVE,
+      textTop: NAV_SPACE + spare * HERO_SPARE_ABOVE,
       gap,
       figureWidth,
       figureHeight,
@@ -187,9 +187,9 @@ export function heroLayout(width: number, vh: number, compact: boolean, title: s
     }
   }
 
-  // Sin figura: el titular y el botón, centrados entre el margen de arriba y la navbar.
-  const free = vh - SCENE_TOP - NAV_SPACE
-  return { titleSize, textWidth, textTop: SCENE_TOP + Math.max(0, (free - text) / 2), gap, figureWidth: 0, figureHeight: 0, figureGap: HERO_FIGURE_GAP }
+  // Sin figura: el titular y el botón, centrados entre la navbar y el margen de abajo.
+  const free = vh - NAV_SPACE - SCENE_BOTTOM
+  return { titleSize, textWidth, textTop: NAV_SPACE + Math.max(0, (free - text) / 2), gap, figureWidth: 0, figureHeight: 0, figureGap: HERO_FIGURE_GAP }
 }
 
 /**

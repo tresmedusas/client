@@ -4,11 +4,11 @@
   import type { Deck } from './deck.svelte.js'
   import { sceneFrame, type SceneFrame } from './deck-logic.js'
   import { depthScale, fade, type Fade, type GalleryView } from './gallery.js'
-  import { NAV_SPACE, SCENE_TOP } from './layout.js'
+  import { NAV_SPACE, SCENE_BOTTOM } from './layout.js'
 
   /**
    * Una escena de la galería del showcase. Como `SceneSlot`, ubica su
-   * contenido en la ventana (centrado sobre la navbar, o arriba con scroll
+   * contenido en la ventana (centrado bajo la navbar, o arriba con scroll
    * interno si no entra), pero en vez de correrlo hacia arriba lo cuelga en
    * el pasillo: lo escala hacia el punto de fuga según su profundidad y lo
    * corre según dónde esté la cámara.
@@ -44,7 +44,7 @@
   let { i, deck, width, viewportHeight, height, view, wallX, camX, reveal = 1, flat = false, children }: Props = $props()
 
   const d = $derived(deck.position - i)
-  const frame = $derived(sceneFrame(height, viewportHeight, SCENE_TOP, NAV_SPACE))
+  const frame = $derived(sceneFrame(height, viewportHeight, NAV_SPACE, SCENE_BOTTOM))
   const depth = $derived(depthScale(d, view))
   const fog = $derived(fade(d))
   const visible = $derived(height > 0 && depth !== null && reveal > 0.001 && (fog.art > 0.001 || fog.text > 0.001))

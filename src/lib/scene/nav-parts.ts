@@ -1,10 +1,8 @@
-// Piezas de la navbar (`nav.svelte`): resortes, íconos, links y el vidrio de las gotas.
+// Piezas de la navbar (`nav.svelte`): resortes, íconos, links y el vidrio de la barra.
 import { NAV, type Link } from '$lib/content.js'
 
 /** Resorte de segundo orden: `omega` en rad/s; `zeta` < 1 rebota. */
 export type Osc = { x: number; v: number }
-
-export const osc = (x = 0): Osc => ({ x, v: 0 })
 
 export function stepOsc(o: Osc, target: number, omega: number, zeta: number, dt: number): void {
   const n = Math.max(1, Math.ceil(dt * 240))
@@ -18,19 +16,9 @@ export function stepOsc(o: Osc, target: number, omega: number, zeta: number, dt:
 /** Llegó a `target` y casi no se mueve. */
 export const still = (o: Osc, target: number, eps = 0.05): boolean => Math.abs(o.x - target) < eps && Math.abs(o.v) < eps * 4
 
-export function snap(o: Osc, x: number): void {
-  o.x = x
-  o.v = 0
-}
-
 export const clamp01 = (t: number): number => Math.min(1, Math.max(0, t))
-export const smoothstep = (t: number): number => {
-  const c = clamp01(t)
-  return c * c * (3 - 2 * c)
-}
-export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
 
-/** Separación del borde de abajo de la ventana. */
+/** Separación del borde de arriba de la ventana. */
 export const NAV_MARGIN = 16
 
 const ICONS: Record<string, string> = {
@@ -40,44 +28,43 @@ const ICONS: Record<string, string> = {
   '/#contacto': 'nav-contacto',
 }
 
-/** Ícono de un link (de línea, o sólido para el activo). */
-export const navIcon = (href: string, solid = false): string => `/icons/${ICONS[href] ?? ICONS['/showcase']}${solid ? '-solid' : ''}.svg`
+/** Ícono de un link (de línea, o sólido para el activo; `paper`: sólido en blanco). */
+export const navIcon = (href: string, solid: boolean | 'paper' = false): string =>
+  `/icons/${ICONS[href] ?? ICONS['/showcase']}${solid === 'paper' ? '-solid-paper' : solid ? '-solid' : ''}.svg`
 
 /** En un teléfono entran el showcase y el contacto. */
 export const navLinks = (compact: boolean): readonly Link[] =>
   compact ? NAV.filter((l) => l.href === '/showcase' || l.href === '/#contacto') : NAV
 
-/** El vidrio claro de las gotas, tuneado en el playground de crystal. */
+/**
+ * Vidrio de la pastilla y de la burbuja del logo: el perfil de `crystal` con
+ * un tinte claro, ajustado por el usuario en un banco de pruebas.
+ */
 export const NAV_GLASS = {
   profile: 'dome',
   bevelWidth: 20,
   bevelDepth: 13,
-  lip: 4,
-  lipSharpness: 8,
+  lip: 6,
+  lipSharpness: 10,
   thickness: 30,
   ior: 1.5,
   refraction: 1.15,
   dispersion: 0.15,
   magnify: 0.92,
-  blur: 4,
+  blur: 4.5,
   edgeSharpness: 0,
-  tint: '#747474',
-  tintOpacity: 0.35,
+  tint: '#f0f0f0',
+  tintOpacity: 0.6,
   tintMode: 'overlay',
-  brightness: 0.2,
+  brightness: 0.38,
   saturation: 0.8,
-  reflection: 0.09,
+  reflection: 0.05,
   specular: 0.5,
-  rim: 0.01,
+  rim: 0.02,
   softness: 0,
-  shadowOpacity: 0.01,
-  shadowSpread: 12,
-  shadowOffsetY: 2,
+  shadowOpacity: 0.03,
+  shadowSpread: 8,
+  shadowOffsetY: 1,
   tilt: 0.5,
   surfaceRoughness: 0,
 } as const
-
-/** Posición del puntero en coordenadas de la escena (origen al centro, y hacia arriba). */
-export function scenePointer(e: PointerEvent, viewport: { width: number; height: number }): { x: number; y: number } {
-  return { x: e.clientX - viewport.width / 2, y: viewport.height / 2 - e.clientY }
-}

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { FAR, cameraX, depthScale, fade, galleryView, hallEdges, hallFog, place, portals, wallOf, wallX } from './gallery.js'
 
-const view = galleryView(1440, 900, false, 40, 88)
+const view = galleryView(1440, 900, false, 88, 40)
 
 describe('galleryView', () => {
-  it('pone el punto de fuga en el medio del área sobre la navbar', () => {
-    expect(view.vanishY).toBe(24)
+  it('pone el punto de fuga en el medio del área bajo la navbar', () => {
+    expect(view.vanishY).toBe(-24)
   })
 })
 
@@ -58,8 +58,8 @@ describe('place', () => {
     const far = place(-2, 0, 0, view)!
     expect(far.x).toBe(0)
     // El origen de la escena (el centro de la ventana) se acerca al punto de fuga.
-    expect(far.y).toBeGreaterThan(0)
-    expect(far.y).toBeLessThan(view.vanishY)
+    expect(far.y).toBeLessThan(0)
+    expect(far.y).toBeGreaterThan(view.vanishY)
   })
 })
 

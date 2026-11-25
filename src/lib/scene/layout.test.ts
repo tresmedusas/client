@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ASPECT } from './figures/hero.js'
-import { CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_TOP, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
+import { CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_BOTTOM, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -55,7 +55,7 @@ describe('heroLayout', () => {
       expect(h.figureHeight).toBeLessThanOrEqual(Math.floor(h.figureWidth / ASPECT))
       expect(h.figureGap).toBeGreaterThanOrEqual(28)
       expect(h.textTop + text + h.gap + CTA_HEIGHT + h.figureGap + h.figureHeight).toBeCloseTo(vh)
-      expect(h.textTop).toBeGreaterThanOrEqual(SCENE_TOP)
+      expect(h.textTop).toBeGreaterThanOrEqual(NAV_SPACE)
     }
   })
 
@@ -63,11 +63,11 @@ describe('heroLayout', () => {
     const text = 150
     const short = heroLayout(columnWidth(1280), 560, false, TITLE, text)
     expect(short.figureHeight).toBeLessThan(Math.floor(short.figureWidth / ASPECT))
-    expect(short.textTop).toBe(SCENE_TOP)
+    expect(short.textTop).toBe(NAV_SPACE)
     const h = heroLayout(columnWidth(1440), 420, false, TITLE, text)
     expect(h.figureWidth).toBe(0)
     const bottom = h.textTop + text + h.gap + CTA_HEIGHT
-    expect(h.textTop - SCENE_TOP).toBeCloseTo(420 - NAV_SPACE - bottom)
+    expect(h.textTop - NAV_SPACE).toBeCloseTo(420 - SCENE_BOTTOM - bottom)
   })
 
   it('en escritorio la línea más larga entra en el ancho', () => {
@@ -106,16 +106,16 @@ describe('flow', () => {
 describe('footerTop', () => {
   const { top, bottom } = footerBands(false)
 
-  it('con el contenido entero en la ventana, el pie queda sobre la navbar', () => {
+  it('con el contenido entero en la ventana, el pie queda pegado abajo', () => {
     // Contenido de 200 px con el tope a 100 px del borde, en una ventana de 900.
-    expect(footerTop(-200, 100, 900, false)).toBe(100 - 900 + NAV_SPACE + top + bottom)
+    expect(footerTop(-200, 100, 900, false)).toBe(100 - 900 + SCENE_BOTTOM + top + bottom)
   })
 
   it('si el contenido no entra, va FOOTER_GAP debajo de él', () => {
     expect(footerTop(-1200, 48, 700, false)).toBe(-1200 - FOOTER_GAP)
   })
 
-  it('la reserva es el aire más las dos franjas: con el scroll interno al máximo, el pie termina sobre la navbar', () => {
+  it('la reserva es el aire más las dos franjas: con el scroll interno al máximo, el pie termina en el borde de abajo', () => {
     expect(footerReserve(true)).toBe(FOOTER_GAP + footerBands(true).top + footerBands(true).bottom)
   })
 })

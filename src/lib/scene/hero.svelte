@@ -7,7 +7,7 @@
   import type { SceneFrame } from './deck-logic.js'
   import { headlineAt, headlineWords, widestHeadline, type HeadlineWord } from './headline.js'
   import HeroFigure from './hero-figure.svelte'
-  import { CTA_HEIGHT, NAV_SPACE, SCENE_TOP, TITLE_LINE, flow, heroLayout } from './layout.js'
+  import { CTA_HEIGHT, NAV_SPACE, SCENE_BOTTOM, TITLE_LINE, flow, heroLayout } from './layout.js'
   import MeasuredText from './measured-text.svelte'
   import PrismCta from './prism-cta.svelte'
 
@@ -126,8 +126,8 @@
     }
   })
 
-  // La escena ocupa toda la ventana (el slot la deja a `SCENE_TOP` del borde).
-  const titleY = $derived(-(layout.textTop - SCENE_TOP))
+  // La escena ocupa toda la ventana (el slot la deja a `NAV_SPACE` del borde, bajo la navbar).
+  const titleY = $derived(-(layout.textTop - NAV_SPACE))
   const ctaY = $derived(titleY - (shownHeight || layout.titleSize * TITLE_LINE) - layout.gap)
 
   // ── Figura ───────────────────────────────────────────────────────
@@ -136,7 +136,7 @@
   const figureY = $derived(ctaY - CTA_HEIGHT - layout.figureGap - layout.figureHeight / 2)
 
   $effect(() => {
-    if (ready && ctaWidth > 0) onmeasure(viewportHeight - SCENE_TOP - NAV_SPACE)
+    if (ready && ctaWidth > 0) onmeasure(viewportHeight - NAV_SPACE - SCENE_BOTTOM)
   })
 
   /** Parallax de salida: lo de abajo se va antes. */
