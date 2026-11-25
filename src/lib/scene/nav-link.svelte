@@ -19,8 +19,6 @@
     minWidth?: number
     fontSize?: number
     color?: string
-    /** Opacidad del ícono y del texto. */
-    opacity?: number
     /**
      * Encima del activo, otra capa (ícono y texto en otro color) en `over.z`:
      * para un indicador oscuro que tapa la capa de abajo. Se ve con `solid`.
@@ -49,7 +47,6 @@
     minWidth = 66,
     fontSize = 11,
     color = PALETTE.ink,
-    opacity = 1,
     over,
     x,
     y,
@@ -71,7 +68,7 @@
   const iconY = $derived(y + blockHeight / 2 - iconSize / 2)
   const textTop = $derived(iconY - iconSize / 2 - GAP)
   /** Con capa de arriba, la de abajo se apaga a medida que aparece aquella. */
-  const base = $derived(over ? opacity * (1 - solid) : opacity)
+  const base = $derived(over ? 1 - solid : 1)
 </script>
 
 {#if focused && textWidth > 0}
@@ -105,7 +102,7 @@
   }}
 />
 {#if over && solid > 0.002}
-  <Image src={over.icon} width={iconSize} height={iconSize} opacity={opacity * solid} {x} y={iconY} z={over.z} />
+  <Image src={over.icon} width={iconSize} height={iconSize} opacity={solid} {x} y={iconY} z={over.z} />
   <MeasuredText
     text={link.label}
     {fontSize}
@@ -117,6 +114,6 @@
     {x}
     y={textTop}
     z={over.z}
-    opacity={opacity * solid}
+    opacity={solid}
   />
 {/if}

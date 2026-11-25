@@ -18,15 +18,6 @@ export const still = (o: Osc, target: number, eps = 0.05): boolean => Math.abs(o
 
 export const clamp01 = (t: number): number => Math.min(1, Math.max(0, t))
 
-/**
- * Propuestas del activo de la navbar de islas (temporal, se elige con `?nav=`):
- * `islas` el lente actual; `isla` el activo se separa en su propia isla;
- * `gota` una gota de tinta colgando bajo el activo; `tinta` un lente oscuro con
- * el ícono y el texto en blanco.
- */
-export type NavVariant = 'islas' | 'isla' | 'gota' | 'tinta'
-export const NAV_VARIANTS: readonly NavVariant[] = ['islas', 'isla', 'gota', 'tinta']
-
 /** Separación del borde de arriba de la ventana. */
 export const NAV_MARGIN = 16
 
@@ -47,7 +38,7 @@ export const navLinks = (compact: boolean): readonly Link[] =>
 
 /**
  * Vidrio de la pastilla y de la burbuja del logo: el perfil de `crystal` con
- * un tinte claro, ajustado por el usuario en el banco de pruebas (`?tune`).
+ * un tinte claro, ajustado por el usuario en un banco de pruebas.
  */
 export const NAV_GLASS = {
   profile: 'dome',

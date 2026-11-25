@@ -6,9 +6,8 @@
   import { Glass } from 'essentia-crystal'
   import { Image, Rect } from 'essentia-primitives'
   import { LOGO, PALETTE } from '$lib/tokens.js'
-  import { barTune, lensTune } from './lens-tune.svelte.js'
   import NavLink from './nav-link.svelte'
-  import { NAV_MARGIN, clamp01, navIcon, navLinks, stepOsc, still, type NavVariant, type Osc } from './nav-parts.js'
+  import { NAV_GLASS, NAV_MARGIN, clamp01, navIcon, navLinks, stepOsc, still, type Osc } from './nav-parts.js'
 
   interface Props {
     /** Ancho de la columna: la pastilla nunca lo pasa. */
@@ -20,11 +19,9 @@
     /** Link de la escena que se ve (o de la página): lo envuelve el lente. */
     activeHref: string | null
     onnavigate: (href: string) => void
-    /** Cómo se marca el activo (propuestas, temporal). */
-    variant?: NavVariant
   }
 
-  let { width, compact, logo = 1, focusedHref, activeHref, onnavigate, variant = 'islas' }: Props = $props()
+  let { width, compact, logo = 1, focusedHref, activeHref, onnavigate }: Props = $props()
 
   const engine = useEngine()
   const { onPointerEnter, onPointerLeave } = useCursor()
@@ -34,21 +31,16 @@
   const LINK_GAP = $derived(compact ? 22 : 30)
   const LOGO_HEIGHT = $derived(compact ? 28 : 30)
   const logoWidth = $derived(LOGO_HEIGHT * LOGO.isotipoNegro.aspect)
-  /** El lente del link activo: más ancho que el item y más alto que la barra. */
-  const LENS_PAD = 14
-  const LENS_OVERHANG = 10
-  const LENS_HEIGHT = HEIGHT + LENS_OVERHANG * 2
-  const LENS_RADIUS = 36
-  /** «Gota»: diámetro de la gota de tinta y cuánto cuelga bajo la pastilla. */
-  const DROP = 6
-  const DROP_BELOW = 9
-  /** «Isla»: aire entre la isla del activo y el resto de la pastilla; cuánto más alta es. */
-  const SPLIT = 10
-  const ISLAND_LIFT = 6
-  /** «Tinta»: el lente oscuro va adentro de la pastilla, a esta distancia de sus bordes (banco de pruebas). */
-  const INSET = $derived(variant === 'tinta' ? lensTune.inset : 0)
+  /**
+   * El lente del link activo va adentro de la pastilla, a `INSET` de sus bordes:
+   * sus puntas son concéntricas con las de la barra y, en el primer y el último
+   * item, queda a la misma distancia de la punta.
+   */
+  const INSET = 3
+  const LENS_HEIGHT = HEIGHT - INSET * 2
+  const LENS_PAD = PADDING - INSET
 
-  /** Íconos y textos: todos en el mismo negro; el activo lo marca el lente. */
+  /** Íconos y textos: todos en el mismo negro; el activo, en blanco sobre el lente. */
   const INK = '#1C1C1C'
 
   const links = $derived(navLinks(compact))
@@ -173,7 +165,10 @@
   // Aparece y se va con un fade: Glass no tiene opacidad, así que el fade lleva
   // cada parámetro visual del lente a su valor neutro, el de un vidrio que no se ve.
 
-  /** Vidrio del lente, tuneado en el playground de crystal: forma fija. */
+  /**
+   * Vidrio del lente oscuro, ajustado por el usuario en el banco de pruebas:
+   * forma fija…
+   */
   const LENS_SHAPE = {
     profile: 'squircle',
     bevelWidth: 16,
@@ -183,7 +178,7 @@
     ior: 1.37,
     blur: 0,
     edgeSharpness: 0,
-    tint: '#121212',
+    tint: PALETTE.ink,
     tintMode: 'overlay',
     softness: 0,
     shadowSpread: 4,
@@ -195,89 +190,34 @@
   const LENS_LOOK = {
     bevelDepth: 20,
     refraction: 2.1,
-    dispersion: 0.07,
-    magnify: 0.92,
-    tintOpacity: 0.01,
+    dispersion: 0.185,
+    magnify: 0.96,
+    tintOpacity: 0.5,
     brightness: -0.02,
-    saturation: 0.8,
+    saturation: 1,
     reflection: 0.2,
     specular: 0.07,
     rim: 0.15,
     shadowOpacity: 0.02,
   } as const
-  /** Forma y aspecto del lente: los del preset, o en «tinta» los del banco de pruebas (`?tune`). */
-  const lensShape = $derived(
-    variant === 'tinta'
-      ? {
-          ...LENS_SHAPE,
-          profile: lensTune.profile,
-          bevelWidth: lensTune.bevelWidth,
-          lip: lensTune.lip,
-          lipSharpness: lensTune.lipSharpness,
-          thickness: lensTune.thickness,
-          ior: lensTune.ior,
-          blur: lensTune.blur,
-          tint: lensTune.tint,
-          tintMode: lensTune.tintMode,
-          tilt: lensTune.tilt,
-        }
-      : LENS_SHAPE,
-  )
-  const lensLook = $derived(
-    variant === 'tinta'
-      ? {
-          bevelDepth: lensTune.bevelDepth,
-          refraction: lensTune.refraction,
-          dispersion: lensTune.dispersion,
-          magnify: lensTune.magnify,
-          tintOpacity: lensTune.tintOpacity,
-          brightness: lensTune.brightness,
-          saturation: lensTune.saturation,
-          reflection: lensTune.reflection,
-          specular: lensTune.specular,
-          rim: lensTune.rim,
-          shadowOpacity: lensTune.shadowOpacity,
-        }
-      : LENS_LOOK,
-  )
-
-  /** El alto del indicador en reposo. */
-  const lensRest = $derived(
-    variant === 'gota' ? DROP : variant === 'isla' ? HEIGHT + ISLAND_LIFT : variant === 'tinta' ? HEIGHT - INSET * 2 : LENS_HEIGHT,
-  )
   const lensTarget = $derived.by(() => {
     if (activeIndex < 0 || !measured) return null
-    const x = itemX(activeIndex)
-    const w = itemWidths[links[activeIndex]!.href]!
-    if (variant === 'gota') return { x, width: DROP }
-    if (variant === 'isla') {
-      // La isla corta la pastilla a mitad de camino entre el activo y sus vecinos.
-      const prev = links[activeIndex - 1]
-      const next = links[activeIndex + 1]
-      const left = prev ? (itemX(activeIndex - 1) + itemWidths[prev.href]! / 2 + x - w / 2) / 2 : layout.barX - pillWidth / 2
-      const right = next ? (x + w / 2 + itemX(activeIndex + 1) - itemWidths[next.href]! / 2) / 2 : layout.barX + pillWidth / 2
-      return { x: (left + right) / 2, width: right - left }
-    }
-    // Adentro, el lente del primer y el último item queda a `INSET` de la punta.
-    if (variant === 'tinta') return { x, width: w + (PADDING - INSET) * 2 }
-    return { x, width: w + LENS_PAD * 2 }
+    return { x: itemX(activeIndex), width: itemWidths[links[activeIndex]!.href]! + LENS_PAD * 2 }
   })
 
   // ── Lente: gota elástica ───────────────────────────────────────
   // Al cambiar de item, el borde que va adelante corre y el de atrás se queda y
-  // después alcanza: el lente se estira, se afina como una gota y ondula.
+  // después alcanza: el lente se estira, se afina como una gota y ondula. Con
+  // mesura: adentro de la pastilla, la gota entera se veía demasiado.
 
-  /**
-   * Cuánto se deforma (0 rígido, 1 la gota entera): en «tinta» lo dice el banco
-   * de pruebas; el borde de atrás se atrasa menos y el lente se afina y ondula menos.
-   */
-  const stretch = $derived(variant === 'tinta' ? lensTune.stretch : 1)
+  /** Cuánto se deforma: 0 rígido, 1 la gota entera. */
+  const STRETCH = 0.6
   /** Borde de adelante y de atrás (rad/s) y su amortiguación. */
   const EDGE_LEAD = 24
-  const EDGE_TRAIL = $derived(EDGE_LEAD - 15 * stretch)
+  const EDGE_TRAIL = EDGE_LEAD - 15 * STRETCH
   const EDGE_ZETA = 0.85
   /** Cuánto se afina al estirarse: alto mínimo relativo. */
-  const THINNEST = $derived(1 - 0.28 * stretch)
+  const THINNEST = 1 - 0.28 * STRETCH
 
   // Bordes del lente (izquierdo y derecho), alto y fade.
   const edgeL: Osc = { x: 0, v: 0 }
@@ -301,7 +241,7 @@
       edgeL.x = target.x - target.width / 2
       edgeR.x = target.x + target.width / 2
       edgeL.v = edgeR.v = 0
-      tall.x = lensRest
+      tall.x = LENS_HEIGHT
       tall.v = 0
     }
     springFade.target = target ? 1 : 0
@@ -328,14 +268,14 @@
         stepOsc(edgeR, target.x + target.width / 2, right ? EDGE_LEAD : EDGE_TRAIL, EDGE_ZETA, dt)
         stepOsc(edgeL, target.x - target.width / 2, right ? EDGE_TRAIL : EDGE_LEAD, EDGE_ZETA, dt)
         const thin = Math.pow(target.width / Math.max(1, edgeR.x - edgeL.x), 0.35)
-        stepOsc(tall, lensRest * Math.min(1, Math.max(THINNEST, thin)), 30, 1, dt)
+        stepOsc(tall, LENS_HEIGHT * Math.min(1, Math.max(THINNEST, thin)), 30, 1, dt)
       }
       springFade.step(dt)
       phase += dt * (2 + speed / 120)
       sync(((edgeL.x + edgeR.x) / 2 - before) / Math.max(dt, 1e-4))
       const settled =
         springFade.settled &&
-        (!target || (still(edgeL, target.x - target.width / 2) && still(edgeR, target.x + target.width / 2) && still(tall, lensRest)))
+        (!target || (still(edgeL, target.x - target.width / 2) && still(edgeR, target.x + target.width / 2) && still(tall, LENS_HEIGHT)))
       if (settled) {
         speed = 0
         animating = false
@@ -345,7 +285,7 @@
   )
 
   /** Amplitud del blob: crece con lo que se estira y con la velocidad; quieto es liso. */
-  const wobbleAmplitude = $derived(stretch * Math.min(0.09, Math.max(0, lensW - (lensTarget?.width ?? lensW)) / 1400 + speed / 14000))
+  const wobbleAmplitude = $derived(STRETCH * Math.min(0.09, Math.max(0, lensW - (lensTarget?.width ?? lensW)) / 1400 + speed / 14000))
 
   const mix = (from: number, to: number) => from + (to - from) * fade
 
@@ -359,55 +299,28 @@
     return fade * Math.min(1, Math.max(0, 1 - Math.abs(lensX - itemX(i)) / half))
   }
 
-  /** «Isla»: la pastilla cortada en tres, con la isla del activo en el medio. */
-  const segments = $derived.by(() => {
-    if (variant !== 'isla' || fade <= 0.002) return null
-    const hole = (SPLIT / 2) * fade
-    const left = layout.barX - pillWidth / 2
-    const right = layout.barX + pillWidth / 2
-    const l = lensX - lensW / 2
-    const r = lensX + lensW / 2
-    return [
-      { from: left, to: l - hole, island: false },
-      { from: l + hole, to: r - hole, island: true },
-      { from: r + hole, to: right, island: false },
-    ].filter((s) => s.to - s.from > 4)
-  })
-
   // La barra no deja pasar el puntero al contenido que se mueve debajo.
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation()
 </script>
 
 <!--
-  z = 10: la pastilla de los links y la burbuja del logo, vidrio claro casi opaco
-  (`NAV_GLASS`, o el del banco de pruebas con `?tune`; nivel 2 de captura).
-  z = 11: el lente del link activo (`LENS_SHAPE` + `LENS_LOOK`), que refracta la barra y
-  lo que pasa por debajo (nivel 3, el último).
+  z = 10: la pastilla de los links y la burbuja del logo, vidrio claro (`NAV_GLASS`;
+  nivel 2 de captura).
+  z = 11: el lente oscuro del link activo (`LENS_SHAPE` + `LENS_LOOK`), adentro de la
+  pastilla; refracta la barra y lo que pasa por debajo (nivel 3, el último).
+  z = 11.05: el ícono y el texto del activo en blanco, encima del lente.
   Sin los anchos medidos la pastilla no sabe cuánto mide: aparece con el texto.
 -->
 {#if measured}
-  {#if segments}
-    {#each segments as seg, k (k)}
-      {@const w = seg.to - seg.from}
-      {@const h = seg.island ? mix(HEIGHT, lensH) : HEIGHT}
-      <Glass {...barTune} width={w} height={h} radius={Math.min(h, w) / 2} x={(seg.from + seg.to) / 2} {y}
-        z={10}
-        wobble={seg.island && wobbleAmplitude > 0.002 ? { amplitude: wobbleAmplitude, frequency: 0.6, phase } : barWobble > 0.002 ? { amplitude: barWobble, frequency: 0.6, phase: dropPhase } : null}
-        onclick={stop}
-        onpointermove={stop}
-      />
-    {/each}
-  {:else}
-    <Glass {...barTune} width={pillWidth} height={HEIGHT} radius={HEIGHT / 2} x={layout.barX} {y}
-      z={10}
-      wobble={barWobble > 0.002 ? { amplitude: barWobble, frequency: 0.6, phase: dropPhase } : null}
-      onclick={stop}
-      onpointermove={stop}
-    />
-  {/if}
+  <Glass {...NAV_GLASS} width={pillWidth} height={HEIGHT} radius={HEIGHT / 2} x={layout.barX} {y}
+    z={10}
+    wobble={barWobble > 0.002 ? { amplitude: barWobble, frequency: 0.6, phase: dropPhase } : null}
+    onclick={stop}
+    onpointermove={stop}
+  />
   {#if layout.bubble}
     <!-- La burbuja del logo, del mismo vidrio que la barra. -->
-    <Glass {...barTune} width={layout.bubble.size} height={layout.bubble.size} radius={layout.bubble.size / 2} x={layout.bubble.x} {y}
+    <Glass {...NAV_GLASS} width={layout.bubble.size} height={layout.bubble.size} radius={layout.bubble.size / 2} x={layout.bubble.x} {y}
       z={10}
       wobble={bubbleWobble > 0.002 ? { amplitude: bubbleWobble, frequency: 0.6, phase: dropPhase + 1.7 } : null}
       onclick={(e: { stopPropagation: () => void }) => {
@@ -419,26 +332,23 @@
   {/if}
 {/if}
 
-{#if variant === 'gota' && fade > 0.002}
-  <!-- La gota de tinta, colgando bajo el activo: se estira al viajar. -->
-  <Rect width={lensW} height={lensH} radius={lensH / 2} color={PALETTE.ink} opacity={fade} x={lensX} y={y - HEIGHT / 2 - DROP_BELOW} z={10.05} />
-{:else if (variant === 'islas' || variant === 'tinta') && fade > 0.002}
+{#if fade > 0.002}
   <Glass
-    {...lensShape}
+    {...LENS_SHAPE}
     width={lensW}
     height={lensH}
-    radius={Math.min(LENS_RADIUS, lensH / 2)}
-    bevelDepth={mix(0, lensLook.bevelDepth)}
-    refraction={mix(0, lensLook.refraction)}
-    dispersion={mix(0, lensLook.dispersion)}
-    magnify={mix(1, lensLook.magnify)}
-    tintOpacity={mix(0, lensLook.tintOpacity)}
-    brightness={mix(0, lensLook.brightness)}
-    saturation={mix(0, lensLook.saturation)}
-    reflection={mix(0, lensLook.reflection)}
-    specular={mix(0, lensLook.specular)}
-    rim={mix(0, lensLook.rim)}
-    shadowOpacity={mix(0, lensLook.shadowOpacity)}
+    radius={lensH / 2}
+    bevelDepth={mix(0, LENS_LOOK.bevelDepth)}
+    refraction={mix(0, LENS_LOOK.refraction)}
+    dispersion={mix(0, LENS_LOOK.dispersion)}
+    magnify={mix(1, LENS_LOOK.magnify)}
+    tintOpacity={mix(0, LENS_LOOK.tintOpacity)}
+    brightness={mix(0, LENS_LOOK.brightness)}
+    saturation={mix(0, LENS_LOOK.saturation)}
+    reflection={mix(0, LENS_LOOK.reflection)}
+    specular={mix(0, LENS_LOOK.specular)}
+    rim={mix(0, LENS_LOOK.rim)}
+    shadowOpacity={mix(0, LENS_LOOK.shadowOpacity)}
     wobble={wobbleAmplitude > 0.002 ? { amplitude: wobbleAmplitude, frequency: 0.6, phase } : null}
     x={lensX}
     {y}
@@ -470,8 +380,7 @@
     iconSolid={navIcon(link.href, true)}
     solid={solidness(i)}
     color={INK}
-    opacity={variant === 'gota' ? 0.45 + 0.55 * solidness(i) : 1}
-    over={variant === 'tinta' && lensTune.label === 'paper' ? { icon: navIcon(link.href, 'paper'), color: PALETTE.paper, z: 11.05 } : undefined}
+    over={{ icon: navIcon(link.href, 'paper'), color: PALETTE.paper, z: 11.05 }}
     x={itemX(i)}
     {y}
     z={10.05}

@@ -7,7 +7,6 @@
   import HomeScene from './home-scene.svelte'
   import { bob, columnWidth, isCompact, medusas, type MedusaRect } from './layout.js'
   import Nav from './nav.svelte'
-  import { NAV_VARIANTS, type NavVariant } from './nav-parts.js'
   import Backdrop from './backdrop.svelte'
   import EdgeWarp from './edge-warp.svelte'
   import SceneDots from './scene-dots.svelte'
@@ -55,20 +54,6 @@
     const t = Math.min(1, Math.max(0, (deck.position - 0.3) / 0.5))
     return t * t * (3 - 2 * t)
   })
-
-  // ── Propuestas del activo de la navbar (temporal) ───────────
-  // `?nav=isla|gota|tinta` elige una; queda guardada en la pestaña, porque
-  // la URL pierde el query al cambiar de escena.
-  const navVariant = ((): NavVariant => {
-    try {
-      const asked = new URLSearchParams(location.search).get('nav')
-      if (asked) sessionStorage.setItem('nav', asked)
-      const v = asked ?? sessionStorage.getItem('nav')
-      return NAV_VARIANTS.includes(v as NavVariant) ? (v as NavVariant) : 'islas'
-    } catch {
-      return 'islas'
-    }
-  })()
 
   // ── Medusas del hero ───────────────────────────────────────────
   // Flotan sobre el título y se van con el hero, un poco más rápido que él
@@ -130,7 +115,7 @@
 <!-- La fase del líquido sigue al contenido: el paso de escena, el scroll interno y el reloj del hero. -->
 <EdgeWarp phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
 
-<Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} {onnavigate} variant={navVariant} />
+<Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} {onnavigate} />
 {#if !compact && deck.count > 1}
   <SceneDots count={deck.count} position={deck.position} x={vw / 2 - 22} {onselect} />
 {/if}

@@ -6,8 +6,6 @@
   import { PALETTE } from '$lib/tokens.js'
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
-  import { tuning } from './lens-tune.svelte.js'
-  import LensTuner from './lens-tuner.svelte'
   import SiteScene from './site-scene.svelte'
 
   interface Props {
@@ -18,8 +16,6 @@
   let { layer }: Props = $props()
 
   const YEAR = new Date().getFullYear()
-  /** Banco de pruebas del lente de la navbar (temporal): `?tune`. */
-  const tune = tuning()
 
   /** Ruta sin la barra final: «/» queda como está. */
   const normalize = (path: string) => (path.length > 1 ? path.replace(/\/$/, '') : path)
@@ -185,9 +181,6 @@
     />
   </EssentiaRoot>
 </div>
-{#if tune}
-  <LensTuner />
-{/if}
 
 <style>
   .stage {
