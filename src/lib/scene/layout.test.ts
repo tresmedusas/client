@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ASPECT } from './figures/hero.js'
 import { CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_TOP, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
@@ -44,16 +45,29 @@ describe('rows', () => {
 describe('heroLayout', () => {
   const TITLE = 'Construimos la identidad\nque tu emprendimiento necesita.'
 
-  it('centra el titular y el botón en el alto libre, entre el margen de arriba y la navbar', () => {
-    for (const [vw, vh, compact] of [[1440, 900, false], [375, 812, true]] as const) {
+  it('la figura llega al borde de abajo de la ventana, tan ancha como la columna', () => {
+    for (const [vw, vh, compact] of [[1440, 900, false], [1920, 1080, false], [375, 812, true]] as const) {
       const width = columnWidth(vw)
       const text = 150
       const h = heroLayout(width, vh, compact, TITLE, text)
       expect(h.textWidth).toBeLessThanOrEqual(width)
-      const bottom = h.textTop + text + h.gap + CTA_HEIGHT
-      expect(h.textTop - SCENE_TOP).toBeCloseTo(vh - NAV_SPACE - bottom)
+      expect(h.figureWidth).toBe(Math.min(1100, width))
+      expect(h.figureHeight).toBeLessThanOrEqual(Math.floor(h.figureWidth / ASPECT))
+      expect(h.figureGap).toBeGreaterThanOrEqual(28)
+      expect(h.textTop + text + h.gap + CTA_HEIGHT + h.figureGap + h.figureHeight).toBeCloseTo(vh)
       expect(h.textTop).toBeGreaterThanOrEqual(SCENE_TOP)
     }
+  })
+
+  it('con poco alto recorta la figura por abajo, y si queda muy baja no la muestra', () => {
+    const text = 150
+    const short = heroLayout(columnWidth(1280), 560, false, TITLE, text)
+    expect(short.figureHeight).toBeLessThan(Math.floor(short.figureWidth / ASPECT))
+    expect(short.textTop).toBe(SCENE_TOP)
+    const h = heroLayout(columnWidth(1440), 420, false, TITLE, text)
+    expect(h.figureWidth).toBe(0)
+    const bottom = h.textTop + text + h.gap + CTA_HEIGHT
+    expect(h.textTop - SCENE_TOP).toBeCloseTo(420 - NAV_SPACE - bottom)
   })
 
   it('en escritorio la línea más larga entra en el ancho', () => {

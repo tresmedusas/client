@@ -2,6 +2,7 @@
   import LeadIn from '$lib/lead-in.svelte'
   import { ABOUT, CONTACT_SECTION, HERO, HOW_WORK, SITE } from '$lib/content.js'
   import FounderDialog from '$lib/founder-dialog.svelte'
+  import HeroFigure from '$lib/hero-figure.svelte'
   import { headlineWords } from '$lib/scene/headline.js'
   import { openFounder } from '$lib/founder-dialog.svelte.js'
 </script>
@@ -27,6 +28,7 @@
       </span>{HERO.primary.label}
     </a>
   </p>
+  <HeroFigure />
 </section>
 
 <section id={HOW_WORK.section.id} aria-labelledby="{HOW_WORK.section.id}-title">

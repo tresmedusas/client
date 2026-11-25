@@ -2,19 +2,19 @@
   import { untrack } from 'svelte'
   import { T, useTask } from '@threlte/core'
   import { HERO } from '$lib/content.js'
+  import { figureAt } from './figures/hero.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
   import type { SceneFrame } from './deck-logic.js'
   import { headlineAt, headlineWords, widestHeadline, type HeadlineWord } from './headline.js'
-  import HeroEdge from './hero-edge.svelte'
-  import { NAV_SPACE, SCENE_TOP, TITLE_LINE, flow, heroLayout } from './layout.js'
+  import HeroFigure from './hero-figure.svelte'
+  import { CTA_HEIGHT, NAV_SPACE, SCENE_TOP, TITLE_LINE, flow, heroLayout } from './layout.js'
   import MeasuredText from './measured-text.svelte'
   import PrismCta from './prism-cta.svelte'
 
   /**
-   * Hero: el titular y, debajo, el botón, centrados en la columna y en el
-   * alto libre. Los protagonistas son el titular y el fondo: arriba, una
-   * franja de haces de luz, y en todo el hero un grano que reacciona a esa
-   * luz. Sin logo (pedido del usuario, 2026-11-24).
+   * Hero: el titular, el botón y, debajo, la figura de lo que nombra el
+   * titular, centrados en la columna y en el alto libre, sobre el papel liso.
+   * Sin logo ni luz de fondo (pedidos del usuario, 2026-11-24).
    *
    * El titular tiene palabras que rotan (`headline.ts`): el texto fijo va en
    * `muted` y regular, y las palabras que rotan, en `ink` y black. Cada
@@ -30,7 +30,7 @@
     /** No se usa: el hero ocupa toda la ventana. */
     frame?: SceneFrame
     focusedHref: string | null
-    /** El movimiento continuo (las palabras que rotan y la luz) está permitido. @default true */
+    /** El movimiento continuo (las palabras que rotan, la figura y el botón) está permitido. @default true */
     motion?: boolean
     onmeasure: (height: number) => void
     onnavigate: (href: string) => void
@@ -40,7 +40,7 @@
 
   const H = HERO.headline
 
-  // Reloj del titular, la luz y el botón: corre solo con el hero a la vista.
+  // Reloj del titular, la figura y el botón: corre solo con el hero a la vista.
   let time = $state(0)
 
   // ── Titular ──────────────────────────────────────────────────────
@@ -130,6 +130,11 @@
   const titleY = $derived(-(layout.textTop - SCENE_TOP))
   const ctaY = $derived(titleY - (shownHeight || layout.titleSize * TITLE_LINE) - layout.gap)
 
+  // ── Figura ───────────────────────────────────────────────────────
+  // Sigue al titular: cambia cuando cambia «qué construimos».
+  const figure = $derived(motion ? figureAt(H, time) : { from: 0, to: 0, p: 1 })
+  const figureY = $derived(ctaY - CTA_HEIGHT - layout.figureGap - layout.figureHeight / 2)
+
   $effect(() => {
     if (ready && ctaWidth > 0) onmeasure(viewportHeight - SCENE_TOP - NAV_SPACE)
   })
@@ -138,9 +143,6 @@
   const lag = (k: number) => d * viewportHeight * k
 </script>
 
-<!-- La columna está centrada en la ventana; la escena empieza `SCENE_TOP` debajo de su borde de arriba. -->
-<!-- Luz arriba y grano en todo el hero: la ventana, centrada con la columna, desde `SCENE_TOP` hacia abajo. -->
-<HeroEdge x={width / 2} top={SCENE_TOP} height={viewportHeight} {time} />
 {#each words as w (w.key)}
   {@const at = shown[w.key] ?? target.at[w.key]}
   <MeasuredText
@@ -156,6 +158,20 @@
     onmeasure={(wd) => (widths[w.key] = wd)}
   />
 {/each}
+{#if layout.figureWidth > 0}
+  <T.Group position.y={lag(0.34)}>
+    <HeroFigure
+      from={figure.from}
+      to={figure.to}
+      p={figure.p}
+      width={layout.figureWidth}
+      height={layout.figureHeight}
+      x={width / 2}
+      y={figureY}
+      opacity={ready ? 1 : 0}
+    />
+  </T.Group>
+{/if}
 <T.Group position.y={lag(0.22)}>
   <PrismCta
     link={HERO.primary}

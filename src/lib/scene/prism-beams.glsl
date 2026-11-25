@@ -1,5 +1,4 @@
-// Haces de luz iridiscentes, compartidos por el botón del hero
-// (`prism-ring.frag.glsl`) y la franja de arriba del hero (`prism-edge.frag.glsl`).
+// Haces de luz iridiscentes del aro del botón del hero (`prism-ring.frag.glsl`).
 //
 // Franjas de luz que cruzan lo que iluminan, cada una por su cuenta: su
 // ángulo, su ancho, su velocidad y su vaivén salen de su propia semilla, y

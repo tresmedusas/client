@@ -67,7 +67,7 @@ export const NAV: readonly Link[] = [
 
 // ── Home ─────────────────────────────────────────────────────────
 
-/** Hero: la marca, qué hacemos y un botón que lleva a cómo trabajamos. Va a la izquierda, con el logo animado a la derecha. */
+/** Hero: qué hacemos y un botón para agendar una reunión, centrados. */
 export const HERO = {
   id: 'inicio',
   /**
@@ -90,8 +90,12 @@ export const HERO = {
     who: ['empresa', 'negocio', 'emprendimiento'],
     after: 'necesita.',
   },
-  /** Lleva a la escena siguiente; el mismo href que en `NAV`, para que el foco del teclado encuentre el botón. */
-  primary: { label: 'Conocer más', href: '/#como-trabajamos' } satisfies Link,
+  /**
+   * Lo que se busca: agendar una reunión (pedido del usuario, 2026-11-24).
+   * Lleva al contacto, desde donde se coordina la llamada; el mismo href que
+   * en `NAV`, para que el foco del teclado encuentre el botón.
+   */
+  primary: { label: 'Agendar reunión', href: '/#contacto' } satisfies Link,
 } as const
 
 export const HOW_WORK = {
