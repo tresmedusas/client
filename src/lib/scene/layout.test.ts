@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bob, columnWidth, flow, grid, medusas, rows, stack } from './layout.js'
+import { bob, columnWidth, flow, footerBands, footerReserve, footerTop, FOOTER_GAP, grid, medusas, NAV_SPACE, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -79,5 +79,22 @@ describe('flow', () => {
 
   it('centrado: cada fila queda al medio de la columna', () => {
     expect(flow([100, 100, 100], 250, 10, 'center')).toEqual({ x: [20, 130, 75], row: [0, 0, 1], rows: 2 })
+  })
+})
+
+describe('footerTop', () => {
+  const { top, bottom } = footerBands(false)
+
+  it('con el contenido entero en la ventana, el pie queda sobre la navbar', () => {
+    // Contenido de 200 px con el tope a 100 px del borde, en una ventana de 900.
+    expect(footerTop(-200, 100, 900, false)).toBe(100 - 900 + NAV_SPACE + top + bottom)
+  })
+
+  it('si el contenido no entra, va FOOTER_GAP debajo de él', () => {
+    expect(footerTop(-1200, 48, 700, false)).toBe(-1200 - FOOTER_GAP)
+  })
+
+  it('la reserva es el aire más las dos franjas: con el scroll interno al máximo, el pie termina sobre la navbar', () => {
+    expect(footerReserve(true)).toBe(FOOTER_GAP + footerBands(true).top + footerBands(true).bottom)
   })
 })

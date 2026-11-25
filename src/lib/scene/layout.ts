@@ -16,6 +16,40 @@ export const NAV_SPACE = 88
 /** Margen de arriba de cada escena (la navbar va abajo). */
 export const SCENE_TOP = 40
 
+/** Aire entre el contenido de la última escena y el pie. */
+export const FOOTER_GAP = 72
+
+/**
+ * Alto de las dos franjas del pie (sin contar la de la navbar): la blanca, con
+ * el logo, y la de abajo, con «Powered by», el copyright y los términos. En
+ * una columna, la de abajo apila sus dos filas.
+ */
+export function footerBands(compact: boolean): { top: number; bottom: number } {
+  return compact ? { top: 104, bottom: 96 } : { top: 140, bottom: 64 }
+}
+
+/**
+ * Lo que la última escena reserva bajo su contenido para el pie. La franja de
+ * la navbar ya queda fuera del área de la escena: el pie la cubre con su
+ * franja de abajo, y la navbar flota encima.
+ */
+export function footerReserve(compact: boolean): number {
+  const { top, bottom } = footerBands(compact)
+  return FOOTER_GAP + top + bottom
+}
+
+/**
+ * Tope del pie, en la y de la escena (origen en el tope de su contenido, y
+ * hacia arriba): pegado sobre la navbar, con la franja de abajo hasta el
+ * borde de la ventana, o `FOOTER_GAP` bajo el contenido si este no entra.
+ * `contentBottom` es el borde de abajo del contenido (negativo) y `frameTop`,
+ * dónde quedó el tope del contenido en la ventana.
+ */
+export function footerTop(contentBottom: number, frameTop: number, viewportHeight: number, compact: boolean): number {
+  const { top, bottom } = footerBands(compact)
+  return Math.min(frameTop - viewportHeight + NAV_SPACE + top + bottom, contentBottom - FOOTER_GAP)
+}
+
 /** Alto de los botones (píldoras de vidrio). */
 export const CTA_HEIGHT = 52
 /** Separación entre dos botones en fila. */

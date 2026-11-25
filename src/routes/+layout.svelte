@@ -72,10 +72,23 @@
     {@render children()}
   </main>
 
-  <footer>
-    <p class="brand-name">{SITE.name}</p>
-    <p>{FOOTER.tagline}</p>
-    <p>{FOOTER.copyright(YEAR)}</p>
+  <!-- El pie de la última escena: el logo; «Powered by Essentia», el copyright y los términos. -->
+  <footer class="site-footer">
+    <div class="footer-main">
+      <a class="footer-brand" href="/">
+        <img src={LOGO.completo.src} alt={SITE.name} width="188" height="32" />
+      </a>
+    </div>
+    <div class="footer-legal">
+      <p class="powered">
+        {FOOTER.poweredBy}
+        <img src={LOGO.essentia.src} alt={FOOTER.essentia} width="91" height="18" />
+      </p>
+      <p class="legal">
+        <span>{FOOTER.copyright(YEAR)}</span>
+        <a href={FOOTER.terms.href} aria-current={page.url.pathname === FOOTER.terms.href ? 'page' : undefined}>{FOOTER.terms.label}</a>
+      </p>
+    </div>
   </footer>
 </div>
 
