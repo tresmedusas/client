@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { HERO } from '$lib/content.js'
-import { FADE_OUT, HOLD, STEP, headlineAt, headlineText, headlineWords, variant, widestHeadline } from './headline.js'
+import { HERO, SHOWCASE } from '$lib/content.js'
+import { FADE_IN, FADE_OUT, HOLD, STEP, headlineAt, rotatingAt, rotatingInline, headlineText, headlineWords, variant, widestHeadline } from './headline.js'
 
 const H = HERO.headline
 
@@ -46,5 +46,27 @@ describe('headline', () => {
 
   it('el más ancho usa las variantes más largas', () => {
     expect(widestHeadline(H)).toBe('Construimos la identidad\nque tu emprendimiento necesita.')
+  })
+})
+
+describe('rotatingAt (el título del showcase)', () => {
+  const T = SHOWCASE.headline
+
+  it('arranca en la primera variante y la capa semántica dice lo mismo', () => {
+    expect(rotatingAt(T, 0)).toEqual({ index: 0, opacity: 1 })
+    expect(rotatingInline(T)).toBe(SHOWCASE.section.title)
+  })
+
+  it('en cada paso se desvanece la anterior y aparece la siguiente', () => {
+    const out = rotatingAt(T, STEP + FADE_OUT / 2)
+    expect(out.index).toBe(0)
+    expect(out.opacity).toBeLessThan(1)
+    expect(rotatingAt(T, STEP + FADE_OUT + FADE_IN)).toEqual({ index: 1, opacity: 1 })
+  })
+
+  it('recorre todas las variantes y vuelve a empezar', () => {
+    const at = (k: number) => rotatingAt(T, k * STEP + HOLD / 2 + FADE_OUT + FADE_IN).index
+    expect(T.words.map((_, k) => at(k))).toEqual(T.words.map((_, i) => i))
+    expect(at(T.words.length)).toBe(0)
   })
 })

@@ -4,10 +4,12 @@
   import type { Page } from '$lib/content.js'
   import type { Deck } from './deck.svelte.js'
   import HomeScene from './home-scene.svelte'
-  import { columnWidth, isCompact } from './layout.js'
+  import { CASE_LOOK, columnWidth, isCompact, showcaseBand } from './layout.js'
   import Nav from './nav.svelte'
   import Backdrop from './backdrop.svelte'
   import EdgeWarp from './edge-warp.svelte'
+  import { HOME_WARP, SHOWCASE_WARP, bandHeight, type WarpAxis } from './edge-warp.js'
+  import { lab } from '$lib/lab/warp-lab.svelte.js'
   import SceneDots from './scene-dots.svelte'
   import ShowcaseScene from './showcase-scene.svelte'
   import TermsScene from './terms-scene.svelte'
@@ -46,6 +48,27 @@
   useTask((delta) => (time += delta), { running: () => running })
   useTask((delta) => deck.advance(delta), { running: () => deck.moving })
 
+  // ── Bordes ─────────────────────────────────────────────────────
+  // En el showcase, los bordes son protagonistas: los casos pasan en fila,
+  // las franjas de los costados los estiran y los bordes de arriba y abajo
+  // los reflejan (pedido del usuario, 2026-11-25). En desarrollo, los
+  // valores del banco de pruebas (`$lib/lab`).
+  const warp = $derived(
+    import.meta.env.DEV && lab ? lab.looks[page === 'showcase' ? 'showcase' : 'home'] : page === 'showcase' ? SHOWCASE_WARP : HOME_WARP,
+  )
+  const axis = $derived<WarpAxis>(page === 'showcase' ? 'horizontal' : 'vertical')
+  /**
+   * Tamaño de las franjas. En el showcase, las de los costados se ajustan a
+   * la ventana: le dejan lugar a la card centrada (`showcaseBand`).
+   */
+  const cases = $derived(import.meta.env.DEV && lab ? lab.cases : CASE_LOOK)
+  const band = $derived(page === 'showcase' ? showcaseBand(warp, cases, vw, vh, compact) : bandHeight(warp, vh, compact))
+  /** Cuánto se enciende el reflejo: lo informa el showcase. */
+  let focus = $state(0)
+  $effect(() => {
+    if (page !== 'showcase') focus = 0
+  })
+
   // ── Logo de la navbar ──────────────────────────────────────────
   // Mientras se ve el hero, que ya presenta la marca, la navbar va sin logo:
   // aparece a medida que el hero se va (posición 0.3 → 0.8).
@@ -63,7 +86,9 @@
    0    texto, líneas y placas del contenido
    1    vidrios del contenido: botones, paneles y lentes → nivel 1
    1.01 texto sobre los paneles
-   9.9995 bordes de arriba y abajo: curva, aberración, blur y líquido → nivel 2 (con la navbar)
+   9.9995 bordes: franjas arriba y abajo (a los costados en el showcase) con curva (o
+          estirado), aberración, blur y líquido, y reflejo en los otros dos
+          (showcase) → nivel 2 (con la navbar)
   10    navbar fija (pastilla y burbuja del logo) → nivel 2; indicador de escenas
   11    lente del link activo de la navbar → nivel 3 (el último)
 -->
@@ -71,14 +96,14 @@
   {#if home}
     <HomeScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
   {:else if page === 'showcase'}
-    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
+    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {band} look={warp} {motion} onfocus={(f) => (focus = f)} />
   {:else}
     <TermsScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}
 {/key}
 
 <!-- La fase del líquido sigue al contenido: el paso de escena, el scroll interno y el reloj del hero. -->
-<EdgeWarp phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
+<EdgeWarp look={warp} {axis} {band} {focus} phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
 
 <Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} {onnavigate} />
 {#if !compact && deck.count > 1}

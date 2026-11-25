@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 1000" width="1200" height="3000">
+  <!-- Captura de ejemplo de una landing, entera (se ve desde arriba). Monocromo, DESIGN.md §4. -->
+  <rect width="400" height="1000" fill="#FFFFFF"/>
+  <!-- Navbar -->
+  <circle cx="36" cy="34" r="10" fill="#1C1E21"/>
+  <rect x="54" y="30" width="56" height="8" rx="4" fill="#111111" fill-opacity="0.16"/>
+  <rect x="236" y="30" width="34" height="8" rx="4" fill="#111111" fill-opacity="0.09"/>
+  <rect x="280" y="30" width="34" height="8" rx="4" fill="#111111" fill-opacity="0.09"/>
+  <rect x="324" y="22" width="52" height="24" rx="12" fill="#1C1E21"/>
+  <line x1="0" y1="64" x2="400" y2="64" stroke="#111111" stroke-opacity="0.08"/>
+  <!-- Hero -->
+  <rect x="146" y="96" width="108" height="18" rx="9" fill="none" stroke="#111111" stroke-opacity="0.22"/>
+  <rect x="160" y="103" width="80" height="4" rx="2" fill="#111111" fill-opacity="0.16"/>
+  <rect x="44" y="134" width="312" height="26" rx="8" fill="#111111" fill-opacity="0.82"/>
+  <rect x="84" y="170" width="232" height="26" rx="8" fill="#111111" fill-opacity="0.82"/>
+  <rect x="80" y="214" width="240" height="8" rx="4" fill="#111111" fill-opacity="0.16"/>
+  <rect x="110" y="230" width="180" height="8" rx="4" fill="#111111" fill-opacity="0.16"/>
+  <rect x="108" y="258" width="88" height="34" rx="17" fill="#1C1E21"/>
+  <rect x="126" y="272" width="52" height="6" rx="3" fill="#F4F4F4"/>
+  <rect x="204" y="258" width="88" height="34" rx="17" fill="#FFFFFF" stroke="#111111" stroke-opacity="0.22"/>
+  <rect x="222" y="272" width="52" height="6" rx="3" fill="#111111" fill-opacity="0.3"/>
+  <!-- Imagen del hero -->
+  <rect x="24" y="320" width="352" height="232" rx="16" fill="#1C1E21"/>
+  <g stroke="#F4F4F4" stroke-opacity="0.08">
+    <path d="M48 320v232M72 320v232M96 320v232M120 320v232M144 320v232M168 320v232M192 320v232M216 320v232M240 320v232M264 320v232M288 320v232M312 320v232M336 320v232M360 320v232"/>
+    <path d="M24 344h352M24 368h352M24 392h352M24 416h352M24 440h352M24 464h352M24 488h352M24 512h352M24 536h352"/>
+  </g>
+  <circle cx="200" cy="436" r="78" fill="none" stroke="#F4F4F4" stroke-opacity="0.18"/>
+  <circle cx="200" cy="436" r="52" fill="none" stroke="#F4F4F4" stroke-opacity="0.3"/>
+  <circle cx="200" cy="436" r="26" fill="#F4F4F4" fill-opacity="0.9"/>
+  <rect x="48" y="512" width="96" height="20" rx="10" fill="#F4F4F4" fill-opacity="0.12"/>
+  <!-- Logos de clientes -->
+  <g fill="#111111" fill-opacity="0.09">
+    <rect x="40" y="584" width="56" height="10" rx="5"/>
+    <rect x="116" y="584" width="56" height="10" rx="5"/>
+    <rect x="192" y="584" width="56" height="10" rx="5"/>
+    <rect x="268" y="584" width="56" height="10" rx="5"/>
+  </g>
+  <!-- Beneficios -->
+  <rect x="120" y="632" width="160" height="16" rx="6" fill="#111111" fill-opacity="0.82"/>
+  <rect x="96" y="660" width="208" height="7" rx="3.5" fill="#111111" fill-opacity="0.16"/>
+  <g>
+    <rect x="24" y="692" width="110" height="140" rx="16" fill="#111111" fill-opacity="0.03" stroke="#111111" stroke-opacity="0.1"/>
+    <rect x="145" y="692" width="110" height="140" rx="16" fill="#111111" fill-opacity="0.03" stroke="#111111" stroke-opacity="0.1"/>
+    <rect x="266" y="692" width="110" height="140" rx="16" fill="#111111" fill-opacity="0.03" stroke="#111111" stroke-opacity="0.1"/>
+    <rect x="40" y="708" width="28" height="28" rx="8" fill="#1C1E21"/>
+    <rect x="161" y="708" width="28" height="28" rx="8" fill="#111111" fill-opacity="0.16"/>
+    <rect x="282" y="708" width="28" height="28" rx="8" fill="#111111" fill-opacity="0.16"/>
+    <g fill="#111111" fill-opacity="0.3">
+      <rect x="40" y="752" width="64" height="8" rx="4"/>
+      <rect x="161" y="752" width="64" height="8" rx="4"/>
+      <rect x="282" y="752" width="64" height="8" rx="4"/>
+    </g>
+    <g fill="#111111" fill-opacity="0.09">
+      <rect x="40" y="772" width="78" height="6" rx="3"/><rect x="40" y="784" width="60" height="6" rx="3"/>
+      <rect x="161" y="772" width="78" height="6" rx="3"/><rect x="161" y="784" width="60" height="6" rx="3"/>
+      <rect x="282" y="772" width="78" height="6" rx="3"/><rect x="282" y="784" width="60" height="6" rx="3"/>
+    </g>
+  </g>
+  <!-- Llamado final -->
+  <rect x="24" y="860" width="352" height="110" rx="16" fill="#111111" fill-opacity="0.05"/>
+  <rect x="104" y="888" width="192" height="14" rx="6" fill="#111111" fill-opacity="0.82"/>
+  <rect x="152" y="920" width="96" height="30" rx="15" fill="#1C1E21"/>
+</svg>

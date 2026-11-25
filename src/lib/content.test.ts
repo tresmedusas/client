@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ABOUT, CONTACT_SECTION, HOME_SCENES, HOW_WORK, pageOf, scenesOf, SHOWCASE, SHOWCASE_SCENES, TERMS_SCENES } from './content.js'
+import { ABOUT, CONTACT_SECTION, HOME_SCENES, HOW_WORK, pageOf, scenesOf, SHOWCASE, SHOWCASE_SCENES, TERMS_SCENES, type Section } from './content.js'
 import { headlineParts } from './inline-headline.js'
 import { leadIn } from './lead-in.js'
 
@@ -20,14 +20,14 @@ describe('scenesOf', () => {
 })
 
 describe('encabezados de sección', () => {
-  const sections = [HOW_WORK.section, ABOUT.section, CONTACT_SECTION.section, SHOWCASE.section, SHOWCASE.closing.section]
+  const sections: Section[] = [HOW_WORK.section, ABOUT.section, CONTACT_SECTION.section, SHOWCASE.section, SHOWCASE.closing.section]
 
-  it('llevan titular inline (tramos destacados y apagados) y lead-in en la intro (DESIGN.md §3)', () => {
+  it('llevan titular inline (tramos destacados y apagados) y lead-in en la intro, si la tienen (DESIGN.md §3)', () => {
     for (const section of sections) {
       const parts = headlineParts(section.title)
       expect(parts.some((p) => p.accent), section.title).toBe(true)
       expect(parts.some((p) => !p.accent && p.text.trim() !== ''), section.title).toBe(true)
-      expect(leadIn(section.intro ?? '').lead, section.intro).not.toBe('')
+      if (section.intro) expect(leadIn(section.intro).lead, section.intro).not.toBe('')
     }
   })
 
