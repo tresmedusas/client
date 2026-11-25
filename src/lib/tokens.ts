@@ -57,6 +57,10 @@ export const LOGO = {
   /** Imagotipo a 4× (viewBox 345 × 88): la textura sale nítida con DPR 2. */
   imagotipo: { src: '/brand/imagotipo-negro.svg', aspect: 345 / 88 },
   isotipo: { src: '/brand/isotipo.svg', aspect: 60 / 79 },
+  /** Logo completo del pie (isotipo + «tresmedusas»), a 3× (viewBox 258 × 44). */
+  completo: { src: '/brand/imagotipo-completo.svg', aspect: 258 / 44 },
+  /** Logo de Essentia para el «Powered by» del pie, a 3× (viewBox 137 × 27), en su gris. */
+  essentia: { src: '/brand/essentia.svg', aspect: 137 / 27 },
 } as const
 
 /**

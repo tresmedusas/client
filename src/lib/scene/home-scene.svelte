@@ -11,6 +11,7 @@
   interface Props {
     deck: Deck
     width: number
+    viewportWidth: number
     viewportHeight: number
     compact: boolean
     year: number
@@ -20,7 +21,7 @@
     motion?: boolean
   }
 
-  let { deck, width, viewportHeight, compact, year, focusedHref, onnavigate, motion = true }: Props = $props()
+  let { deck, width, viewportWidth, viewportHeight, compact, year, focusedHref, onnavigate, motion = true }: Props = $props()
 
   let heights = $state(HOME_SCENES.map(() => 0))
   const common = $derived({ deck, width, viewportHeight })
@@ -28,7 +29,7 @@
 
 <SceneSlot i={0} {...common} height={heights[0]!}>
   {#snippet children(d, frame)}
-    <Hero {width} {viewportHeight} {compact} {d} {frame} {focusedHref} onmeasure={(h) => (heights[0] = h)} {onnavigate} />
+    <Hero {width} {viewportHeight} {compact} {d} {frame} {focusedHref} {motion} onmeasure={(h) => (heights[0] = h)} {onnavigate} />
   {/snippet}
 </SceneSlot>
 
@@ -60,6 +61,7 @@
       links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary, CONTACT_SECTION.tertiary]}
       align="center"
       {width}
+      {viewportWidth}
       {viewportHeight}
       {compact}
       {d}

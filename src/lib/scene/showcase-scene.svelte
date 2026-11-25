@@ -82,6 +82,7 @@
       section={SHOWCASE.closing.section}
       links={[SHOWCASE.closing.primary, SHOWCASE.closing.secondary]}
       {width}
+      {viewportWidth}
       {viewportHeight}
       {compact}
       d={0}

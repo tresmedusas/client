@@ -67,16 +67,35 @@ export const NAV: readonly Link[] = [
 
 // ── Home ─────────────────────────────────────────────────────────
 
-/** Hero provisorio: se trabaja aparte. */
+/** Hero: qué hacemos y un botón para agendar una reunión, centrados. */
 export const HERO = {
   id: 'inicio',
-  eyebrow: 'Software a medida e integraciones',
-  // Frase de posicionamiento vigente, aún por decidir.
-  title: 'Resolvemos operaciones manuales y procesos fragmentados.',
-  lead: 'Construimos el software y las integraciones que conectan lo que hoy se hace a mano, para que tu equipo deje de copiar datos entre sistemas.',
-  primary: WRITE_US,
-  secondary: { label: 'Cómo trabajamos', href: '#como-trabajamos' } satisfies Link,
-  hint: 'Desliza para seguir',
+  /**
+   * El titular: «Construimos el software que tu empresa necesita.», con
+   * palabras que van rotando (pedido del usuario, 2026-11-24). El texto fijo
+   * va en `muted` y regular; las palabras que rotan, en `ink` y black. Arma
+   * el texto `scene/headline.ts`.
+   */
+  headline: {
+    before: 'Construimos',
+    /** Qué construimos: artículo y sustantivo, que concuerdan. */
+    what: [
+      ['el', 'software'],
+      ['la', 'identidad'],
+      ['el', 'diseño'],
+    ],
+    /** En escritorio, la segunda línea empieza acá. */
+    middle: 'que tu',
+    /** Para quién. */
+    who: ['empresa', 'negocio', 'emprendimiento'],
+    after: 'necesita.',
+  },
+  /**
+   * Lo que se busca: agendar una reunión (pedido del usuario, 2026-11-24).
+   * Lleva al contacto, desde donde se coordina la llamada; el mismo href que
+   * en `NAV`, para que el foco del teclado encuentre el botón.
+   */
+  primary: { label: 'Agendar reunión', href: '/#contacto' } satisfies Link,
 } as const
 
 export const HOW_WORK = {
@@ -239,15 +258,58 @@ export const SHOWCASE = {
 /** Escenas del showcase, en orden. */
 export const SHOWCASE_SCENES = [SHOWCASE.section.id, ...SHOWCASE.projects.map((p) => p.id), SHOWCASE.closing.section.id] as const
 
-/** Escenas de cada página, por ruta. */
-export function scenesOf(path: string): readonly string[] {
-  return path.replace(/\/$/, '') === '/showcase' ? SHOWCASE_SCENES : HOME_SCENES
+// ── Términos y condiciones ───────────────────────────────────────
+
+/** TODO: página de ejemplo; el texto legal definitivo está por escribirse. */
+export const TERMS = {
+  section: {
+    id: 'terminos',
+    index: '',
+    label: 'Legal',
+    title: 'Términos y condiciones.',
+    intro: 'Página de ejemplo. El texto definitivo está en preparación.',
+  } satisfies Section,
+  title: 'Términos y condiciones — Tres Medusas',
+  description: 'Términos y condiciones de uso del sitio y de los servicios de Tres Medusas.',
+  items: [
+    {
+      title: 'Uso del sitio',
+      body: 'Texto de ejemplo. Aquí van las condiciones para usar este sitio y su contenido.',
+    },
+    {
+      title: 'Servicios',
+      body: 'Texto de ejemplo. Aquí va el alcance de los servicios y cómo se acuerda cada proyecto.',
+    },
+    {
+      title: 'Privacidad',
+      body: 'Texto de ejemplo. Aquí va cómo tratamos los datos que nos compartes al escribirnos.',
+    },
+  ] satisfies Item[] as readonly Item[],
+} as const
+
+/** Escenas de la página de términos: una sola. */
+export const TERMS_SCENES = [TERMS.section.id] as const
+
+export type Page = 'home' | 'showcase' | 'terms'
+
+/** Qué página del deck es una ruta. */
+export function pageOf(path: string): Page {
+  const clean = path.replace(/\/$/, '')
+  return clean === '/showcase' ? 'showcase' : clean === '/terminos' ? 'terms' : 'home'
 }
 
+/** Escenas de cada página, por ruta. */
+export function scenesOf(path: string): readonly string[] {
+  return { home: HOME_SCENES, showcase: SHOWCASE_SCENES, terms: TERMS_SCENES }[pageOf(path)]
+}
+
+/** Pie de todas las páginas: logo y términos arriba; copyright y «Powered by Essentia» abajo. */
 export const FOOTER = {
-  tagline: 'Software a medida e integraciones.',
+  terms: { label: 'Términos y condiciones', href: '/terminos' } satisfies Link,
   /** El año sale del build: el sitio se prerenderiza. */
-  copyright: (year: number) => `© ${year} Tres Medusas`,
+  copyright: (year: number) => `Copyright © ${year}`,
+  poweredBy: 'Powered by',
+  essentia: 'Essentia',
 } as const
 
 /** Iniciales de un nombre, para el avatar sin foto: «Fundador Uno» → «FU». */
