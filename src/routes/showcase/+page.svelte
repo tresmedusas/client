@@ -12,32 +12,24 @@
   <meta property="og:description" content={SHOWCASE.description} />
 </svelte:head>
 
-<!-- Una sección por escena del deck, en el orden de SHOWCASE_SCENES. -->
+<!-- Una sección por escena del deck, en el orden de SHOWCASE_SCENES: la entrada con los casos, y el cierre. -->
 <section id={SHOWCASE.section.id} class="hero" aria-labelledby="{SHOWCASE.section.id}-title">
-  <p class="eyebrow">{SHOWCASE.section.label}</p>
   <h1 id="{SHOWCASE.section.id}-title"><InlineHeadline text={SHOWCASE.section.title} /></h1>
-  <p class="lead"><LeadIn text={SHOWCASE.section.intro} /></p>
-  <ol class="index">
+  <ul class="cases">
     {#each SHOWCASE.projects as project (project.id)}
-      <li><a href="#{project.id}">{project.name}</a></li>
+      {@const preview = project.preview}
+      <li id={project.id}>
+        <img
+          src={preview.src}
+          alt="{project.name}: {preview.alt}"
+          class:contain={preview.fit === 'contain'}
+          class:top={preview.align === 'top'}
+          class:deep={preview.background === 'deep'}
+        />
+      </li>
     {/each}
-  </ol>
+  </ul>
 </section>
-
-{#each SHOWCASE.projects as project, i (project.id)}
-  <section id={project.id} aria-labelledby="{project.id}-title">
-    <p class="eyebrow">{String(i + 1).padStart(2, '0')} / {String(SHOWCASE.projects.length).padStart(2, '0')}</p>
-    <h2 id="{project.id}-title"><InlineHeadline text={project.name} /></h2>
-    <p>{[project.client, ...project.tags].join(' · ')}</p>
-    {#if project.image}
-      <img src={project.image} alt="" />
-    {/if}
-    <h3 class="label">{SHOWCASE.problemLabel}</h3>
-    <p><LeadIn text={project.problem} /></p>
-    <h3 class="label">{SHOWCASE.solutionLabel}</h3>
-    <p><LeadIn text={project.solution} /></p>
-  </section>
-{/each}
 
 <section id={SHOWCASE.closing.section.id} aria-labelledby="{SHOWCASE.closing.section.id}-title">
   <p class="eyebrow">{SHOWCASE.closing.section.label}</p>
@@ -55,12 +47,45 @@
     text-align: center;
   }
 
-  section .index {
-    padding-left: 0;
-    list-style-position: inside;
-  }
-
   section .actions {
     justify-content: center;
+  }
+
+  /* Los casos, uno debajo del otro: cards 4:5 con la previsualización, sin texto (DESIGN.md §4). */
+  .cases {
+    display: grid;
+    gap: 36px;
+    justify-items: center;
+    margin: 80px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cases li {
+    width: min(84%, 600px);
+  }
+
+  .cases img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+    border-radius: 16px;
+    background: var(--color-paper);
+  }
+
+  .cases img.top {
+    object-position: top;
+  }
+
+  .cases img.contain {
+    object-fit: contain;
+    padding: 18%;
+    box-sizing: border-box;
+  }
+
+  .cases img.deep {
+    background: var(--color-brand-deep);
   }
 </style>

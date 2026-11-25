@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ASPECT } from './figures/hero.js'
-import { CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_BOTTOM, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
+import { CASE_ASPECT, CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_BOTTOM, caseCard, columnWidth, feedTopPad, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -117,5 +117,29 @@ describe('footerTop', () => {
 
   it('la reserva es el aire más las dos franjas: con el scroll interno al máximo, el pie termina en el borde de abajo', () => {
     expect(footerReserve(true)).toBe(FOOTER_GAP + footerBands(true).top + footerBands(true).bottom)
+  })
+})
+
+describe('caseCard', () => {
+  it('en escritorio, algo más de la mitad de la columna, entre 360 y 600 px', () => {
+    expect(caseCard(1080, false).width).toBe(600)
+    expect(caseCard(700, false).width).toBe(392)
+    expect(caseCard(500, false).width).toBe(360)
+  })
+
+  it('en una columna, el 84 % del ancho', () => {
+    expect(caseCard(343, true).width).toBe(288)
+  })
+
+  it('es 4:5', () => {
+    const { width, height } = caseCard(1080, false)
+    expect(width / height).toBeCloseTo(CASE_ASPECT, 2)
+  })
+})
+
+describe('feedTopPad', () => {
+  it('deja el título debajo de la franja de arriba', () => {
+    expect(NAV_SPACE + 8 + feedTopPad(180)).toBeGreaterThanOrEqual(180)
+    expect(feedTopPad(40)).toBe(0)
   })
 })

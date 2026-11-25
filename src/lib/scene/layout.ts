@@ -223,3 +223,27 @@ export function flow(
   if (align === 'center') x.forEach((left, i) => (x[i] = left + (maxWidth - used[row[i]!]!) / 2))
   return { x, row, rows: widths.length === 0 ? 0 : line + 1 }
 }
+
+/** Proporción de las cards del showcase: 4:5, como un feed. */
+export const CASE_ASPECT = 4 / 5
+
+/**
+ * Tamaño de la card de un caso del showcase: en una columna, el 84 % del
+ * ancho (al abrirse en los bordes se ve el contorno); en escritorio, algo más
+ * de la mitad de la columna (entre 360 y 600 px). Más
+ * alta que la zona libre entre las franjas de los bordes a propósito: siempre
+ * hay una card entrando o saliendo por un borde, donde se deforma.
+ */
+export function caseCard(width: number, compact: boolean): { width: number; height: number } {
+  const w = Math.round(compact ? width * 0.84 : Math.max(360, Math.min(600, width * 0.56)))
+  return { width: w, height: Math.round(w / CASE_ASPECT) }
+}
+
+/**
+ * Aire arriba de la entrada del showcase para que, en reposo, el título quede
+ * debajo de la franja de arriba (`band`) y no se deforme. La escena, como no
+ * entra en la ventana, arranca `NAV_SPACE + 8` bajo el borde.
+ */
+export function feedTopPad(band: number): number {
+  return Math.max(0, band + 24 - (NAV_SPACE + 8))
+}

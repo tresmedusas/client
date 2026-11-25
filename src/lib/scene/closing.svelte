@@ -31,12 +31,18 @@
     size?: 'section' | 'display'
     /** Año del build, para el pie; sin él no hay pie. */
     year?: number
+    /**
+     * Alto de las franjas de los bordes (px CSS). Con franjas altas (el
+     * showcase), el bloque se centra en la ventana, entre las dos, para no
+     * quedar deformado en reposo. @default 0
+     */
+    band?: number
     focusedHref: string | null
     onmeasure: (height: number) => void
     onnavigate: (href: string) => void
   }
 
-  let { section, links, width, viewportWidth, viewportHeight, compact, align = 'start', size = 'display', year, focusedHref, onmeasure, onnavigate }: Props = $props()
+  let { section, links, width, viewportWidth, viewportHeight, compact, align = 'start', size = 'display', year, band = 0, focusedHref, onmeasure, onnavigate }: Props = $props()
 
   const ACTION_GAP = 36
 
@@ -55,8 +61,15 @@
   const base = $derived(viewportHeight - NAV_SPACE - 8)
   const fits = $derived(block + FOOTER_GAP <= base)
   const fill = $derived(fits ? base : block + FOOTER_GAP)
-  /** Cuánto baja el bloque para quedar centrado en la ventana (0 sin pie o si no entra). */
-  const offset = $derived(year !== undefined && fits ? (base - block) / 2 : 0)
+  /**
+   * Cuánto baja el bloque para quedar centrado bajo la navbar (0 sin pie o si
+   * no entra); con franjas, centrado en la ventana, entre las dos.
+   */
+  const offset = $derived.by(() => {
+    if (year === undefined || !fits) return 0
+    if (band <= 0) return (base - block) / 2
+    return Math.max(0, Math.min(base - block, (viewportHeight - block) / 2 - (NAV_SPACE + 8)))
+  })
 
   $effect(() => {
     if (headHeight === 0 || ctaHeight === 0) return

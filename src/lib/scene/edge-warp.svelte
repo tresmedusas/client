@@ -1,41 +1,25 @@
 <script lang="ts">
-  // Bordes de arriba y de abajo: el contenido se dobla, se separa en canales,
-  // se difumina y ondula al entrar y salir (ver edge-warp.frag.glsl).
+  // Bordes de arriba y de abajo: el contenido se dobla (o se estira), se
+  // separa en canales, se difumina y ondula al entrar y salir; en el showcase,
+  // los bordes izquierdo y derecho reflejan los casos (ver edge-warp.frag.glsl).
   import { T, useThrelte } from '@threlte/core'
   import { useEngine } from 'essentia-core'
   import { Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from 'three'
   import fragmentShader from './edge-warp.frag.glsl'
   import vertexShader from './backdrop.vert.glsl'
+  import { HOME_WARP, bandHeight, reflectSpan, reflectWidth, type WarpLook } from './edge-warp.js'
+  import { isCompact } from './layout.js'
 
   interface Props {
     /** Fase de la ondulación, en radianes: la mueve quien lo usa. */
     phase: number
+    /** Cómo se ve (ver `edge-warp.ts`). @default HOME_WARP */
+    look?: WarpLook
+    /** Cuánto se enciende el reflejo (0 a 1): según cuán centrado está el caso (ver `reflectFocus`). @default 0 */
+    focus?: number
   }
 
-  let { phase }: Props = $props()
-
-  /**
-   * Todo lo que regula el efecto. Valores marcados a propósito, para ver cómo
-   * se comporta.
-   */
-  const LOOK = {
-    /** Alto de cada franja (px CSS), y como mucho esta fracción de la ventana. */
-    height: 45,
-    maxFraction: 0.13,
-    /** Ángulo (rad) del cilindro en el borde: más, más se comprime hacia él. Hasta 1.5. */
-    curve: 1.3,
-    /** Cuánto se abre hacia los costados en el borde: 0.45 = ×1.45. */
-    spread: 0.45,
-    /** Diferencia de deformación entre canales: el rojo se abre menos y el azul más. */
-    aberration: 0.3,
-    /** Separación vertical de canales en el borde (px CSS). */
-    split: 6,
-    /** Radio del blur en el borde (px CSS). */
-    blur: 24,
-    /** Ondulación líquida pegada al borde: amplitud y largo de onda (px CSS). */
-    ripple: 5,
-    wavelength: 140,
-  }
+  let { phase, look = HOME_WARP, focus = 0 }: Props = $props()
 
   /**
    * z: justo por debajo de la navbar (10) y dentro de su nivel de captura
@@ -55,15 +39,24 @@
     u_background: { value: null as unknown },
     u_resolution: { value: new Vector2(1, 1) },
     u_dpr: { value: 1 },
-    u_height: { value: LOOK.height },
-    u_curve: { value: LOOK.curve },
-    u_spread: { value: LOOK.spread },
-    u_aberration: { value: LOOK.aberration },
-    u_split: { value: LOOK.split },
-    u_blur: { value: LOOK.blur },
-    u_ripple: { value: LOOK.ripple },
-    u_wavelength: { value: LOOK.wavelength },
+    u_height: { value: 0 },
+    u_curve: { value: 0 },
+    u_stretch: { value: 0 },
+    u_spread: { value: 0 },
+    u_aberration: { value: 0 },
+    u_split: { value: 0 },
+    u_blur: { value: 0 },
+    u_ripple: { value: 0 },
+    u_wavelength: { value: 1 },
     u_phase: { value: 0 },
+    u_reflect: { value: 0 },
+    u_reflectWidth: { value: 0 },
+    u_reflectSpan: { value: 0 },
+    u_reflectFocus: { value: 0 },
+    u_reflectReach: { value: 0 },
+    u_reflectBlur: { value: 0 },
+    u_reflectWiden: { value: 1 },
+    u_reflectSaturation: { value: 0 },
   }
   // Transparente para que se ordene con el resto por z: se dibuja después del
   // contenido y antes de la navbar. Sin profundidad: es una pasada de pantalla.
@@ -95,7 +88,23 @@
   $effect(() => {
     uniforms.u_resolution.value.set(vw * dpr, vh * dpr)
     uniforms.u_dpr.value = dpr
-    uniforms.u_height.value = Math.min(LOOK.height, vh * LOOK.maxFraction)
+    uniforms.u_height.value = bandHeight(look, vh, isCompact(vw))
+    uniforms.u_curve.value = look.curve
+    uniforms.u_stretch.value = look.stretch
+    uniforms.u_spread.value = look.spread
+    uniforms.u_aberration.value = look.aberration
+    uniforms.u_split.value = look.split
+    uniforms.u_blur.value = look.blur
+    uniforms.u_ripple.value = look.ripple
+    uniforms.u_wavelength.value = look.wavelength
+    uniforms.u_reflect.value = look.reflect
+    uniforms.u_reflectWidth.value = reflectWidth(look, vw)
+    uniforms.u_reflectSpan.value = reflectSpan(look, vh)
+    uniforms.u_reflectFocus.value = focus
+    uniforms.u_reflectReach.value = look.reflectReach
+    uniforms.u_reflectBlur.value = look.reflectBlur
+    uniforms.u_reflectWiden.value = look.reflectWiden
+    uniforms.u_reflectSaturation.value = look.reflectSaturation
     uniforms.u_phase.value = phase
     invalidate()
   })

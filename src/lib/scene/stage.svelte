@@ -7,6 +7,7 @@
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
   import SiteScene from './site-scene.svelte'
+  import WarpLabPanel from '$lib/lab/warp-lab-panel.svelte'
 
   interface Props {
     /** La capa semántica: de acá salen el foco y las anclas. */
@@ -184,6 +185,11 @@
     />
   </EssentiaRoot>
 </div>
+
+<!-- Banco de pruebas de los bordes: solo en desarrollo (no entra al build). Afuera del stage: la rueda no cambia de escena. -->
+{#if import.meta.env.DEV}
+  <WarpLabPanel {page} />
+{/if}
 
 <style>
   .stage {
