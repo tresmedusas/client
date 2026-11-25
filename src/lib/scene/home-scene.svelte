@@ -29,7 +29,7 @@
 
 <SceneSlot i={0} {...common} height={heights[0]!}>
   {#snippet children(d, frame)}
-    <Hero {width} {viewportHeight} {compact} {d} {frame} {focusedHref} onmeasure={(h) => (heights[0] = h)} {onnavigate} />
+    <Hero {width} {viewportHeight} {compact} {d} {frame} {focusedHref} {motion} onmeasure={(h) => (heights[0] = h)} {onnavigate} />
   {/snippet}
 </SceneSlot>
 

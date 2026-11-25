@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { bob, columnWidth, flow, footerBands, footerReserve, footerTop, FOOTER_GAP, grid, medusas, NAV_SPACE, rows, stack } from './layout.js'
+import { ASPECT } from './figures/hero.js'
+import { CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_TOP, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -41,26 +42,46 @@ describe('rows', () => {
   })
 })
 
-describe('medusas', () => {
-  it('son tres y quedan dentro de la columna', () => {
-    for (const compact of [true, false]) {
-      const list = medusas(800, 800, compact)
-      expect(list).toHaveLength(3)
-      for (const m of list) {
-        expect(m.x - m.width / 2).toBeGreaterThanOrEqual(0)
-        expect(m.x).toBeLessThanOrEqual(800)
-      }
+describe('heroLayout', () => {
+  const TITLE = 'Construimos la identidad\nque tu emprendimiento necesita.'
+
+  it('la figura llega al borde de abajo de la ventana, tan ancha como la columna', () => {
+    for (const [vw, vh, compact] of [[1440, 900, false], [1920, 1080, false], [375, 812, true]] as const) {
+      const width = columnWidth(vw)
+      const text = 150
+      const h = heroLayout(width, vh, compact, TITLE, text)
+      expect(h.textWidth).toBeLessThanOrEqual(width)
+      expect(h.figureWidth).toBe(Math.min(1100, width))
+      expect(h.figureHeight).toBeLessThanOrEqual(Math.floor(h.figureWidth / ASPECT))
+      expect(h.figureGap).toBeGreaterThanOrEqual(28)
+      expect(h.textTop + text + h.gap + CTA_HEIGHT + h.figureGap + h.figureHeight).toBeCloseTo(vh)
+      expect(h.textTop).toBeGreaterThanOrEqual(SCENE_TOP)
     }
   })
-})
 
-describe('bob', () => {
-  it('flota menos que una décima de su alto', () => {
-    const [m] = medusas(1000, 800, false)
-    for (let t = 0; t < 20; t += 0.37) {
-      const { dy } = bob(m!, t)
-      expect(Math.abs(dy)).toBeLessThanOrEqual(m!.height * 0.08 + 1e-9)
-    }
+  it('con poco alto recorta la figura por abajo, y si queda muy baja no la muestra', () => {
+    const text = 150
+    const short = heroLayout(columnWidth(1280), 560, false, TITLE, text)
+    expect(short.figureHeight).toBeLessThan(Math.floor(short.figureWidth / ASPECT))
+    expect(short.textTop).toBe(SCENE_TOP)
+    const h = heroLayout(columnWidth(1440), 420, false, TITLE, text)
+    expect(h.figureWidth).toBe(0)
+    const bottom = h.textTop + text + h.gap + CTA_HEIGHT
+    expect(h.textTop - SCENE_TOP).toBeCloseTo(420 - NAV_SPACE - bottom)
+  })
+
+  it('en escritorio la línea más larga entra en el ancho', () => {
+    const h = heroLayout(columnWidth(1440), 900, false, TITLE)
+    expect(h.textWidth).toBe(960)
+    expect('que tu emprendimiento necesita.'.length * 0.56 * h.titleSize).toBeLessThanOrEqual(h.textWidth + 0.01)
+    expect(h.titleSize).toBeGreaterThanOrEqual(48)
+  })
+
+  it('en un teléfono las líneas se parten, pero la palabra más larga entra', () => {
+    const width = columnWidth(375)
+    const h = heroLayout(width, 812, true, TITLE)
+    expect('emprendimiento'.length * 0.56 * h.titleSize).toBeLessThanOrEqual(width)
+    expect(h.titleSize).toBeLessThanOrEqual(44)
   })
 })
 
