@@ -11,6 +11,8 @@
  * Lo marcado con TODO es provisorio: placeholders hasta tener el contenido real.
  */
 
+import type { RotatingTitle } from './scene/headline.js'
+
 /** Contacto. TODO: dominio, página de empresa y número de WhatsApp reales. */
 export const CONTACT = {
   email: 'hola@tresmedusas.com',
@@ -192,7 +194,7 @@ export const HOME_SCENES = [HERO.id, HOW_WORK.section.id, ABOUT.section.id, CONT
 /**
  * La previsualización de un caso: una captura o una imagen (por ahora, sin
  * video). Los casos van de una landing a un manual de marca, un logo o una
- * app, así que cada uno dice cómo encaja en su card (4:5).
+ * app, así que cada uno dice cómo encaja en su card (3:2; 4:5 en un teléfono).
  */
 export interface CasePreview {
   /** Imagen en `static/casos/`. Un SVG va con `width`/`height` a 3× de su `viewBox` (DESIGN.md §4). */
@@ -222,9 +224,20 @@ export interface Project {
 export const SHOWCASE = {
   section: {
     id: 'showcase',
-    title: 'Lo que ya **construimos.** Caso por caso.',
+    /** La primera variante de `headline` (la capa semántica y el movimiento reducido). */
+    title: '**Empresas** que confiaron en nosotros.',
     // Sin bajada: el título y los casos (pedido del usuario, 2026-11-25).
   } satisfies Section,
+  /**
+   * El título, animado como el del hero (pedido del usuario, 2026-11-25): la
+   * primera palabra rota entre quienes confiaron en el estudio.
+   */
+  headline: {
+    before: '',
+    words: ['Empresas', 'Marcas', 'Emprendedores', 'Colegios'],
+    /** En escritorio, la segunda línea empieza en «en» (como los cortes del hero). */
+    after: 'que confiaron\nen nosotros.',
+  } satisfies RotatingTitle,
   title: 'Showcase — Tres Medusas',
   description: 'Landings, identidades, logos y aplicaciones construidos por Tres Medusas.',
   /**
@@ -259,6 +272,7 @@ export const SHOWCASE = {
       preview: { src: '/casos/ejemplo-app.svg', alt: 'Pantallas de ejemplo de una app.' },
     },
   ] satisfies Project[] as readonly Project[],
+  /** El cierre: por ahora no se muestra (pedido del usuario, 2026-11-25). */
   closing: {
     section: {
       id: 'siguiente',
@@ -272,10 +286,11 @@ export const SHOWCASE = {
 } as const
 
 /**
- * Escenas del showcase, en orden: la entrada con los casos (una sola escena,
- * que scrollea adentro) y el cierre.
+ * Escenas del showcase: la entrada con los casos (una sola escena, que
+ * scrollea adentro). Por ahora sin el cierre (`SHOWCASE.closing`; pedido del
+ * usuario, 2026-11-25).
  */
-export const SHOWCASE_SCENES = [SHOWCASE.section.id, SHOWCASE.closing.section.id] as const
+export const SHOWCASE_SCENES = [SHOWCASE.section.id] as const
 
 // ── Términos y condiciones ───────────────────────────────────────
 

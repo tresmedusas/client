@@ -82,3 +82,32 @@ export function widestHeadline(h: Headline): string {
   const what = longest(h.what.map(([a, n]) => `${a} ${n}`))
   return `${h.before} ${what}\n${h.middle} ${longest(h.who)} ${h.after}`
 }
+
+/**
+ * Un título con una sola palabra que rota (el del showcase): el texto fijo
+ * antes y después (un `\n` corta la línea en escritorio), y las variantes de
+ * la palabra, que van destacadas. Rota
+ * con los mismos tiempos que el titular del hero.
+ */
+export interface RotatingTitle {
+  readonly before: string
+  readonly words: readonly string[]
+  readonly after: string
+}
+
+/** Qué variante se ve a los `t` segundos y su opacidad: se desvanece la anterior y aparece la nueva. */
+export function rotatingAt(title: RotatingTitle, t: number): { index: number; opacity: number } {
+  const n = title.words.length
+  const k = Math.max(0, Math.floor(t / STEP))
+  if (k === 0 || n < 2) return { index: 0, opacity: 1 }
+  const u = t - k * STEP
+  if (u < FADE_OUT) return { index: (k - 1) % n, opacity: smooth(1 - u / FADE_OUT) }
+  return { index: k % n, opacity: smooth(Math.min(1, (u - FADE_OUT) / FADE_IN)) }
+}
+
+/** El título con la variante `index`, como titular inline (`**…**` en la palabra que rota). */
+export const rotatingInline = (title: RotatingTitle, index = 0) =>
+  [title.before, `**${title.words[index]}**`, title.after]
+    .filter((part) => part !== '')
+    .join(' ')
+    .replace(/\s*\n\s*/g, ' ')

@@ -1,6 +1,5 @@
 <script lang="ts">
   import InlineHeadline from '$lib/inline-headline.svelte'
-  import LeadIn from '$lib/lead-in.svelte'
   import { SHOWCASE } from '$lib/content.js'
 </script>
 
@@ -12,7 +11,7 @@
   <meta property="og:description" content={SHOWCASE.description} />
 </svelte:head>
 
-<!-- Una sección por escena del deck, en el orden de SHOWCASE_SCENES: la entrada con los casos, y el cierre. -->
+<!-- Una sección por escena del deck, en el orden de SHOWCASE_SCENES: la entrada con los casos (por ahora sin cierre). -->
 <section id={SHOWCASE.section.id} class="hero" aria-labelledby="{SHOWCASE.section.id}-title">
   <h1 id="{SHOWCASE.section.id}-title"><InlineHeadline text={SHOWCASE.section.title} /></h1>
   <ul class="cases">
@@ -31,27 +30,13 @@
   </ul>
 </section>
 
-<section id={SHOWCASE.closing.section.id} aria-labelledby="{SHOWCASE.closing.section.id}-title">
-  <p class="eyebrow">{SHOWCASE.closing.section.label}</p>
-  <h2 id="{SHOWCASE.closing.section.id}-title"><InlineHeadline text={SHOWCASE.closing.section.title} /></h2>
-  <p><LeadIn text={SHOWCASE.closing.section.intro} /></p>
-  <p class="actions">
-    <a class="button" href={SHOWCASE.closing.primary.href} rel="noopener" target="_blank">{SHOWCASE.closing.primary.label}</a>
-    <a class="button secondary" href={SHOWCASE.closing.secondary.href}>{SHOWCASE.closing.secondary.label}</a>
-  </p>
-</section>
-
 <style>
   /* Centrado por convención (DESIGN.md, sección 6), como la escena. */
   section {
     text-align: center;
   }
 
-  section .actions {
-    justify-content: center;
-  }
-
-  /* Los casos, uno debajo del otro: cards 4:5 con la previsualización, sin texto (DESIGN.md §4). */
+  /* Sin WebGL, los casos van uno debajo del otro: cards 3:2 (4:5 en un teléfono) con la previsualización, sin texto (DESIGN.md §4). */
   .cases {
     display: grid;
     gap: 36px;
@@ -62,17 +47,23 @@
   }
 
   .cases li {
-    width: min(84%, 600px);
+    width: min(90%, 990px);
   }
 
   .cases img {
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 3 / 2;
     object-fit: cover;
     border: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
     border-radius: 16px;
     background: var(--color-paper);
+  }
+
+  @media (max-width: 759px) {
+    .cases img {
+      aspect-ratio: 4 / 5;
+    }
   }
 
   .cases img.top {

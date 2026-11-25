@@ -1,14 +1,16 @@
 import type { WarpLook } from '$lib/scene/edge-warp.js'
+import type { CaseLook } from '$lib/scene/layout.js'
 
 /**
- * Banco de pruebas de los efectos de los bordes (solo en desarrollo): qué se
- * puede ajustar, en qué rango, y cómo se copian los valores a `edge-warp.ts`.
+ * Banco de pruebas de los efectos de los bordes y del tamaño de las cards del
+ * showcase (solo en desarrollo): qué se puede ajustar, en qué rango, y cómo
+ * se copian los valores a `edge-warp.ts` y `layout.ts`.
  */
 
 export type LookName = 'home' | 'showcase'
 
-export interface Control {
-  key: keyof WarpLook
+export interface Control<K extends string = string> {
+  key: K
   label: string
   min: number
   max: number
@@ -17,18 +19,19 @@ export interface Control {
   hint?: string
 }
 
-export interface ControlGroup {
+export interface ControlGroup<K extends string = string> {
   title: string
-  controls: readonly Control[]
+  controls: readonly Control<K>[]
 }
 
-export const CONTROL_GROUPS: readonly ControlGroup[] = [
+export const CONTROL_GROUPS: readonly ControlGroup<keyof WarpLook>[] = [
   {
-    title: 'Franjas de arriba y abajo',
+    title: 'Franjas (bordes del scroll: costados en el showcase, arriba y abajo en la home)',
     controls: [
-      { key: 'height', label: 'Alto (px)', min: 0, max: 400, step: 1 },
-      { key: 'maxFraction', label: 'Alto máximo (fracción de la ventana)', min: 0, max: 0.5, step: 0.01 },
-      { key: 'compactHeight', label: 'Alto en teléfono (px)', min: 0, max: 300, step: 1 },
+      { key: 'height', label: 'Tamaño hacia adentro (px)', min: 0, max: 400, step: 1 },
+      { key: 'maxFraction', label: 'Tamaño máximo (fracción de la ventana)', min: 0, max: 0.5, step: 0.01 },
+      { key: 'compactHeight', label: 'Tamaño en teléfono (px)', min: 0, max: 300, step: 1 },
+      { key: 'minHeight', label: 'Tamaño mínimo (px)', min: 0, max: 300, step: 1, hint: 'En el showcase se achican hasta acá para dejarle lugar a la card centrada.' },
     ],
   },
   {
@@ -36,7 +39,7 @@ export const CONTROL_GROUPS: readonly ControlGroup[] = [
     controls: [
       { key: 'stretch', label: 'Estirado hacia el borde', min: 0, max: 0.95, step: 0.01, hint: 'Con 0, se usa el cilindro.' },
       { key: 'curve', label: 'Cilindro (rad)', min: 0, max: 1.5, step: 0.01, hint: 'Solo con el estirado en 0.' },
-      { key: 'spread', label: 'Apertura a los costados', min: 0, max: 3, step: 0.01 },
+      { key: 'spread', label: 'Apertura a lo largo del borde', min: 0, max: 3, step: 0.01 },
       { key: 'aberration', label: 'Aberración (deformación por canal)', min: 0, max: 1, step: 0.01 },
       { key: 'split', label: 'Separación de canales (px)', min: 0, max: 40, step: 0.5 },
       { key: 'blur', label: 'Blur en el borde (px)', min: 0, max: 80, step: 1 },
@@ -45,18 +48,35 @@ export const CONTROL_GROUPS: readonly ControlGroup[] = [
     ],
   },
   {
-    title: 'Reflejo de los costados',
+    title: 'Reflejo (los otros dos bordes: arriba y abajo en el showcase)',
     controls: [
       { key: 'reflect', label: 'Fuerza', min: 0, max: 1, step: 0.01, hint: 'Se enciende solo con un caso en el centro: en el showcase.' },
-      { key: 'reflectWidth', label: 'Ancho (px)', min: 0, max: 300, step: 1 },
-      { key: 'reflectMaxFraction', label: 'Ancho máximo (fracción de la ventana)', min: 0, max: 0.3, step: 0.005 },
-      { key: 'reflectSpan', label: 'Medio alto del óvalo (fracción de la ventana)', min: 0, max: 0.5, step: 0.01 },
+      { key: 'reflectWidth', label: 'Grosor (px)', min: 0, max: 300, step: 1 },
+      { key: 'reflectMaxFraction', label: 'Grosor máximo (fracción de la ventana)', min: 0, max: 0.3, step: 0.005 },
+      { key: 'reflectSpan', label: 'Medio largo del óvalo (fracción de la ventana)', min: 0, max: 0.5, step: 0.01 },
       { key: 'reflectReach', label: 'Alcance de lo reflejado (px)', min: 0, max: 1000, step: 5 },
       { key: 'reflectBlur', label: 'Blur (px)', min: 0, max: 150, step: 1 },
-      { key: 'reflectWiden', label: 'Estirado a lo alto', min: 0.5, max: 3, step: 0.01 },
+      { key: 'reflectWiden', label: 'Estirado a lo largo del borde', min: 0.5, max: 3, step: 0.01 },
       { key: 'reflectSaturation', label: 'Saturación extra', min: 0, max: 3, step: 0.05 },
       { key: 'reflectHold', label: 'Entero hasta (fracción de la card)', min: 0, max: 0.5, step: 0.01 },
       { key: 'reflectFade', label: 'Se apaga a lo largo de (fracción de la card)', min: 0.01, max: 1, step: 0.01 },
+    ],
+  },
+]
+
+/** El tamaño de las cards del showcase (`CASE_LOOK` en `layout.ts`). */
+export const CASE_CONTROLS: readonly ControlGroup<keyof CaseLook>[] = [
+  {
+    title: 'Cards del showcase',
+    controls: [
+      { key: 'start', label: 'Al entrar, arrancan a (fracción de la ventana)', min: 0.2, max: 0.9, step: 0.01, hint: 'Arriba va el título; el scroll lo saca y las cards llenan la ventana.' },
+      { key: 'aspect', label: 'Proporción ancho / alto', min: 0.5, max: 2.5, step: 0.01, hint: '1.6 = 16:10; 1 = cuadrada; 0.8 = 4:5.' },
+      { key: 'maxWidth', label: 'Ancho máximo (px)', min: 200, max: 2400, step: 10 },
+      { key: 'maxFraction', label: 'Ancho máximo (fracción de la ventana)', min: 0.2, max: 1, step: 0.01, hint: 'La card centrada nunca entra en las franjas.' },
+      { key: 'gap', label: 'Separación (px)', min: 0, max: 200, step: 1 },
+      { key: 'compactAspect', label: 'Teléfono: proporción ancho / alto', min: 0.5, max: 2.5, step: 0.01 },
+      { key: 'compactFraction', label: 'Teléfono: ancho máximo (fracción)', min: 0.2, max: 1, step: 0.01 },
+      { key: 'compactGap', label: 'Teléfono: separación (px)', min: 0, max: 100, step: 1 },
     ],
   },
 ]
@@ -68,37 +88,45 @@ export function decimals(step: number): number {
   return dot < 0 ? 0 : text.length - dot - 1
 }
 
-const CONTROLS = CONTROL_GROUPS.flatMap((group) => group.controls)
-
-/** Un valor redondeado al paso de su control. */
-export function rounded(key: keyof WarpLook, value: number): number {
-  const control = CONTROLS.find((c) => c.key === key)
+/** Un valor redondeado al paso de su control en `groups`. */
+export function rounded(groups: readonly ControlGroup[], key: string, value: number): number {
+  const control = groups.flatMap((g) => g.controls).find((c) => c.key === key)
   return control ? Number(value.toFixed(decimals(control.step))) : value
 }
 
 /** Los valores guardados sobre los de fábrica: solo números de claves conocidas. */
-export function mergeLook(defaults: WarpLook, saved: unknown): WarpLook {
-  const look = { ...defaults }
-  if (!saved || typeof saved !== 'object') return look
-  for (const key of Object.keys(defaults) as (keyof WarpLook)[]) {
-    const value = (saved as Record<string, unknown>)[key]
-    if (typeof value === 'number' && Number.isFinite(value)) look[key] = value
+export function mergeValues<T extends object>(defaults: T, saved: unknown): T {
+  const values = { ...defaults }
+  if (!saved || typeof saved !== 'object') return values
+  for (const key of Object.keys(defaults) as (keyof T)[]) {
+    const value = (saved as Record<string, unknown>)[key as string]
+    if (typeof value === 'number' && Number.isFinite(value)) (values as Record<keyof T, unknown>)[key] = value
   }
-  return look
+  return values
 }
 
-const CONST_NAMES: Record<LookName, string> = { home: 'HOME_WARP', showcase: 'SHOWCASE_WARP' }
+/** Solo los valores que difieren de los de fábrica: lo que se guarda, así un cambio de fábrica llega. */
+export function diffValues<T extends object>(defaults: T, values: T): Partial<T> {
+  const diff: Partial<T> = {}
+  for (const key of Object.keys(defaults) as (keyof T)[]) if (values[key] !== defaults[key]) diff[key] = values[key]
+  return diff
+}
 
-/** El look como código para pegar en `edge-warp.ts`. */
-export function formatLook(name: LookName, look: WarpLook): string {
-  const lines = (Object.keys(look) as (keyof WarpLook)[]).map((key) => `  ${key}: ${rounded(key, look[key])},`)
-  return `export const ${CONST_NAMES[name]}: WarpLook = {\n${lines.join('\n')}\n}\n`
+/** Los valores como código para pegar: `export const NAME: Type = { … }`. */
+export function formatConst(name: string, type: string, values: object, groups: readonly ControlGroup[]): string {
+  const lines = Object.entries(values).map(([key, value]) => `  ${key}: ${rounded(groups, key, value as number)},`)
+  return `export const ${name}: ${type} = {\n${lines.join('\n')}\n}\n`
 }
 
 /** Las claves cuyo valor difiere del de fábrica. */
-export function changedKeys(defaults: WarpLook, look: WarpLook): (keyof WarpLook)[] {
-  return (Object.keys(defaults) as (keyof WarpLook)[]).filter((key) => rounded(key, look[key]) !== rounded(key, defaults[key]))
+export function changedKeys<T extends object>(defaults: T, values: T, groups: readonly ControlGroup[]): (keyof T)[] {
+  return (Object.keys(defaults) as (keyof T)[]).filter(
+    (key) => rounded(groups, key as string, values[key] as number) !== rounded(groups, key as string, defaults[key] as number),
+  )
 }
+
+/** El nombre de la constante de cada look en `edge-warp.ts`. */
+export const WARP_CONST: Record<LookName, string> = { home: 'HOME_WARP', showcase: 'SHOWCASE_WARP' }
 
 /** Pares de colores de las previsualizaciones de prueba: para ver el reflejo, que con el papel no se ve. */
 const TEST_COLORS: readonly [string, string][] = [

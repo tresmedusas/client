@@ -59,13 +59,31 @@ export class Deck {
   viewport = $state(1)
   /** Movimiento reducido: ir a una escena salta sin animar (el scroll sigue siendo scroll). */
   instant = false
+  /**
+   * Un arrastre de costado también scrollea (hacia la izquierda = hacia
+   * abajo de la página): para el showcase, donde los casos pasan en fila.
+   */
+  swipeX = false
 
   private readonly _scroll = new Spring({ stiffness: SCROLL_STIFFNESS, precision: 0.1 })
   /** `true` si el resorte va a una escena o sigue una inercia: la rueda arranca de donde está. */
   private _gliding = false
   private _overflow: number[] = [0]
   private _layout: PageLayout = pageLayout([0], [])
-  private _drag: { startY: number; startScroll: number; lastY: number; lastT: number; velocity: number } | null = null
+  /**
+   * El arrastre en curso. `axis` se decide al pasar el umbral de tap: `x`
+   * solo con `swipeX` y un gesto más de costado que vertical. `last` es la
+   * última posición en ese eje.
+   */
+  private _drag: {
+    startY: number
+    startX: number
+    axis: 'x' | 'y' | null
+    startScroll: number
+    last: number
+    lastT: number
+    velocity: number
+  } | null = null
 
   /** Cambia de página: otra cantidad de escenas, y arranca quieta en `start`. */
   reset(count: number, start = 0): void {
@@ -153,27 +171,38 @@ export class Deck {
     this.scrollBy(pixels)
   }
 
-  dragStart(clientY: number, timeStamp: number): void {
+  dragStart(clientY: number, timeStamp: number, clientX = 0): void {
     // Tomar la página en movimiento la frena donde está.
     this._scroll.set(this._scroll.value)
     this._gliding = false
     this.moving = false
     this.velocity = 0
     this.dragged = false
-    this._drag = { startY: clientY, startScroll: this._scroll.value, lastY: clientY, lastT: timeStamp, velocity: 0 }
+    this._drag = { startY: clientY, startX: clientX, axis: null, startScroll: this._scroll.value, last: clientY, lastT: timeStamp, velocity: 0 }
   }
 
-  dragMove(clientY: number, timeStamp: number): void {
+  dragMove(clientY: number, timeStamp: number, clientX?: number): void {
     const drag = this._drag
     if (!drag) return
-    if (Math.abs(clientY - drag.startY) > TAP_SLOP) this.dragged = true
+    if (drag.axis === null) {
+      const dy = Math.abs(clientY - drag.startY)
+      const dx = this.swipeX && clientX !== undefined ? Math.abs(clientX - drag.startX) : 0
+      if (Math.max(dx, dy) > TAP_SLOP) {
+        this.dragged = true
+        drag.axis = dx > dy ? 'x' : 'y'
+        if (drag.axis === 'x') drag.last = drag.startX
+      }
+    }
+    const horizontal = drag.axis === 'x' && clientX !== undefined
+    const pos = horizontal ? clientX : clientY
+    const start = horizontal ? drag.startX : drag.startY
     const dt = (timeStamp - drag.lastT) / 1000
     // Velocidad suavizada en px/s (positiva hacia abajo de la página), para que el último evento no decida solo.
-    if (dt > 0) drag.velocity = drag.velocity * 0.6 + ((drag.lastY - clientY) / dt) * 0.4
-    drag.lastY = clientY
+    if (dt > 0) drag.velocity = drag.velocity * 0.6 + ((drag.last - pos) / dt) * 0.4
+    drag.last = pos
     drag.lastT = timeStamp
-    // Arrastrar hacia arriba baja por la página; más allá de los bordes, con resistencia.
-    const wanted = drag.startScroll + drag.startY - clientY
+    // Arrastrar hacia arriba (o hacia la izquierda) baja por la página; más allá de los bordes, con resistencia.
+    const wanted = drag.startScroll + start - pos
     const total = this._layout.total
     const scroll = wanted < 0 ? wanted * EDGE_RESISTANCE : wanted > total ? total + (wanted - total) * EDGE_RESISTANCE : wanted
     this._scroll.set(scroll)

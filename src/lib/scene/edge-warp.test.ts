@@ -5,8 +5,8 @@ describe('bandHeight', () => {
   it('usa el alto del look, limitado a una fracción de la ventana', () => {
     expect(bandHeight(HOME_WARP, 900)).toBe(45)
     expect(bandHeight(HOME_WARP, 200)).toBeCloseTo(26)
-    expect(bandHeight(SHOWCASE_WARP, 1000)).toBe(80)
-    expect(bandHeight(SHOWCASE_WARP, 300)).toBeCloseTo(60)
+    expect(bandHeight(SHOWCASE_WARP, 1000)).toBe(150)
+    expect(bandHeight(SHOWCASE_WARP, 300)).toBeCloseTo(66)
   })
 
   it('en una columna, la franja es más baja', () => {
@@ -22,19 +22,19 @@ describe('bandHeight', () => {
 describe('reflectWidth', () => {
   it('la home no refleja; el showcase sí, a los costados', () => {
     expect(reflectWidth(HOME_WARP, 1280)).toBe(0)
-    expect(reflectWidth(SHOWCASE_WARP, 3000)).toBe(41)
+    expect(reflectWidth(SHOWCASE_WARP, 3000)).toBe(86)
   })
 
-  it('por debajo de ~2700 px de ancho, la franja es una fracción del ancho', () => {
-    expect(reflectWidth(SHOWCASE_WARP, 1280)).toBeCloseTo(19.2)
-    expect(reflectWidth(SHOWCASE_WARP, 375)).toBeCloseTo(5.625)
+  it('por debajo de 344 px de alto, la franja es una fracción de la ventana', () => {
+    expect(reflectWidth(SHOWCASE_WARP, 800)).toBe(86)
+    expect(reflectWidth(SHOWCASE_WARP, 300)).toBeCloseTo(75)
   })
 })
 
 describe('reflectSpan', () => {
   it('el reflejo va en el centro de cada costado, no en todo el borde', () => {
     expect(reflectSpan(HOME_WARP, 800)).toBe(0)
-    expect(reflectSpan(SHOWCASE_WARP, 800)).toBeCloseTo(336)
+    expect(reflectSpan(SHOWCASE_WARP, 800)).toBeCloseTo(208)
     expect(reflectSpan(SHOWCASE_WARP, 800) * 2).toBeLessThan(800)
   })
 })

@@ -117,3 +117,56 @@ describe('Deck como página', () => {
     expect(deck.position).toBeCloseTo(at - 100 / 800, 1)
   })
 })
+
+describe('Arrastre de costado (swipeX)', () => {
+  /** Arrastre de costado de `fromX` a `toX` con el dedo a la misma altura. */
+  function swipe(deck: Deck, fromX: number, toX: number): void {
+    deck.dragStart(400, 0, fromX)
+    for (let k = 1; k <= 10; k++) deck.dragMove(400, k * 16, fromX + ((toX - fromX) * k) / 10)
+  }
+
+  it('sin swipeX, un arrastre de costado no mueve nada ni cuenta como arrastre', () => {
+    const deck = deckOf(3)
+    swipe(deck, 600, 300)
+    expect(deck.position).toBe(0)
+    expect(deck.dragged).toBe(false)
+  })
+
+  it('con swipeX, arrastrar hacia la izquierda baja por la página', () => {
+    const deck = deckOf(3)
+    deck.swipeX = true
+    swipe(deck, 600, 300)
+    expect(deck.dragged).toBe(true)
+    expect(deck.position).toBeCloseTo(300 / 800, 2)
+  })
+
+  it('con swipeX, un arrastre vertical sigue siendo vertical', () => {
+    const deck = deckOf(3)
+    deck.swipeX = true
+    deck.dragStart(600, 0, 400)
+    for (let k = 1; k <= 10; k++) deck.dragMove(600 - 20 * k, k * 16, 400 + k)
+    expect(deck.position).toBeCloseTo(200 / 800, 2)
+  })
+})
+
+describe('Recorrido horizontal de una escena', () => {
+  it('el alto y el scroll interno extra no cambian dónde termina la escena en pantalla', () => {
+    const plain = deckOf(2)
+    const tracked = new Deck()
+    tracked.reset(2)
+    tracked.setViewport(800)
+    tracked.setFrame(0, 100, 500 + 900, 900)
+    tracked.setFrame(1, 100, 500, 0)
+    // El recorrido horizontal se scrollea antes de la transición.
+    tracked.wheel(900)
+    run(tracked)
+    expect(tracked.innerOf(0)).toBeCloseTo(900)
+    expect(tracked.position).toBe(0)
+    // Y después, la transición mide lo mismo que sin recorrido.
+    tracked.wheel(400)
+    plain.wheel(400)
+    run(tracked)
+    run(plain)
+    expect(tracked.position).toBeCloseTo(plain.position)
+  })
+})

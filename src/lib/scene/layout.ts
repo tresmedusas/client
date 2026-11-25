@@ -7,6 +7,7 @@
  * negativa.
  */
 
+import { bandHeight, type WarpLook } from './edge-warp.js'
 import { ASPECT as FIGURE_ASPECT } from './figures/hero.js'
 
 /** Ancho máximo de la columna de contenido. */
@@ -224,26 +225,111 @@ export function flow(
   return { x, row, rows: widths.length === 0 ? 0 : line + 1 }
 }
 
-/** Proporción de las cards del showcase: 4:5, como un feed. */
-export const CASE_ASPECT = 4 / 5
-
 /**
- * Tamaño de la card de un caso del showcase: en una columna, el 84 % del
- * ancho (al abrirse en los bordes se ve el contorno); en escritorio, algo más
- * de la mitad de la columna (entre 360 y 600 px). Más
- * alta que la zona libre entre las franjas de los bordes a propósito: siempre
- * hay una card entrando o saliendo por un borde, donde se deforma.
+ * Tamaño de las cards del showcase (pedido del usuario, 2026-11-25: más
+ * anchas). Se ajusta con el banco de pruebas (`src/lib/lab/`).
  */
-export function caseCard(width: number, compact: boolean): { width: number; height: number } {
-  const w = Math.round(compact ? width * 0.84 : Math.max(360, Math.min(600, width * 0.56)))
-  return { width: w, height: Math.round(w / CASE_ASPECT) }
+export interface CaseLook {
+  /** Proporción ancho / alto en escritorio (1.5 = 3:2) y en un teléfono. */
+  aspect: number
+  compactAspect: number
+  /** Ancho máximo en escritorio (px), y como mucho esta fracción de la ventana. */
+  maxWidth: number
+  maxFraction: number
+  /** Ancho máximo en un teléfono, como fracción de la ventana. */
+  compactFraction: number
+  /** Separación entre cards (px), en escritorio y en un teléfono. */
+  gap: number
+  compactGap: number
+  /** Al entrar, a qué altura de la ventana arrancan las cards (fracción): arriba, el título. */
+  start: number
 }
 
 /**
- * Aire arriba de la entrada del showcase para que, en reposo, el título quede
- * debajo de la franja de arriba (`band`) y no se deforme. La escena, como no
- * entra en la ventana, arranca `NAV_SPACE + 8` bajo el borde.
+ * Apaisadas en escritorio (3:2); 4:5 en un teléfono. Al entrar arrancan al
+ * 62 % del alto de la ventana (unos 100 px más abajo que la mitad, pedido del
+ * usuario, 2026-11-25: se ve más el scroll hasta los casos). Tan altas como la
+ * ventana una vez que el título se fue (pedido del usuario, 2026-11-25), con
+ * tope en 990 px de ancho. Valores ajustados por el usuario en el banco de
+ * pruebas (2026-11-25).
  */
-export function feedTopPad(band: number): number {
-  return Math.max(0, band + 24 - (NAV_SPACE + 8))
+export const CASE_LOOK: CaseLook = {
+  aspect: 1.5,
+  compactAspect: 0.8,
+  maxWidth: 990,
+  maxFraction: 0.9,
+  compactFraction: 0.84,
+  gap: 94,
+  compactGap: 16,
+  start: 0.62,
+}
+
+/**
+ * Tamaño de la card de un caso del showcase, que pasan en fila de izquierda a
+ * derecha (pedido del usuario, 2026-11-25): tan alta como entre en `available`
+ * (la ventana entre la navbar y el pie de la escena) con la proporción del
+ * look, sin pasar del ancho máximo, y nunca menos de 120 px de alto. La card
+ * centrada queda afuera de las franjas de los costados (`band`, con 12 px de
+ * aire): solo las vecinas, que asoman por los bordes, se estiran.
+ */
+export function caseCard(
+  viewportWidth: number,
+  available: number,
+  compact: boolean,
+  band = 0,
+  look: CaseLook = CASE_LOOK,
+): { width: number; height: number } {
+  const aspect = compact ? look.compactAspect : look.aspect
+  const clear = viewportWidth - 2 * (band + 12)
+  const maxWidth = Math.min(clear, compact ? viewportWidth * look.compactFraction : Math.min(look.maxWidth, viewportWidth * look.maxFraction))
+  const height = Math.round(Math.max(120, Math.min(available, maxWidth / aspect)))
+  return { width: Math.round(height * aspect), height }
+}
+
+/**
+ * Tamaño de las franjas de los costados del showcase (px), que se ajusta a la
+ * ventana (pedido del usuario, 2026-11-25): la card centrada tiene prioridad.
+ * Primero se calcula la card con su tope (tan alta como la ventana entre la
+ * navbar y el pie de la escena), y las franjas toman lo que queda a cada
+ * costado (con 12 px de aire): como mucho el tamaño del look y nunca menos
+ * de `minHeight`. Por debajo de ese mínimo, la card se achica (`caseCard`).
+ */
+export function showcaseBand(look: WarpLook, cases: CaseLook, viewportWidth: number, viewportHeight: number, compact: boolean): number {
+  const max = bandHeight(look, viewportWidth, compact)
+  const card = caseCard(viewportWidth, viewportHeight - NAV_SPACE - SCENE_BOTTOM, compact, 0, cases)
+  const room = (viewportWidth - card.width) / 2 - 12
+  return Math.round(Math.max(0, Math.min(look.minHeight, max), Math.min(max, room)))
+}
+
+/** Aire mínimo arriba y abajo del título de la entrada del showcase (px). */
+export const INTRO_PAD = 24
+
+/**
+ * La entrada del showcase, como el hero (pedido del usuario, 2026-11-25): el
+ * título va arriba y las cards arrancan a `start` de la ventana, cortadas
+ * por el borde de abajo; el scroll sube todo hasta que la card queda
+ * centrada entre la navbar y el pie de la escena (y el título se fue).
+ * Desde el tope del contenido: `titleTop`, el título, centrado sobre las
+ * cards; `cardTop`, las cards; `height`, el alto del contenido, con el aire
+ * de abajo que centra la card al final. Con el contenido más alto que la
+ * ventana, la escena arranca a `NAV_SPACE + 8` (`sceneFrame`).
+ */
+export function showcaseIntro(
+  viewportHeight: number,
+  headHeight: number,
+  cardHeight: number,
+  start: number,
+): { titleTop: number; cardTop: number; height: number } {
+  const area = viewportHeight - NAV_SPACE - SCENE_BOTTOM
+  const cardTop = Math.round(Math.max(headHeight + 2 * INTRO_PAD, viewportHeight * start - NAV_SPACE - 8))
+  const below = Math.max(0, Math.round((area - cardHeight) / 2))
+  return { titleTop: Math.round((cardTop - headHeight) / 2), cardTop, height: cardTop + cardHeight + below }
+}
+
+/**
+ * Recorrido horizontal de la fila de casos (px): de la primera card centrada
+ * en la ventana a la última centrada. El scroll de la página lo recorre 1:1.
+ */
+export function caseTrack(count: number, cardWidth: number, gap: number): number {
+  return Math.max(0, count - 1) * (cardWidth + gap)
 }

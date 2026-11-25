@@ -1,15 +1,28 @@
 /**
  * Cómo se ven los bordes de la ventana (ver `edge-warp.svelte` y
- * `edge-warp.frag.glsl`): el contenido que entra en las franjas de arriba y
- * de abajo se deforma y, en el showcase, los bordes izquierdo y derecho
+ * `edge-warp.frag.glsl`): el contenido que entra en las franjas de los bordes
+ * por donde pasa el scroll se deforma y, en el showcase, los otros dos bordes
  * reflejan lo que hay hacia el centro.
  */
+
+/**
+ * Por dónde entra el contenido: `vertical`, por arriba y por abajo (la home);
+ * `horizontal`, por los costados (el showcase, con los casos en fila). Las
+ * franjas van en esos bordes y el reflejo en los otros dos.
+ */
+export type WarpAxis = 'vertical' | 'horizontal'
+
 export interface WarpLook {
-  /** Alto de cada franja (px CSS), y como mucho esta fracción de la ventana. */
+  /** Tamaño de cada franja, hacia adentro desde su borde (px CSS), y como mucho esta fracción de la ventana en el eje del scroll. */
   height: number
   maxFraction: number
-  /** Alto de cada franja en una columna (teléfono), donde la ventana es angosta y el contenido, alto. */
+  /** Tamaño de cada franja en un teléfono. */
   compactHeight: number
+  /**
+   * Tamaño mínimo de cada franja (px CSS): en el showcase, las franjas se
+   * achican hasta acá para dejarle lugar a la card centrada (`showcaseBand`).
+   */
+  minHeight: number
   /** Ángulo (rad) del cilindro en el borde: más, más se comprime hacia él. Hasta 1.5. Sin efecto con `stretch`. */
   curve: number
   /**
@@ -30,12 +43,12 @@ export interface WarpLook {
   ripple: number
   wavelength: number
   /**
-   * Reflejo en los bordes izquierdo y derecho: cada borde, como un espejo
-   * curvo, refleja lo que hay hacia el centro de la ventana (los casos),
-   * difuminado y abierto, con el color del contenido. 0 = sin reflejo.
+   * Reflejo en los otros dos bordes (los que no son del scroll): cada borde,
+   * como un espejo curvo, refleja lo que hay hacia el centro de la ventana
+   * (los casos), difuminado y abierto, con el color del contenido. 0 = sin reflejo.
    */
   reflect: number
-  /** Ancho de la franja del reflejo (px CSS), y como mucho esta fracción del ancho de la ventana. */
+  /** Grosor de la franja del reflejo (px CSS), y como mucho esta fracción de la ventana en ese sentido. */
   reflectWidth: number
   reflectMaxFraction: number
   /** Hasta dónde llega lo que refleja, medido desde el borde de la franja (px CSS; como mucho, hasta el centro). */
@@ -43,18 +56,18 @@ export interface WarpLook {
   /** Radio del blur del reflejo (px CSS). */
   reflectBlur: number
   /**
-   * Medio alto del óvalo del reflejo, como fracción del alto de la ventana: el
-   * reflejo va solo en el centro de cada costado, no en todo el borde.
+   * Medio largo del óvalo del reflejo, a lo largo de su borde, como fracción
+   * de la ventana: el reflejo va solo en el centro del borde, no en todo.
    */
   reflectSpan: number
   /**
-   * Cuándo se enciende el reflejo, como fracción del alto de la card: entero
+   * Cuándo se enciende el reflejo, como fracción de la card en el eje del scroll: entero
    * mientras el centro de la card está a menos de `reflectHold` del centro de
    * la ventana, y se apaga a lo largo de `reflectFade` más.
    */
   reflectHold: number
   reflectFade: number
-  /** Cuánto más alto se ve el reflejo que lo reflejado: 1.4 = ×1.4. */
+  /** Cuánto más largo (a lo largo de su borde) se ve el reflejo que lo reflejado: 1.4 = ×1.4. */
   reflectWiden: number
   /** Saturación extra del reflejo: 0 = el color tal cual; 1 = el doble de croma. */
   reflectSaturation: number
@@ -65,6 +78,7 @@ export const HOME_WARP: WarpLook = {
   height: 45,
   maxFraction: 0.13,
   compactHeight: 45,
+  minHeight: 45,
   curve: 1.3,
   stretch: 0,
   spread: 0.45,
@@ -86,49 +100,50 @@ export const HOME_WARP: WarpLook = {
 }
 
 /**
- * El showcase (pedido del usuario, 2026-11-25): el mismo efecto con
- * protagonismo. Franjas en las que los casos se estiran hacia el borde y se
- * abren a los costados, y en los bordes izquierdo y derecho, el reflejo de
- * los casos. Valores ajustados por el usuario en el banco de pruebas
- * (`src/lib/lab/`), 2026-11-25.
+ * El showcase (pedido del usuario, 2026-11-25), con el eje horizontal: el
+ * mismo efecto con protagonismo. Franjas a los costados en las que los casos
+ * se estiran hacia el borde y se abren, y arriba y abajo, el reflejo de los
+ * casos. Valores ajustados por el usuario en el banco de pruebas
+ * (`src/lib/lab/`), 2026-11-25 (la segunda vez, ya con la fila horizontal).
  */
 export const SHOWCASE_WARP: WarpLook = {
-  height: 80,
-  maxFraction: 0.2,
+  height: 150,
+  maxFraction: 0.22,
   compactHeight: 60,
-  curve: 0,
-  stretch: 0.82,
-  spread: 1.1,
-  aberration: 0.12,
-  split: 8,
-  blur: 30,
-  ripple: 7,
+  minHeight: 60,
+  curve: 0.34,
+  stretch: 0.9,
+  spread: 1.8,
+  aberration: 0.5,
+  split: 18,
+  blur: 45,
+  ripple: 8,
   wavelength: 180,
-  reflect: 0.85,
-  reflectWidth: 41,
-  reflectMaxFraction: 0.015,
-  reflectReach: 355,
-  reflectBlur: 130,
-  reflectSpan: 0.42,
-  reflectHold: 0.06,
-  reflectFade: 0.5,
-  reflectWiden: 0.75,
+  reflect: 1,
+  reflectWidth: 86,
+  reflectMaxFraction: 0.25,
+  reflectReach: 80,
+  reflectBlur: 140,
+  reflectSpan: 0.26,
+  reflectHold: 0.2,
+  reflectFade: 0.3,
+  reflectWiden: 2.71,
   reflectSaturation: 1.7,
 }
 
-/** Alto de cada franja de la deformación en una ventana de `vh` (px CSS); `compact`, en una columna. */
-export function bandHeight(look: WarpLook, vh: number, compact = false): number {
-  return Math.max(0, Math.min(compact ? look.compactHeight : look.height, vh * look.maxFraction))
+/** Tamaño de cada franja de la deformación, con `along` px de ventana en el eje del scroll; `compact`, en un teléfono. */
+export function bandHeight(look: WarpLook, along: number, compact = false): number {
+  return Math.max(0, Math.min(compact ? look.compactHeight : look.height, along * look.maxFraction))
 }
 
-/** Ancho de la franja del reflejo (izquierda y derecha) en una ventana de `vw` de ancho (px CSS). */
-export function reflectWidth(look: WarpLook, vw: number): number {
-  return look.reflect > 0 ? Math.max(0, Math.min(look.reflectWidth, vw * look.reflectMaxFraction)) : 0
+/** Grosor de la franja del reflejo, con `across` px de ventana en el sentido del grosor (a través del scroll). */
+export function reflectWidth(look: WarpLook, across: number): number {
+  return look.reflect > 0 ? Math.max(0, Math.min(look.reflectWidth, across * look.reflectMaxFraction)) : 0
 }
 
-/** Medio alto del óvalo del reflejo (px CSS) en una ventana de `vh` de alto. */
-export function reflectSpan(look: WarpLook, vh: number): number {
-  return look.reflect > 0 ? Math.max(0, vh * look.reflectSpan) : 0
+/** Medio largo del óvalo del reflejo (px CSS), con `along` px de ventana a lo largo de su borde. */
+export function reflectSpan(look: WarpLook, along: number): number {
+  return look.reflect > 0 ? Math.max(0, along * look.reflectSpan) : 0
 }
 
 /**

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { ASPECT } from './figures/hero.js'
-import { CASE_ASPECT, CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_BOTTOM, caseCard, columnWidth, feedTopPad, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
+import { sceneFrame } from './deck-logic.js'
+import { SHOWCASE_WARP } from './edge-warp.js'
+import { CASE_LOOK, CTA_HEIGHT, FOOTER_GAP, NAV_SPACE, SCENE_BOTTOM, caseCard, caseTrack, INTRO_PAD, showcaseBand, showcaseIntro, columnWidth, flow, footerBands, footerReserve, footerTop, grid, heroLayout, rows, stack } from './layout.js'
 
 describe('columnWidth', () => {
   it('deja 16 px de margen en un teléfono', () => {
@@ -121,25 +123,80 @@ describe('footerTop', () => {
 })
 
 describe('caseCard', () => {
-  it('en escritorio, algo más de la mitad de la columna, entre 360 y 600 px', () => {
-    expect(caseCard(1080, false).width).toBe(600)
-    expect(caseCard(700, false).width).toBe(392)
-    expect(caseCard(500, false).width).toBe(360)
+  it('en escritorio, apaisada (3:2) y tan alta como entre', () => {
+    expect(caseCard(1280, 500, false)).toEqual({ width: 750, height: 500 })
+    expect(CASE_LOOK.aspect).toBeGreaterThan(1)
   })
 
-  it('en una columna, el 84 % del ancho', () => {
-    expect(caseCard(343, true).width).toBe(288)
+  it('no pasa del ancho máximo ni de su fracción de la ventana', () => {
+    expect(caseCard(1920, NAV_SPACE + 2000, false).width).toBe(990)
+    expect(caseCard(1000, 2000, false)).toEqual({ width: 900, height: 600 })
   })
 
-  it('es 4:5', () => {
-    const { width, height } = caseCard(1080, false)
-    expect(width / height).toBeCloseTo(CASE_ASPECT, 2)
+  it('en un teléfono, 4:5 y hasta el 84 % de la ventana', () => {
+    expect(caseCard(375, 2000, true)).toEqual({ width: 315, height: 394 })
+  })
+
+  it('la card centrada queda afuera de las franjas de los costados', () => {
+    expect(caseCard(375, 2000, true, 60).width).toBe(375 - 2 * (60 + 12))
+    expect(caseCard(1280, 2000, false, 150).width).toBe(1280 - 2 * (150 + 12))
+  })
+
+  it('nunca menos de 120 px de alto', () => {
+    expect(caseCard(1280, 50, false).height).toBe(120)
+  })
+
+  it('acepta otro look (el del banco de pruebas)', () => {
+    const square = caseCard(1280, 500, false, 0, { ...CASE_LOOK, aspect: 1 })
+    expect(square).toEqual({ width: 500, height: 500 })
   })
 })
 
-describe('feedTopPad', () => {
-  it('deja el título debajo de la franja de arriba', () => {
-    expect(NAV_SPACE + 8 + feedTopPad(180)).toBeGreaterThanOrEqual(180)
-    expect(feedTopPad(40)).toBe(0)
+describe('showcaseBand', () => {
+  const band = (vw: number, vh: number, compact = false) => showcaseBand(SHOWCASE_WARP, CASE_LOOK, vw, vh, compact)
+
+  it('con lugar de sobra, el tamaño del look', () => {
+    expect(band(1920, 1080)).toBe(SHOWCASE_WARP.height)
+  })
+
+  it('en una ventana más angosta, se achican para que la card no pierda ancho', () => {
+    expect(band(1280, 800)).toBe(Math.round((1280 - CASE_LOOK.maxWidth) / 2 - 12))
+    const card = caseCard(1280, 800 - NAV_SPACE - SCENE_BOTTOM, false, band(1280, 800))
+    expect(card.width).toBe(CASE_LOOK.maxWidth)
+  })
+
+  it('nunca menos del mínimo: ahí la card se achica', () => {
+    expect(band(1024, 768)).toBe(SHOWCASE_WARP.minHeight)
+    expect(band(375, 812, true)).toBe(SHOWCASE_WARP.minHeight)
+  })
+})
+
+describe('showcaseIntro', () => {
+  const area = (vh: number) => vh - NAV_SPACE - SCENE_BOTTOM
+
+  it('las cards arrancan a la mitad de la ventana, con el título centrado arriba', () => {
+    const { titleTop, cardTop } = showcaseIntro(800, 160, 672, 0.5)
+    expect(NAV_SPACE + 8 + cardTop).toBe(400)
+    expect(titleTop).toBe((cardTop - 160) / 2)
+  })
+
+  it('al final del scroll vertical, la card queda centrada entre la navbar y el pie', () => {
+    for (const card of [672, 385]) {
+      const { cardTop, height } = showcaseIntro(800, 160, card, 0.5)
+      const { top, overflow } = sceneFrame(height, 800, NAV_SPACE, SCENE_BOTTOM)
+      expect(overflow).toBeGreaterThan(0)
+      expect(Math.abs(top - overflow + cardTop - (NAV_SPACE + (area(800) - card) / 2))).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('un título alto empuja las cards', () => {
+    expect(showcaseIntro(600, 300, 400, 0.5).cardTop).toBe(300 + 2 * INTRO_PAD)
+  })
+})
+
+describe('caseTrack', () => {
+  it('de la primera card centrada a la última', () => {
+    expect(caseTrack(4, 400, 48)).toBe(3 * 448)
+    expect(caseTrack(1, 400, 48)).toBe(0)
   })
 })

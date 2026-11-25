@@ -1,13 +1,14 @@
 <script lang="ts">
   import type { Page } from '$lib/content.js'
-  import type { WarpLook } from '$lib/scene/edge-warp.js'
-  import { CONTROL_GROUPS, changedKeys, decimals, formatLook, type LookName } from './warp-lab.js'
+  import { CASE_LOOK } from '$lib/scene/layout.js'
+  import { CASE_CONTROLS, CONTROL_GROUPS, WARP_CONST, changedKeys, decimals, formatConst, type ControlGroup, type LookName } from './warp-lab.js'
   import { DEFAULT_LOOKS, lab as maybeLab } from './warp-lab.svelte.js'
 
   /**
-   * Banco de pruebas de los efectos de los bordes (solo en desarrollo): cada
-   * valor de los looks de `edge-warp.ts`, en vivo sobre la escena. Es una
-   * herramienta de trabajo, no parte del sitio: no se publica en el build.
+   * Banco de pruebas (solo en desarrollo): cada valor de los bordes
+   * (`edge-warp.ts`) y del tamaño de las cards del showcase (`layout.ts`), en
+   * vivo sobre la escena. Es una herramienta de trabajo, no parte del sitio:
+   * no se publica en el build.
    */
   interface Props {
     /** La página que se ve: arranca editando su look. */
@@ -19,41 +20,94 @@
   // El panel solo se monta en desarrollo, donde el estado existe.
   const lab = maybeLab!
 
+  type Values = Record<string, number>
+
   let picked = $state<LookName | null>(null)
   const name = $derived<LookName>(picked ?? (page === 'showcase' ? 'showcase' : 'home'))
-  const look = $derived(lab.looks[name])
-  const changed = $derived(new Set(changedKeys(DEFAULT_LOOKS[name], look)))
-  const code = $derived(formatLook(name, look))
 
-  let copied = $state(false)
+  // Bordes del look elegido.
+  const look = $derived(lab.looks[name] as unknown as Values)
+  const lookDefaults = $derived(DEFAULT_LOOKS[name] as unknown as Values)
+  const lookChanged = $derived(new Set<string>(changedKeys(lookDefaults, look, CONTROL_GROUPS)))
+  const lookCode = $derived(formatConst(WARP_CONST[name], 'WarpLook', look, CONTROL_GROUPS))
+
+  // Cards del showcase.
+  const cases = $derived(lab.cases as unknown as Values)
+  const caseDefaults = CASE_LOOK as unknown as Values
+  const casesChanged = $derived(new Set<string>(changedKeys(caseDefaults, cases, CASE_CONTROLS)))
+  const casesCode = $derived(formatConst('CASE_LOOK', 'CaseLook', cases, CASE_CONTROLS))
+
+  const total = $derived(lookChanged.size + (name === 'showcase' ? casesChanged.size : 0))
+
+  let copied = $state<string | null>(null)
 
   $effect(() => {
     // Lee todo lo que se guarda: cualquier cambio lo persiste.
     JSON.stringify(lab.looks)
+    JSON.stringify(lab.cases)
     void lab.colorCases
     void lab.open
     lab.save()
   })
 
-  function set(key: keyof WarpLook, value: number) {
-    if (Number.isFinite(value)) lab.looks[name][key] = value
-  }
-
-  async function copy() {
+  async function copy(what: string, code: string) {
     await navigator.clipboard.writeText(code)
-    copied = true
-    setTimeout(() => (copied = false), 1500)
+    copied = what
+    setTimeout(() => (copied = null), 1500)
   }
 </script>
 
-<aside class="lab" class:closed={!lab.open} aria-label="Banco de pruebas de los bordes">
+{#snippet controls(groups: readonly ControlGroup[], values: Values, defaults: Values, changed: Set<string>, prefix: string)}
+  {#each groups as group (group.title)}
+    <fieldset>
+      <legend>{group.title}</legend>
+      {#each group.controls as control (control.key)}
+        {@const set = (value: number) => {
+          if (Number.isFinite(value)) values[control.key] = value
+        }}
+        <div class="control" class:changed={changed.has(control.key)}>
+          <div class="row">
+            <label for="lab-{prefix}-{control.key}">{control.label}</label>
+            <input
+              class="number"
+              type="number"
+              min={control.min}
+              max={control.max}
+              step={control.step}
+              value={Number(values[control.key]!.toFixed(decimals(control.step)))}
+              oninput={(e) => set(e.currentTarget.valueAsNumber)}
+            />
+            <button
+              class="undo"
+              title="Valor de fábrica: {defaults[control.key]}"
+              disabled={!changed.has(control.key)}
+              onclick={() => set(defaults[control.key]!)}>↺</button
+            >
+          </div>
+          <input
+            id="lab-{prefix}-{control.key}"
+            type="range"
+            min={control.min}
+            max={control.max}
+            step={control.step}
+            value={values[control.key]}
+            oninput={(e) => set(e.currentTarget.valueAsNumber)}
+          />
+          {#if control.hint}<small>{control.hint}</small>{/if}
+        </div>
+      {/each}
+    </fieldset>
+  {/each}
+{/snippet}
+
+<aside class="lab" class:closed={!lab.open} aria-label="Banco de pruebas">
   <header>
     <button class="toggle" onclick={() => (lab.open = !lab.open)} aria-expanded={lab.open}>
       {lab.open ? 'Cerrar' : 'Banco de pruebas'}
     </button>
     {#if lab.open}
-      <strong>Bordes</strong>
-      <span class="count">{changed.size} cambios</span>
+      <strong>Banco de pruebas</strong>
+      <span class="count">{total} cambios</span>
     {/if}
   </header>
 
@@ -67,7 +121,19 @@
         {/each}
       </div>
       {#if name !== (page === 'showcase' ? 'showcase' : 'home')}
-        <p class="note">Estás editando el look de otra página: vas a ver el cambio cuando la abras.</p>
+        <p class="note">Estás editando otra página: vas a ver el cambio cuando la abras.</p>
+      {/if}
+
+      {#if name === 'showcase'}
+        {@render controls(CASE_CONTROLS, cases, caseDefaults, casesChanged, 'cases')}
+        <div class="actions">
+          <button class="primary" onclick={() => copy('cases', casesCode)}>{copied === 'cases' ? 'Copiado' : 'Copiar cards'}</button>
+          <button onclick={() => lab.resetCases()} disabled={casesChanged.size === 0}>Restablecer cards</button>
+        </div>
+        <details>
+          <summary>Código para <code>layout.ts</code></summary>
+          <pre>{casesCode}</pre>
+        </details>
       {/if}
 
       <label class="check">
@@ -75,51 +141,15 @@
         Casos de colores (para ver el reflejo)
       </label>
 
-      {#each CONTROL_GROUPS as group (group.title)}
-        <fieldset>
-          <legend>{group.title}</legend>
-          {#each group.controls as control (control.key)}
-            <div class="control" class:changed={changed.has(control.key)}>
-              <div class="row">
-                <label for="lab-{control.key}">{control.label}</label>
-                <input
-                  class="number"
-                  type="number"
-                  min={control.min}
-                  max={control.max}
-                  step={control.step}
-                  value={Number(look[control.key].toFixed(decimals(control.step)))}
-                  oninput={(e) => set(control.key, e.currentTarget.valueAsNumber)}
-                />
-                <button
-                  class="undo"
-                  title="Valor de fábrica: {DEFAULT_LOOKS[name][control.key]}"
-                  disabled={!changed.has(control.key)}
-                  onclick={() => set(control.key, DEFAULT_LOOKS[name][control.key])}>↺</button
-                >
-              </div>
-              <input
-                id="lab-{control.key}"
-                type="range"
-                min={control.min}
-                max={control.max}
-                step={control.step}
-                value={look[control.key]}
-                oninput={(e) => set(control.key, e.currentTarget.valueAsNumber)}
-              />
-              {#if control.hint}<small>{control.hint}</small>{/if}
-            </div>
-          {/each}
-        </fieldset>
-      {/each}
+      {@render controls(CONTROL_GROUPS, look, lookDefaults, lookChanged, 'warp')}
 
       <div class="actions">
-        <button class="primary" onclick={copy}>{copied ? 'Copiado' : 'Copiar valores'}</button>
-        <button onclick={() => lab.reset(name)} disabled={changed.size === 0}>Restablecer</button>
+        <button class="primary" onclick={() => copy('warp', lookCode)}>{copied === 'warp' ? 'Copiado' : 'Copiar bordes'}</button>
+        <button onclick={() => lab.reset(name)} disabled={lookChanged.size === 0}>Restablecer bordes</button>
       </div>
       <details>
         <summary>Código para <code>edge-warp.ts</code></summary>
-        <pre>{code}</pre>
+        <pre>{lookCode}</pre>
       </details>
     </div>
   {/if}
