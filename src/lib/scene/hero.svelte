@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { T, useTask } from '@threlte/core'
+  import { useTask } from '@threlte/core'
   import { HERO } from '$lib/content.js'
   import { figureAt } from './figures/hero.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
@@ -138,9 +138,6 @@
   $effect(() => {
     if (ready && ctaWidth > 0) onmeasure(viewportHeight - NAV_SPACE - SCENE_BOTTOM)
   })
-
-  /** Parallax de salida: lo de abajo se va antes. */
-  const lag = (k: number) => d * viewportHeight * k
 </script>
 
 {#each words as w (w.key)}
@@ -153,34 +150,30 @@
     lineHeight={TITLE_LINE}
     letterSpacing={-layout.titleSize * 0.02}
     x={at?.x ?? 0}
-    y={titleY - (at?.row ?? 0) * lineStep + lag(0.06)}
+    y={titleY - (at?.row ?? 0) * lineStep}
     opacity={ready ? (opacity[w.key] ?? 1) : 0}
     onmeasure={(wd) => (widths[w.key] = wd)}
   />
 {/each}
 {#if layout.figureWidth > 0}
-  <T.Group position.y={lag(0.34)}>
-    <HeroFigure
-      from={figure.from}
-      to={figure.to}
-      p={figure.p}
-      width={layout.figureWidth}
-      height={layout.figureHeight}
-      x={width / 2}
-      y={figureY}
-      opacity={ready ? 1 : 0}
-    />
-  </T.Group>
-{/if}
-<T.Group position.y={lag(0.22)}>
-  <PrismCta
-    link={HERO.primary}
-    x={width / 2 - ctaWidth / 2}
-    y={ctaY}
-    {time}
-    focused={focusedHref === HERO.primary.href}
-    {motion}
-    onmeasure={(w) => (ctaWidth = w)}
-    {onnavigate}
+  <HeroFigure
+    from={figure.from}
+    to={figure.to}
+    p={figure.p}
+    width={layout.figureWidth}
+    height={layout.figureHeight}
+    x={width / 2}
+    y={figureY}
+    opacity={ready ? 1 : 0}
   />
-</T.Group>
+{/if}
+<PrismCta
+  link={HERO.primary}
+  x={width / 2 - ctaWidth / 2}
+  y={ctaY}
+  {time}
+  focused={focusedHref === HERO.primary.href}
+  {motion}
+  onmeasure={(w) => (ctaWidth = w)}
+  {onnavigate}
+/>

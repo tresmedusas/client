@@ -2,6 +2,7 @@
   import { untrack } from 'svelte'
   import type { Section } from '$lib/content.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
+  import InlineHeadline from './inline-headline.svelte'
   import LeadInText from './lead-in-text.svelte'
   import MeasuredText from './measured-text.svelte'
 
@@ -30,12 +31,13 @@
   const anchorX = $derived(centered ? 0.5 : 0)
   const alignment = $derived(centered ? 'center' : 'left')
 
-  let labelHeight = $state(0)
+  let labelHeight = $state(untrack(() => (section.label ? 0 : -1)))
   let titleHeight = $state(0)
   // Los props no cambian de contenido en esta landing: la ausencia se fija al montar.
   let introHeight = $state(untrack(() => (section.intro ? 0 : -1)))
 
-  const titleY = $derived(-(labelHeight + LABEL_GAP))
+  /** Sin etiqueta, el título va arriba de todo. */
+  const titleY = $derived(labelHeight > 0 ? -(labelHeight + LABEL_GAP) : 0)
   const introY = $derived(titleY - titleHeight - TITLE_GAP)
 
   $effect(() => {
@@ -44,31 +46,30 @@
   })
 </script>
 
-<MeasuredText
-  text={(section.index ? `${section.index} — ${section.label}` : section.label).toUpperCase()}
-  fontSize={LABEL_SIZE}
-  color={PALETTE.brandInk}
-  font={FONT.bold}
-  letterSpacing={1.6}
-  lineHeight={1.2}
-  {x}
-  {anchorX}
-  {alignment}
-  onmeasure={(_, h) => (labelHeight = h)}
-/>
-<!-- Título e intro con lead-in: si el texto tiene dos partes, la primera va en tinta y el resto apagado. -->
-<LeadInText
+{#if section.label}
+  <MeasuredText
+    text={section.label.toUpperCase()}
+    fontSize={LABEL_SIZE}
+    color={PALETTE.brandInk}
+    font={FONT.bold}
+    letterSpacing={1.6}
+    lineHeight={1.2}
+    {x}
+    {anchorX}
+    {alignment}
+    onmeasure={(_, h) => (labelHeight = h)}
+  />
+{/if}
+<!-- Título inline, como el del hero; la intro, con lead-in. -->
+<InlineHeadline
   text={section.title}
-  plain="ink"
   fontSize={titleSize}
-  font={display ? FONT.black : FONT.bold}
   lineHeight={display ? 1.04 : 1.12}
   letterSpacing={-titleSize * 0.02}
   maxWidth={Math.min(width, display ? 900 : 780)}
   {x}
   y={titleY}
-  {anchorX}
-  {alignment}
+  alignment={centered ? 'center' : 'left'}
   onmeasure={(_, h) => (titleHeight = h)}
 />
 {#if section.intro}

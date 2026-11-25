@@ -42,25 +42,31 @@ Lato, en tres pesos: 400 (`FONT.regular`), 700 (`FONT.bold`) y 900 (`FONT.black`
 
 | Rol                 | Peso | Color       | Notas                                         |
 | ------------------- | ---- | ----------- | --------------------------------------------- |
-| Display (hero, cierre) | 900 | lead-in   | Interletrado −2 % del tamaño. Sin lead-in, todo en `ink`. |
-| Título de sección   | 700  | lead-in     | Sin lead-in, todo en `ink`.                   |
+| Display (hero, cierre del showcase) | 400 / 900 | titular inline | Interletrado −2 % del tamaño. Texto en `muted` 400, lo destacado en `ink` 900. |
+| Título de sección (Contacto incluido), paso, proyecto | 400 / 900 | titular inline | Igual que el display, a su tamaño. Contacto usa el tamaño de sección, no el display (pedido del usuario, 2026-11-25). |
 | Etiqueta / eyebrow  | 700  | `brandInk` o `muted` | Mayúsculas, 12–14 px, interletrado amplio. |
 | Párrafo             | 400  | lead-in     | Siempre con `LeadInText` / `LeadIn`.          |
 
-## 3. Lead-in text highlight
+## 3. Titulares inline y lead-in
 
-Títulos y párrafos usan lead-in: la primera oración va en `ink` y el resto en
-`muted`, **con el mismo peso**. El contraste lo hace solo el color. En un
-título es donde más se luce.
+**Titular inline (títulos)** — pedido del usuario, 2026-11-25, tomando de
+referencia el titular del hero. Todo título (hero, secciones, cierre, pasos de
+HowWork, nombres de proyecto) va con el texto en `muted` y 400, y las palabras
+que cuentan en `ink` y 900, dentro de la misma frase:
+
+> <span style="color:#5C6166">Primero,</span> **el problema.** <span style="color:#5C6166">Después, la herramienta.</span>
+
+- Lo destacado se marca en `content.ts` con `**…**`. Sin marcas se destaca la primera oración (el lead-in); si tampoco hay, el título entero.
+- Destacar poco: uno o dos grupos cortos por título, como en el hero.
+- En la escena: `<InlineHeadline text={...} fontSize={...} maxWidth={...} />` desde `$lib/scene/inline-headline.svelte`. troika no mezcla fuentes en un texto, así que cada tramo es un texto aparte acomodado con `flow` (como el hero). `section-head.svelte` ya lo usa.
+- En la capa semántica: `<h2><InlineHeadline text={...} /></h2>` desde `$lib/inline-headline.svelte` (`<strong>` para lo destacado).
+
+**Lead-in (párrafos)** — la primera oración va en `ink` y el resto en
+`muted`, **con el mismo peso** (400). El contraste lo hace solo el color.
 
 > **Entendemos el problema.** <span style="color:#5C6166">Antes de escribir código, mapeamos cómo trabaja hoy tu equipo.</span>
 
-**Pesos**
-- En un párrafo, todo va en 400.
-- En un título, todo va en el peso del título: 700 o 900.
-
-**Dónde va**
-- Títulos: hero, secciones, cierre y nombre de proyecto si tiene dos partes. Por ejemplo, «**Software a medida.** <span style="color:#5C6166">Para lo que hoy se hace a mano.</span>»
+**Dónde va el lead-in**
 - Bajadas de hero y secciones.
 - Pasos de HowWork.
 - Bios de fundadores.
@@ -70,25 +76,21 @@ título es donde más se luce.
 **Dónde no va**
 - Etiquetas y eyebrows.
 - Botones y chips.
-- El titular del hero (excepción pedida por el usuario, 2026-11-24): en vez de lead-in, el contraste lo hacen las palabras que rotan, en `ink` y 900, sobre el texto fijo en `muted` y 400. Peso y color distintos solo acá.
+- Los títulos: van con titular inline (arriba).
 
 **Una sola oración**
-- Si el texto tiene una sola oración, no hay lead-in.
-- Un título va entero en `ink`.
-- Un párrafo va entero en `muted`, o en `ink` si es protagonista.
+- Si el párrafo tiene una sola oración, no hay lead-in: va entero en `muted`, o en `ink` si es protagonista.
 
 **Cómo escribir el texto**
 - El lead-in es la primera oración, cerrada por `.`, `?`, `!` o `:`.
 - Tiene que ser corta, de 2 a 6 palabras: una afirmación que se entienda sola.
-- En un título, la segunda parte la completa o la matiza; también es corta.
 - Si pasa de 72 caracteres, el párrafo no se resalta.
 
 **Cómo usarlo**
 - En la escena: `<LeadInText text={...} fontSize={...} maxWidth={...} />` desde `$lib/scene/lead-in-text.svelte`.
   - Acepta los mismos props que `MeasuredText`, salvo el color.
-  - En un título pasa `font={FONT.bold}` o `FONT.black` y `plain="ink"`, para que una sola oración vaya en tinta.
-  - `section-head.svelte` ya lo usa en el título y la intro.
-- En la capa semántica: `<h2><LeadIn text={...} /></h2>` o `<p><LeadIn text={...} /></p>` desde `$lib/lead-in.svelte`.
+  - `section-head.svelte` ya lo usa en la intro.
+- En la capa semántica: `<p><LeadIn text={...} /></p>` desde `$lib/lead-in.svelte`.
 - No se arma a mano con dos textos. `LeadInText` es un solo texto de troika con tramos de color, así el ajuste de línea es el del párrafo entero.
 
 ## 4. Imágenes y figuras: estética Linear
@@ -163,7 +165,10 @@ valores salen de `FIGURE` en `tokens.ts`.
 - Márgenes amplios, en múltiplos de 8 px.
 
 **Movimiento**
-- Las transiciones son del deck. Los componentes acompañan con parallax (`lag(k)`), sin animaciones propias que compitan.
+- Las transiciones son del deck. El contenido de una escena se mueve junto, 1:1 con el scroll, sin parallax ni animaciones propias que compitan (pedido del usuario, 2026-11-25: las piezas que subían a otro ritmo se quitaron).
+- Nosotros y el cierre (Contacto) llenan la ventana (pedido del usuario, 2026-11-25): en Nosotros las cards crecen hasta ocupar el alto que deja el encabezado (hasta el ancho de su celda, estirándose como mucho un 15 %); el cierre (Contacto) ocupa solo toda la ventana, con el título y los botones centrados bajo la navbar, y el pie va debajo: se ve al seguir scrolleando (scroll interno de la escena). Si el contenido no entra, también scrollea adentro.
+- Las secciones de la home (Cómo trabajamos, Nosotros, Contacto) no llevan etiqueta sobre el título ni número, y los pasos de HowWork tampoco van numerados (pedidos del usuario, 2026-11-25): la etiqueta repetía la navbar. El título abre la sección.
+- El indicador de escenas (`scene/scene-dots.svelte`) usa puntos redondos de 6 px; el de la escena que se ve se estira en una píldora.
 - `/showcase` es una galería: en vez de subir, las escenas cuelgan a lo largo de un pasillo y el deck mueve la cámara hacia el punto de fuga (`scene/gallery.ts`). Pedido por el usuario (2026-11-16). En reposo cada escena se ve centrada; entre proyectos la cámara gira de una pared a la otra.
 - La excepción son las figuras 3D (§4): un bucle lento que cuenta la idea, solo mientras la figura se ve.
 - El hero es el titular, el botón, una figura y el fondo, sin logo (pedido del usuario, 2026-11-24). El titular, «Construimos **el software** que tu **empresa** necesita.», tiene palabras que rotan (`scene/headline.ts`): qué construimos (artículo y sustantivo, que concuerdan) y para quién, de a un grupo por vez, cada ~3 s; lo que cambia se desvanece y vuelve, y el resto se corre suave a su lugar. Con movimiento reducido queda quieto en la primera combinación. La figura y el botón también corren con el reloj del hero, solo mientras se ve.
@@ -196,7 +201,7 @@ El contenido de todo componente va **centrado**:
 
 - [ ] Contenido centrado, salvo una excepción pedida y anotada en la sección 6.
 - [ ] Colores desde `PALETTE`, sin hex sueltos.
-- [ ] Títulos y párrafos con `LeadInText` en la escena y `LeadIn` en la capa semántica.
+- [ ] Títulos con `InlineHeadline` y párrafos con `LeadInText` en la escena; `InlineHeadline` y `LeadIn` en la capa semántica.
 - [ ] Ningún color fuera de la paleta: sin azul ni otro tono hasta que la identidad lo defina.
 - [ ] Las superficies `brand` (blancas) se separan del papel con vidrio, borde o sombra.
 - [ ] Figuras con `FIGURE`: monocromo, un acento y línea fina.
