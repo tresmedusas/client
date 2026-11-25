@@ -239,15 +239,58 @@ export const SHOWCASE = {
 /** Escenas del showcase, en orden. */
 export const SHOWCASE_SCENES = [SHOWCASE.section.id, ...SHOWCASE.projects.map((p) => p.id), SHOWCASE.closing.section.id] as const
 
-/** Escenas de cada página, por ruta. */
-export function scenesOf(path: string): readonly string[] {
-  return path.replace(/\/$/, '') === '/showcase' ? SHOWCASE_SCENES : HOME_SCENES
+// ── Términos y condiciones ───────────────────────────────────────
+
+/** TODO: página de ejemplo; el texto legal definitivo está por escribirse. */
+export const TERMS = {
+  section: {
+    id: 'terminos',
+    index: '',
+    label: 'Legal',
+    title: 'Términos y condiciones.',
+    intro: 'Página de ejemplo. El texto definitivo está en preparación.',
+  } satisfies Section,
+  title: 'Términos y condiciones — Tres Medusas',
+  description: 'Términos y condiciones de uso del sitio y de los servicios de Tres Medusas.',
+  items: [
+    {
+      title: 'Uso del sitio',
+      body: 'Texto de ejemplo. Aquí van las condiciones para usar este sitio y su contenido.',
+    },
+    {
+      title: 'Servicios',
+      body: 'Texto de ejemplo. Aquí va el alcance de los servicios y cómo se acuerda cada proyecto.',
+    },
+    {
+      title: 'Privacidad',
+      body: 'Texto de ejemplo. Aquí va cómo tratamos los datos que nos compartes al escribirnos.',
+    },
+  ] satisfies Item[] as readonly Item[],
+} as const
+
+/** Escenas de la página de términos: una sola. */
+export const TERMS_SCENES = [TERMS.section.id] as const
+
+export type Page = 'home' | 'showcase' | 'terms'
+
+/** Qué página del deck es una ruta. */
+export function pageOf(path: string): Page {
+  const clean = path.replace(/\/$/, '')
+  return clean === '/showcase' ? 'showcase' : clean === '/terminos' ? 'terms' : 'home'
 }
 
+/** Escenas de cada página, por ruta. */
+export function scenesOf(path: string): readonly string[] {
+  return { home: HOME_SCENES, showcase: SHOWCASE_SCENES, terms: TERMS_SCENES }[pageOf(path)]
+}
+
+/** Pie de todas las páginas: logo y términos arriba; copyright y «Powered by Essentia» abajo. */
 export const FOOTER = {
-  tagline: 'Software a medida e integraciones.',
+  terms: { label: 'Términos y condiciones', href: '/terminos' } satisfies Link,
   /** El año sale del build: el sitio se prerenderiza. */
-  copyright: (year: number) => `© ${year} Tres Medusas`,
+  copyright: (year: number) => `Copyright © ${year}`,
+  poweredBy: 'Powered by',
+  essentia: 'Essentia',
 } as const
 
 /** Iniciales de un nombre, para el avatar sin foto: «Fundador Uno» → «FU». */

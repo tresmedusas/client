@@ -2,7 +2,7 @@
   import { untrack } from 'svelte'
   import { EssentiaRoot } from 'essentia-core'
   import { afterNavigate, goto, replaceState } from '$app/navigation'
-  import { NAV, scenesOf } from '$lib/content.js'
+  import { NAV, pageOf, scenesOf } from '$lib/content.js'
   import { PALETTE } from '$lib/tokens.js'
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
@@ -25,7 +25,7 @@
   const deck = new Deck()
   let path = $state(normalize(location.pathname))
   const scenes = $derived(scenesOf(path))
-  const page = $derived(path === '/showcase' ? 'showcase' : 'home')
+  const page = $derived(pageOf(path))
   untrack(() => deck.reset(scenes.length, Math.max(0, sceneIndex(scenes, location.hash))))
 
   let focusedHref = $state<string | null>(null)
@@ -82,6 +82,7 @@
   /** El link de la navbar que corresponde a lo que se ve. */
   const activeHref = $derived.by(() => {
     if (page === 'showcase') return '/showcase'
+    if (page !== 'home') return null
     const href = `/#${scenes[deck.index]}`
     return NAV.some((l) => l.href === href) ? href : null
   })
@@ -113,6 +114,8 @@
     focusedHref = target.getAttribute('href')
     const section = target.closest('section[id]')
     if (section) showScene(section.id)
+    // El pie se dibuja en la última escena.
+    else if (target.closest('footer')) deck.goTo(deck.count - 1, reducedMotion)
   }
 
   function onFocusOut() {
