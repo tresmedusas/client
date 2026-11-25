@@ -6,6 +6,8 @@
   import { PALETTE } from '$lib/tokens.js'
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
+  import { tuning } from './lens-tune.svelte.js'
+  import LensTuner from './lens-tuner.svelte'
   import SiteScene from './site-scene.svelte'
 
   interface Props {
@@ -16,6 +18,8 @@
   let { layer }: Props = $props()
 
   const YEAR = new Date().getFullYear()
+  /** Banco de pruebas del lente de la navbar (temporal): `?tune`. */
+  const tune = tuning()
 
   /** Ruta sin la barra final: «/» queda como está. */
   const normalize = (path: string) => (path.length > 1 ? path.replace(/\/$/, '') : path)
@@ -167,7 +171,7 @@
 
 <!-- Sin aria-hidden: la capa del bridge de Essentia vive acá adentro. -->
 <div class="stage" role="presentation" onwheel={onWheel} onpointerdown={onPointerDown}>
-  <!-- Luz global (la que se tuneó con el lente de la navbar anterior): azimut −57°, elevación −83°. -->
+  <!-- Luz global (la del preset del lente de la navbar): azimut −57°, elevación −83°. -->
   <EssentiaRoot background={PALETTE.paper} light={{ direction: [0.0664, -0.1022, -0.9925], intensity: 0.7 }}>
     <SiteScene
       {deck}
@@ -181,6 +185,9 @@
     />
   </EssentiaRoot>
 </div>
+{#if tune}
+  <LensTuner />
+{/if}
 
 <style>
   .stage {
