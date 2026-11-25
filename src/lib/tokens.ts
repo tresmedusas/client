@@ -11,19 +11,19 @@
  */
 
 export const PALETTE = {
-  /** Blanco de la marca: el fondo (el papel). */
+  /** Blanco de la marca: el texto y la luz sobre superficies oscuras. */
   white: '#F4F4F4',
   /** Negro de la marca: el texto. */
   black: '#111111',
-  /** Fondo de la página. */
-  paper: '#F4F4F4',
+  /** Fondo de la página: blanco puro. */
+  paper: '#FFFFFF',
   /** Texto principal. */
   ink: '#111111',
-  /** Texto secundario: el negro al ~65 % sobre el papel (5.6:1). */
+  /** Texto secundario: el negro al ~65 % sobre el papel (6.2:1). */
   muted: '#5C6166',
   /**
-   * Brand (provisorio): el blanco. Es blanco puro, un punto más claro que el
-   * papel, para que una superficie de la marca se lea como luz sobre él.
+   * Brand (provisorio): el blanco. Es el mismo blanco puro del papel, así que
+   * una superficie de la marca se separa con vidrio, borde o sombra.
    * Botón principal, vidrios destacados, brillos.
    */
   brand: '#FFFFFF',
@@ -52,6 +52,8 @@ export const FONT_FAMILY = "Lato, system-ui, -apple-system, 'Segoe UI', sans-ser
 
 /** Logo provisorio: imagotipo en negro para el papel, isotipo blanco para las superficies oscuras. */
 export const LOGO = {
+  /** Isotipo en negro (#1C1C1C), el de la navbar; recortado a su dibujo (viewBox 366 × 416). */
+  isotipoNegro: { src: '/brand/isotipo-negro.svg', aspect: 366 / 416 },
   /** Imagotipo a 4× (viewBox 345 × 88): la textura sale nítida con DPR 2. */
   imagotipo: { src: '/brand/imagotipo-negro.svg', aspect: 345 / 88 },
   isotipo: { src: '/brand/isotipo.svg', aspect: 60 / 79 },

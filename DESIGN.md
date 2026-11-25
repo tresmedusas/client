@@ -17,10 +17,10 @@ cambie solo `tokens.ts`.
 
 | Token        | Valor     | Uso                                                                 |
 | ------------ | --------- | ------------------------------------------------------------------- |
-| `paper`      | `#F4F4F4` | El fondo: papel blanco liso, sin grano ni tintes de color.              |
+| `paper`      | `#FFFFFF` | El fondo: papel blanco puro y liso, sin grano ni tintes de color.   |
 | `ink`        | `#111111` | Títulos, lead-ins, texto que se lee primero.                        |
 | `muted`      | `#5C6166` | Cuerpo de párrafo después del lead-in, etiquetas, metadatos.        |
-| `brand`      | `#FFFFFF` | La luz: el botón principal y los vidrios destacados. Blanco puro, un punto más claro que el papel. |
+| `brand`      | `#FFFFFF` | La luz: el botón principal y los vidrios destacados. Blanco puro, el mismo del papel: se separa con vidrio, borde o sombra. |
 | `brandLight` | `#FFFFFF` | Lentes y medusas: vidrio blanco.                                    |
 | `brandInk`   | `#111111` | Texto chico «de la marca» (índices, eyebrows, link activo): la tinta. |
 | `brandDeep`  | `#1C1E21` | Superficies oscuras con el isotipo o iniciales en blanco.           |
@@ -33,7 +33,8 @@ cambie solo `tokens.ts`.
   - en HTML, un borde de 1 px de tinta al 8 %.
   - Nunca un bloque blanco plano sin borde, porque desaparece.
 - **Sin color.** No uses hex de color en un componente, ni siquiera "temporal". Si hace falta un acento, es tinta: un trazo más grueso, un peso mayor o una superficie `brandDeep`.
-  - Excepción pedida por el usuario (2026-11-19): la card holográfica de los fundadores (`scene/holo-card.frag.glsl`) y el haz de luz de su modal (`light-beam.ts`) usan el espectro. El color sale solo de esos shaders, nunca de un hex en un componente, y no se extiende a otros componentes.
+  - Excepción pedida por el usuario (2026-11-19): el haz de luz del modal de los fundadores (`light-beam.ts`) usa el espectro. El color sale solo de ese shader, nunca de un hex en un componente, y no se extiende a otros componentes. (La card del fundador ya no lleva holograma ni huella, desde 2026-11-23.)
+  - Excepción pedida por el usuario (2026-11-23): el botón del hero (`scene/prism-cta.svelte`) es una píldora `brandDeep` con una lente circular a la izquierda (el mismo vidrio oscurecido al 78 %, con una flecha en `white`) y el label en `white` al lado; la lente lleva un aro de vidrio por el que se ven dos haces de luz iridiscentes (`scene/prism-beams.glsl` y `scene/prism-ring.frag.glsl`): cada haz deambula por su cuenta, con su propio rango de colores, lleva el espectro a lo ancho con dispersión, bandas finas y núcleo blanco, y sus colores cambian al azar; el aro hace de lente (aumento, desvío y aberración). Los haces solo se ven en el aro, que va pegado al borde de la lente (la píldora no tiene aro), y la luz no sale de la lente, salvo en el click: los haces destellan y una onda gruesa sale del borde de la lente y cruza la píldora con los colores que tiene el aro en cada dirección (pedido del usuario, 2026-11-23; no se dibuja con movimiento reducido). Con el puntero encima solo brillan más los haces. Los valores salen del banco de pruebas que eligió el usuario. El espectro sale solo de esos shaders; en la capa semántica el botón es `brandDeep` liso, con la lente y la flecha. El hero ya no lleva franjas de luz en los bordes ni grano (pedido del usuario, 2026-11-24): su papel es liso, como el resto.
 
 ## 2. Tipografía
 
@@ -69,6 +70,7 @@ título es donde más se luce.
 **Dónde no va**
 - Etiquetas y eyebrows.
 - Botones y chips.
+- El titular del hero (excepción pedida por el usuario, 2026-11-24): en vez de lead-in, el contraste lo hacen las palabras que rotan, en `ink` y 900, sobre el texto fijo en `muted` y 400. Peso y color distintos solo acá.
 
 **Una sola oración**
 - Si el texto tiene una sola oración, no hay lead-in.
@@ -164,6 +166,9 @@ valores salen de `FIGURE` en `tokens.ts`.
 - Las transiciones son del deck. Los componentes acompañan con parallax (`lag(k)`), sin animaciones propias que compitan.
 - `/showcase` es una galería: en vez de subir, las escenas cuelgan a lo largo de un pasillo y el deck mueve la cámara hacia el punto de fuga (`scene/gallery.ts`). Pedido por el usuario (2026-11-16). En reposo cada escena se ve centrada; entre proyectos la cámara gira de una pared a la otra.
 - La excepción son las figuras 3D (§4): un bucle lento que cuenta la idea, solo mientras la figura se ve.
+- El hero es el titular, el botón, una figura y el fondo, sin logo (pedido del usuario, 2026-11-24). El titular, «Construimos **el software** que tu **empresa** necesita.», tiene palabras que rotan (`scene/headline.ts`): qué construimos (artículo y sustantivo, que concuerdan) y para quién, de a un grupo por vez, cada ~3 s; lo que cambia se desvanece y vuelve, y el resto se corre suave a su lugar. Con movimiento reducido queda quieto en la primera combinación. La figura y el botón también corren con el reloj del hero, solo mientras se ve.
+- La figura del hero (pedido del usuario, 2026-11-24) va debajo del botón, tan ancha como la columna (hasta 1100 px) y pegada al borde de abajo de la ventana; si no entra con su alto natural, se recorta por abajo, y lo que sobra se reparte entre arriba del titular y entre el botón y la figura. Muestra lo que nombra el titular: una app, un tablero de marca o un lienzo de diseño (`scene/figures/hero.ts`). Es plana, en línea fina con los tokens `FIGURE`, con un solo acento, y se pierde en el papel hacia abajo con un difuminado blanco largo. Para que no parezca un boceto (pedido del usuario, 2026-11-24) tiene detalle de interfaz real: los renglones de texto son barras redondeadas de tinta al 5, 9 y 16 % (texto suave, texto y títulos) en vez de líneas; las barras laterales y los paneles van un paso más oscuros (5 %); los botones primarios, la herramienta elegida y los tonos fuertes de la paleta van rellenos al 75–82 %, y la placa tiene una sombra suave de tinta (≤ 0.1). Los rellenos se mezclan con el papel en sRGB, como en el navegador, para que la escena, la capa semántica y el banco de pruebas se vean igual. Cuando el titular cambia «qué construimos», un panel de vidrio limpio (`Glass`, sin dispersión) cruza la figura: a su izquierda ya está la figura nueva y a su derecha la de antes (`scene/hero-figure.svelte`). Es la otra excepción de movimiento: solo se mueve en ese cambio, que sigue al titular. Sin lupa (pedido del usuario, 2026-11-24: no se entendía). Con movimiento reducido queda la primera figura, sin cambios. Si el alto no alcanza, no se muestra. Su tamaño (ancho y alto del marco), el difuminado y el panel salen de `LOOK` y del banco de pruebas que eligió el usuario; ahí la placa ocupa el 85 % del ancho del marco, más que el 70 % de §4, y no se desvanece arriba ni a los costados: solo abajo. En la capa semántica va la misma figura en SVG (`lib/hero-figure.svelte`).
+- El click del botón del hero destella (haces del aro hasta 3.5 veces más brillantes, apagándose en ~0.6 s) y lanza una onda que cruza la píldora en ~0.7 s; la página espera 650 ms antes de bajar, para que se vea (con movimiento reducido navega enseguida, sin destello).
 - Todo respeta `prefers-reduced-motion`.
 
 ## 6. Alineación: centrado por convención
@@ -185,6 +190,7 @@ El contenido de todo componente va **centrado**:
 | Componente | Alineación | Pedido |
 | ---------- | ---------- | ------ |
 | Pie (`scene/footer.svelte`, `footer` del layout) | El logo va centrado. La franja de abajo, en escritorio, a los costados: «Powered by Essentia» a la izquierda; copyright y términos a la derecha. En una columna vuelve a centrado y apilado. | 2026-11-23, con el rediseño del pie. |
+| Botón del hero (`scene/prism-cta.svelte`) | La lente con la flecha a la izquierda y el label al lado, no centrado. | Usuario, 2026-11-23: variante «Lente» con icono y aro. |
 
 ## Checklist de un componente
 

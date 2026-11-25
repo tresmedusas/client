@@ -11,12 +11,14 @@
  * Lo marcado con TODO es provisorio: placeholders hasta tener el contenido real.
  */
 
-/** Contacto. TODO: dominio, página de empresa y agenda reales. */
+/** Contacto. TODO: dominio, página de empresa y número de WhatsApp reales. */
 export const CONTACT = {
   email: 'hola@tresmedusas.com',
   linkedin: 'https://www.linkedin.com/company/tres-medusas',
-  /** Agenda provisoria: la experiencia de reunión todavía no está definida. */
-  calendly: 'https://calendly.com/tres-medusas',
+  /** Número con código de país, solo dígitos (formato de wa.me). TODO: el real. */
+  whatsapp: '10000000000',
+  /** Mensaje con el que se abre la conversación. */
+  whatsappMessage: 'Hola, quiero contarles un proceso que hoy hacemos a mano.',
 } as const
 
 export const SITE = {
@@ -46,7 +48,14 @@ export interface Item {
   body: string
 }
 
-const MEETING: Link = { label: 'Agenda una reunión', href: CONTACT.calendly }
+/**
+ * El contacto principal: no hay agenda, se escribe por WhatsApp y desde ahí se
+ * coordina la llamada.
+ */
+const WRITE_US: Link = {
+  label: 'Escríbenos por WhatsApp',
+  href: `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(CONTACT.whatsappMessage)}`,
+}
 
 /** Navegación fija. Las anclas de la home funcionan también desde otra página. */
 export const NAV: readonly Link[] = [
@@ -58,16 +67,35 @@ export const NAV: readonly Link[] = [
 
 // ── Home ─────────────────────────────────────────────────────────
 
-/** Hero provisorio: se trabaja aparte. */
+/** Hero: qué hacemos y un botón para agendar una reunión, centrados. */
 export const HERO = {
   id: 'inicio',
-  eyebrow: 'Software a medida e integraciones',
-  // Frase de posicionamiento vigente, aún por decidir.
-  title: 'Resolvemos operaciones manuales y procesos fragmentados.',
-  lead: 'Construimos el software y las integraciones que conectan lo que hoy se hace a mano, para que tu equipo deje de copiar datos entre sistemas.',
-  primary: MEETING,
-  secondary: { label: 'Cómo trabajamos', href: '#como-trabajamos' } satisfies Link,
-  hint: 'Desliza para seguir',
+  /**
+   * El titular: «Construimos el software que tu empresa necesita.», con
+   * palabras que van rotando (pedido del usuario, 2026-11-24). El texto fijo
+   * va en `muted` y regular; las palabras que rotan, en `ink` y black. Arma
+   * el texto `scene/headline.ts`.
+   */
+  headline: {
+    before: 'Construimos',
+    /** Qué construimos: artículo y sustantivo, que concuerdan. */
+    what: [
+      ['el', 'software'],
+      ['la', 'identidad'],
+      ['el', 'diseño'],
+    ],
+    /** En escritorio, la segunda línea empieza acá. */
+    middle: 'que tu',
+    /** Para quién. */
+    who: ['empresa', 'negocio', 'emprendimiento'],
+    after: 'necesita.',
+  },
+  /**
+   * Lo que se busca: agendar una reunión (pedido del usuario, 2026-11-24).
+   * Lleva al contacto, desde donde se coordina la llamada; el mismo href que
+   * en `NAV`, para que el foco del teclado encuentre el botón.
+   */
+  primary: { label: 'Agendar reunión', href: '/#contacto' } satisfies Link,
 } as const
 
 export const HOW_WORK = {
@@ -150,10 +178,10 @@ export const CONTACT_SECTION = {
     id: 'contacto',
     index: '03',
     label: 'Contacto',
-    title: 'Agenda una reunión.',
-    intro: 'Cuéntanos qué proceso te quita tiempo. En una llamada corta vemos si podemos ayudarte.',
+    title: 'Cuéntanos tu proceso.',
+    intro: 'Una llamada corta basta. Escríbenos qué se hace hoy a mano y vemos si podemos ayudarte.',
   } satisfies Section,
-  primary: MEETING,
+  primary: WRITE_US,
   secondary: { label: CONTACT.email, href: `mailto:${CONTACT.email}` } satisfies Link,
   tertiary: { label: 'LinkedIn', href: CONTACT.linkedin } satisfies Link,
 } as const
@@ -222,7 +250,7 @@ export const SHOWCASE = {
       title: '¿El próximo es el tuyo?',
       intro: 'Cuéntanos qué proceso te quita tiempo.',
     } satisfies Section,
-    primary: MEETING,
+    primary: WRITE_US,
     secondary: { label: 'Volver al inicio', href: '/' } satisfies Link,
   },
 } as const

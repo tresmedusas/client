@@ -20,6 +20,11 @@
     compact: boolean
     d: number
     frame: SceneFrame
+    /**
+     * `center`: encabezado y botones centrados (DESIGN.md §6), como Contacto.
+     * El cierre del showcase todavía va a la izquierda. @default 'start'
+     */
+    align?: 'start' | 'center'
     /** Año del build, para el pie; sin él no hay pie. */
     year?: number
     focusedHref: string | null
@@ -27,7 +32,7 @@
     onnavigate: (href: string) => void
   }
 
-  let { section, links, width, viewportWidth, viewportHeight, compact, d, frame, year, focusedHref, onmeasure, onnavigate }: Props = $props()
+  let { section, links, width, viewportWidth, viewportHeight, compact, d, frame, align = 'start', year, focusedHref, onmeasure, onnavigate }: Props = $props()
 
   const ACTION_GAP = 36
 
@@ -45,9 +50,9 @@
   const footerY = $derived(footerTop(ctaY - ctaHeight, frame.top, viewportHeight, compact))
 </script>
 
-<SectionHead {section} {width} {compact} size="display" onmeasure={(h) => (headHeight = h)} />
+<SectionHead {section} {width} {compact} size="display" {align} onmeasure={(h) => (headHeight = h)} />
 <T.Group position.y={lag(0.18)}>
-  <CtaGroup {links} {width} y={ctaY} {focusedHref} onmeasure={(h) => (ctaHeight = h)} {onnavigate} />
+  <CtaGroup {links} {width} y={ctaY} {focusedHref} {align} onmeasure={(h) => (ctaHeight = h)} {onnavigate} />
 </T.Group>
 
 {#if year !== undefined && ctaHeight > 0}

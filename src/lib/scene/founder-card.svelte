@@ -6,13 +6,12 @@
   import { Color, LinearFilter, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, SRGBColorSpace, Texture, TextureLoader, Vector2, WebGLRenderTarget } from 'three'
   import { ABOUT, initials, type Person } from '$lib/content.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
-  import fragmentShader from './holo-card.frag.glsl'
-  import vertexShader from './holo-card.vert.glsl'
+  import fragmentShader from './founder-card.frag.glsl'
+  import vertexShader from './founder-card.vert.glsl'
 
   /**
-   * Card holográfica de un fundador (pedido del usuario, ver DESIGN.md §6):
-   * oscura, con la textura de una huella, un holograma que sigue la luz y un
-   * tilt 3D hacia el puntero. La foto va a sangre y el contenido, centrado
+   * Card de un fundador: oscura, con un tilt 3D hacia el puntero. La foto va
+   * a sangre y el contenido, centrado
    * (DESIGN.md §6): «Fundador» arriba, el nombre y la profesión abajo, y al
    * pie «Conocer a …», que abre su modal.
    *
@@ -22,8 +21,6 @@
    */
   interface Props {
     person: Person
-    /** Número de la card: 1, 2, 3. */
-    index: number
     /** Centro de la card, en el espacio de la sección. */
     x: number
     y: number
@@ -35,7 +32,7 @@
     onopen: (id: string) => void
   }
 
-  let { person, index, x, y, width, height, compact, focused, onopen }: Props = $props()
+  let { person, x, y, width, height, compact, focused, onopen }: Props = $props()
 
   /** Margen del quad alrededor de la card, para la sombra y el anillo de foco. */
   const MARGIN = 28
@@ -143,10 +140,8 @@
     u_base: { value: new Color(PALETTE.ink) },
     u_light: { value: new Color(PALETTE.white) },
     u_ink: { value: new Color(PALETTE.ink) },
-    u_pointer: { value: new Vector2(0.5, 0.5) },
     u_hover: { value: 0 },
     u_focus: { value: 0 },
-    u_seed: { value: untrack(() => index) * 3.7 },
     u_content: { value: target.texture as Texture },
     u_photo: { value: null as Texture | null },
     u_photoAspect: { value: 1 },
@@ -156,7 +151,7 @@
   }
   const material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms, transparent: true, depthWrite: false })
 
-  // La foto: hasta que carga, la huella sola.
+  // La foto: hasta que carga, la superficie lisa.
   $effect(() => {
     const src = person.photo
     if (!src) return
@@ -183,7 +178,7 @@
     invalidate()
   })
 
-  // ── Puntero: tilt, luz y hover, con un resorte suave ─────────
+  // ── Puntero: tilt y hover, con un resorte suave ──────────────
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let hovering = $state(false)
   const aim = { u: 0.5, v: 0.5 }
@@ -209,7 +204,6 @@
       const tilt = reduced ? 0 : MAX_TILT * now.hover
       uniforms.u_tilt.value.set(-(now.v - 0.5) * 2 * tilt, (now.u - 0.5) * 2 * tilt)
       uniforms.u_scale.value = 1 + (reduced ? 0 : 0.025 * now.hover)
-      uniforms.u_pointer.value.set(now.u, now.v)
       uniforms.u_hover.value = now.hover
       if (Math.abs(u - now.u) + Math.abs(v - now.v) + Math.abs(goal - now.hover) < 0.002) settling = false
     },

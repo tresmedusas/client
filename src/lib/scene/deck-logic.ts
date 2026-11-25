@@ -104,9 +104,10 @@ export function scrollAt(layout: PageLayout, spot: PageSpot): number {
 }
 
 /**
- * Área de contenido de una escena: arranca un margen (`top`) bajo el borde de
- * arriba y termina `bottom` antes del de abajo, donde va la navbar. Un contenido más alto que el área scrollea adentro
- * de su escena antes de pasar a la siguiente.
+ * Área de contenido de una escena: arranca `top` bajo el borde de arriba, donde
+ * va la navbar, y termina un margen (`bottom`) antes del de abajo. Un
+ * contenido más alto que el área scrollea adentro de su escena antes de pasar
+ * a la siguiente.
  */
 export interface SceneFrame {
   /** Distancia desde el borde de arriba de la ventana hasta el tope del contenido. */

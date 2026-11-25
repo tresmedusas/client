@@ -12,15 +12,18 @@
     icon: string
     /** Versión sólida del ícono, para cuando el item está activo. */
     iconSolid?: string
-    /** Cuánto lo envuelve el lente (0..1): mezcla el ícono de línea con el sólido. */
+    /** Cuánto lo marca el activo (0..1): mezcla el ícono de línea con el sólido. */
     solid?: number
     iconSize?: number
     /** Ancho mínimo del item: los labels cortos ocupan lo mismo. */
     minWidth?: number
     fontSize?: number
     color?: string
-    /** Opacidad del ícono: el activo va entero, los demás apagados. */
-    iconOpacity?: number
+    /**
+     * Encima del activo, otra capa (ícono y texto en otro color) en `over.z`:
+     * para un indicador oscuro que tapa la capa de abajo. Se ve con `solid`.
+     */
+    over?: { icon: string; color: string; z: number }
     /** Centro horizontal del item. */
     x: number
     /** Centro vertical del item (ícono + texto). */
@@ -44,7 +47,7 @@
     minWidth = 66,
     fontSize = 11,
     color = PALETTE.ink,
-    iconOpacity = 1,
+    over,
     x,
     y,
     z,
@@ -64,34 +67,53 @@
   const blockHeight = $derived(iconSize + GAP + textHeight)
   const iconY = $derived(y + blockHeight / 2 - iconSize / 2)
   const textTop = $derived(iconY - iconSize / 2 - GAP)
+  /** Con capa de arriba, la de abajo se apaga a medida que aparece aquella. */
+  const base = $derived(over ? 1 - solid : 1)
 </script>
 
 {#if focused && textWidth > 0}
   <Rect width={width + 18} height={blockHeight + 12} radius={12} color={PALETTE.brand} opacity={0.22} {x} {y} z={z - 0.01} />
 {/if}
+<!-- Lo único que recibe el click es el área del item (el raycast no saltea mallas invisibles). -->
 <T.Group onclick={() => onnavigate(link.href)} onpointerenter={onPointerEnter} onpointerleave={onPointerLeave}>
-  <!-- Área de click: el item entero, no solo los trazos del ícono y las letras. -->
   <Rect width={width + 16} height={hitHeight} color={PALETTE.ink} opacity={0} {x} {y} z={z - 0.02} />
-  <!-- Los dos íconos quedan montados: al activarse, el sólido ya está cargado y no parpadea. -->
-  <Image src={icon} width={iconSize} height={iconSize} opacity={iconOpacity * (iconSolid ? 1 - solid : 1)} {x} y={iconY} {z} />
-  {#if iconSolid}
-    <Image src={iconSolid} width={iconSize} height={iconSize} opacity={iconOpacity * solid} {x} y={iconY} {z} />
-  {/if}
+</T.Group>
+<!-- Los dos íconos quedan montados: al activarse, el sólido ya está cargado y no parpadea. -->
+<Image src={icon} width={iconSize} height={iconSize} opacity={base * (iconSolid && !over ? 1 - solid : 1)} {x} y={iconY} {z} />
+{#if iconSolid && !over}
+  <Image src={iconSolid} width={iconSize} height={iconSize} opacity={base * solid} {x} y={iconY} {z} />
+{/if}
+<MeasuredText
+  text={link.label}
+  {fontSize}
+  font={FONT.bold}
+  {color}
+  lineHeight={1.2}
+  anchorX={0.5}
+  anchorY={0}
+  {x}
+  y={textTop}
+  {z}
+  opacity={base}
+  onmeasure={(w, h) => {
+    textWidth = w
+    textHeight = h
+    onmeasure?.(Math.max(minWidth, iconSize, w))
+  }}
+/>
+{#if over && solid > 0.002}
+  <Image src={over.icon} width={iconSize} height={iconSize} opacity={solid} {x} y={iconY} z={over.z} />
   <MeasuredText
     text={link.label}
     {fontSize}
     font={FONT.bold}
-    {color}
+    color={over.color}
     lineHeight={1.2}
     anchorX={0.5}
     anchorY={0}
     {x}
     y={textTop}
-    {z}
-    onmeasure={(w, h) => {
-      textWidth = w
-      textHeight = h
-      onmeasure?.(Math.max(minWidth, iconSize, w))
-    }}
+    z={over.z}
+    opacity={solid}
   />
-</T.Group>
+{/if}

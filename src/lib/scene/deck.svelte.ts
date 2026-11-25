@@ -45,7 +45,7 @@ export class Deck {
   index = $state(0)
   /** Escena que se ve, con decimales durante la transición. */
   position = $state(0)
-  /** Velocidad del deck en escenas/s: el fondo la usa para la estela. */
+  /** Velocidad del deck en escenas/s. */
   velocity = $state(0)
   /** Scroll interno de cada escena, en píxeles CSS. */
   inner = $state<number[]>([])
