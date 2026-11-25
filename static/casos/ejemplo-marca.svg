@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="1200" height="1500">
+  <!-- Página de ejemplo de un manual de marca: la marca, la paleta y la tipografía. Monocromo, DESIGN.md §4. -->
+  <rect width="400" height="500" fill="#FFFFFF"/>
+  <!-- La marca, sobre la superficie oscura -->
+  <rect width="400" height="270" fill="#1C1E21"/>
+  <g stroke="#F4F4F4" stroke-opacity="0.06">
+    <path d="M0 24h400M0 48h400M0 72h400M0 96h400M0 120h400M0 144h400M0 168h400M0 192h400M0 216h400M0 240h400"/>
+    <path d="M24 0v270M48 0v270M72 0v270M96 0v270M120 0v270M144 0v270M168 0v270M192 0v270M216 0v270M240 0v270M264 0v270M288 0v270M312 0v270M336 0v270M360 0v270M384 0v270"/>
+  </g>
+  <rect x="24" y="24" width="40" height="7" rx="3.5" fill="#F4F4F4" fill-opacity="0.4"/>
+  <rect x="340" y="24" width="36" height="7" rx="3.5" fill="#F4F4F4" fill-opacity="0.2"/>
+  <circle cx="200" cy="128" r="54" fill="none" stroke="#F4F4F4" stroke-width="14"/>
+  <path d="M200 74v108" stroke="#F4F4F4" stroke-width="14"/>
+  <circle cx="200" cy="128" r="9" fill="#1C1E21"/>
+  <rect x="140" y="206" width="120" height="14" rx="7" fill="#F4F4F4"/>
+  <rect x="164" y="230" width="72" height="6" rx="3" fill="#F4F4F4" fill-opacity="0.4"/>
+  <!-- Paleta -->
+  <rect x="24" y="294" width="64" height="7" rx="3.5" fill="#111111" fill-opacity="0.3"/>
+  <rect x="24" y="314" width="64" height="64" rx="12" fill="#1C1E21"/>
+  <rect x="96" y="314" width="64" height="64" rx="12" fill="#111111" fill-opacity="0.6"/>
+  <rect x="168" y="314" width="64" height="64" rx="12" fill="#111111" fill-opacity="0.22"/>
+  <rect x="240" y="314" width="64" height="64" rx="12" fill="#F4F4F4"/>
+  <rect x="312.5" y="314.5" width="63" height="63" rx="12" fill="#FFFFFF" stroke="#111111" stroke-opacity="0.12"/>
+  <g fill="#111111" fill-opacity="0.16">
+    <rect x="24" y="386" width="40" height="5" rx="2.5"/>
+    <rect x="96" y="386" width="40" height="5" rx="2.5"/>
+    <rect x="168" y="386" width="40" height="5" rx="2.5"/>
+    <rect x="240" y="386" width="40" height="5" rx="2.5"/>
+    <rect x="312" y="386" width="40" height="5" rx="2.5"/>
+  </g>
+  <!-- Tipografía -->
+  <line x1="24" y1="410" x2="376" y2="410" stroke="#111111" stroke-opacity="0.1"/>
+  <text x="24" y="474" font-family="Helvetica, Arial, sans-serif" font-size="64" font-weight="900" fill="#111111">Aa</text>
+  <rect x="140" y="430" width="120" height="8" rx="4" fill="#111111" fill-opacity="0.82"/>
+  <rect x="140" y="448" width="236" height="6" rx="3" fill="#111111" fill-opacity="0.16"/>
+  <rect x="140" y="462" width="200" height="6" rx="3" fill="#111111" fill-opacity="0.16"/>
+</svg>
