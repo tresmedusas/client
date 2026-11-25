@@ -253,24 +253,11 @@ body {
   list-style: none;
 }
 
-.semantic .steps {
-  counter-reset: step;
-}
-
 .semantic .cards li,
 .semantic .steps li {
   padding: 1.25rem;
   border: 1px solid color-mix(in srgb, var(--color-muted) 30%, transparent);
   border-radius: 1rem;
-}
-
-.semantic .steps li::before {
-  counter-increment: step;
-  content: '0' counter(step);
-  font-weight: 900;
-  display: block;
-  color: var(--color-brand-ink);
-  margin-bottom: 0.25rem;
 }
 
 /* Nosotros: cada fundador centrado (DESIGN.md §6). */
@@ -433,6 +420,17 @@ body {
   clip-path: inset(50%);
 }
 
+/* Titular inline (DESIGN.md §3), como el del hero: el texto apagado y regular, lo destacado en tinta y black. */
+.inline-headline {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.inline-headline strong {
+  color: var(--color-ink);
+  font-weight: 900;
+}
+
 /* Lead-in text highlight (DESIGN.md): la primera oración en tinta, el resto apagado, mismo peso. */
 .lead-in {
   color: var(--color-ink);
@@ -447,7 +445,7 @@ body {
   text-align: center;
 }
 
-/* Las etapas van una debajo de la otra, como en la escena: figura, número, título y texto. */
+/* Las etapas van una debajo de la otra, como en la escena: figura, título y texto, sin número. */
 .semantic #como-trabajamos .steps {
   grid-template-columns: 1fr;
   gap: 4.5rem;
@@ -463,7 +461,7 @@ body {
   padding: 0;
 }
 
-.semantic #como-trabajamos .steps li::before {
+.semantic #como-trabajamos .steps h3 {
   margin: 1.5rem 0 0.75rem;
 }
 

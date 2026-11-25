@@ -4,6 +4,7 @@
   import { SHOWCASE, type Project } from '$lib/content.js'
   import { smoothstep, type Fade } from './gallery.js'
   import { FIGURE, FONT, LOGO, PALETTE } from '$lib/tokens.js'
+  import InlineHeadline from './inline-headline.svelte'
   import LeadInText from './lead-in-text.svelte'
   import MeasuredText from './measured-text.svelte'
 
@@ -134,15 +135,12 @@
   opacity={text}
   onmeasure={(_, h) => (indexHeight = h)}
 />
-<LeadInText
+<InlineHeadline
   text={project.name}
-  plain="ink"
-  font={FONT.bold}
   fontSize={nameSize}
   lineHeight={1.1}
   letterSpacing={-nameSize * 0.02}
   maxWidth={textWidth}
-  {...centered}
   x={cx}
   y={nameY}
   opacity={text}

@@ -77,7 +77,7 @@
   de vidrio se quedan en el nivel de captura del contenido.
 -->
 <GallerySlot i={last} {...common} height={heights[last]!} wallX={wall(last)} reveal={smoothstep(-1, -0.15, deck.position - last)} flat>
-  {#snippet children(_d, frame)}
+  {#snippet children()}
     <Closing
       section={SHOWCASE.closing.section}
       links={[SHOWCASE.closing.primary, SHOWCASE.closing.secondary]}
@@ -85,8 +85,6 @@
       {viewportWidth}
       {viewportHeight}
       {compact}
-      d={0}
-      {frame}
       {year}
       {focusedHref}
       onmeasure={(h) => (heights[last] = h)}

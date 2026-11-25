@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InlineHeadline from '$lib/inline-headline.svelte'
   import LeadIn from '$lib/lead-in.svelte'
   import { ABOUT, CONTACT_SECTION, HERO, HOW_WORK, SITE } from '$lib/content.js'
   import FounderDialog from '$lib/founder-dialog.svelte'
@@ -32,14 +33,13 @@
 </section>
 
 <section id={HOW_WORK.section.id} aria-labelledby="{HOW_WORK.section.id}-title">
-  <p class="eyebrow">{HOW_WORK.section.index} — {HOW_WORK.section.label}</p>
-  <h2 id="{HOW_WORK.section.id}-title"><LeadIn text={HOW_WORK.section.title} /></h2>
+  <h2 id="{HOW_WORK.section.id}-title"><InlineHeadline text={HOW_WORK.section.title} /></h2>
   <p><LeadIn text={HOW_WORK.section.intro} /></p>
   <ol class="steps">
     {#each HOW_WORK.steps as step (step.title)}
       <li>
         <img src={step.figure} alt="" width="640" height="427" loading="lazy" />
-        <h3>{step.title}</h3>
+        <h3><InlineHeadline text={step.title} /></h3>
         <p><LeadIn text={step.body} /></p>
       </li>
     {/each}
@@ -47,8 +47,7 @@
 </section>
 
 <section id={ABOUT.section.id} aria-labelledby="{ABOUT.section.id}-title">
-  <p class="eyebrow">{ABOUT.section.index} — {ABOUT.section.label}</p>
-  <h2 id="{ABOUT.section.id}-title"><LeadIn text={ABOUT.section.title} /></h2>
+  <h2 id="{ABOUT.section.id}-title"><InlineHeadline text={ABOUT.section.title} /></h2>
   <p><LeadIn text={ABOUT.section.intro} /></p>
   <h3 class="label">{ABOUT.foundersLabel}</h3>
   <ul class="cards founders">
@@ -75,8 +74,7 @@
 </section>
 
 <section id={CONTACT_SECTION.section.id} aria-labelledby="{CONTACT_SECTION.section.id}-title">
-  <p class="eyebrow">{CONTACT_SECTION.section.index} — {CONTACT_SECTION.section.label}</p>
-  <h2 id="{CONTACT_SECTION.section.id}-title"><LeadIn text={CONTACT_SECTION.section.title} /></h2>
+  <h2 id="{CONTACT_SECTION.section.id}-title"><InlineHeadline text={CONTACT_SECTION.section.title} /></h2>
   <p><LeadIn text={CONTACT_SECTION.section.intro} /></p>
   <p class="actions">
     <a class="button" href={CONTACT_SECTION.primary.href} rel="noopener" target="_blank">{CONTACT_SECTION.primary.label}</a>
