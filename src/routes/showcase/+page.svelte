@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InlineHeadline from '$lib/inline-headline.svelte'
   import LeadIn from '$lib/lead-in.svelte'
   import { SHOWCASE } from '$lib/content.js'
 </script>
@@ -14,7 +15,7 @@
 <!-- Una sección por escena del deck, en el orden de SHOWCASE_SCENES. -->
 <section id={SHOWCASE.section.id} class="hero" aria-labelledby="{SHOWCASE.section.id}-title">
   <p class="eyebrow">{SHOWCASE.section.label}</p>
-  <h1 id="{SHOWCASE.section.id}-title"><LeadIn text={SHOWCASE.section.title} /></h1>
+  <h1 id="{SHOWCASE.section.id}-title"><InlineHeadline text={SHOWCASE.section.title} /></h1>
   <p class="lead"><LeadIn text={SHOWCASE.section.intro} /></p>
   <ol class="index">
     {#each SHOWCASE.projects as project (project.id)}
@@ -26,7 +27,7 @@
 {#each SHOWCASE.projects as project, i (project.id)}
   <section id={project.id} aria-labelledby="{project.id}-title">
     <p class="eyebrow">{String(i + 1).padStart(2, '0')} / {String(SHOWCASE.projects.length).padStart(2, '0')}</p>
-    <h2 id="{project.id}-title"><LeadIn text={project.name} /></h2>
+    <h2 id="{project.id}-title"><InlineHeadline text={project.name} /></h2>
     <p>{[project.client, ...project.tags].join(' · ')}</p>
     {#if project.image}
       <img src={project.image} alt="" />
@@ -40,7 +41,7 @@
 
 <section id={SHOWCASE.closing.section.id} aria-labelledby="{SHOWCASE.closing.section.id}-title">
   <p class="eyebrow">{SHOWCASE.closing.section.label}</p>
-  <h2 id="{SHOWCASE.closing.section.id}-title"><LeadIn text={SHOWCASE.closing.section.title} /></h2>
+  <h2 id="{SHOWCASE.closing.section.id}-title"><InlineHeadline text={SHOWCASE.closing.section.title} /></h2>
   <p><LeadIn text={SHOWCASE.closing.section.intro} /></p>
   <p class="actions">
     <a class="button" href={SHOWCASE.closing.primary.href} rel="noopener" target="_blank">{SHOWCASE.closing.primary.label}</a>

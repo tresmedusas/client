@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InlineHeadline from '$lib/inline-headline.svelte'
   import LeadIn from '$lib/lead-in.svelte'
   import { TERMS } from '$lib/content.js'
 </script>
@@ -14,7 +15,7 @@
 <!-- Una sola escena, como TERMS_SCENES. Página de ejemplo hasta tener el texto legal. -->
 <section id={TERMS.section.id} class="terms" aria-labelledby="{TERMS.section.id}-title">
   <p class="eyebrow">{TERMS.section.label}</p>
-  <h1 id="{TERMS.section.id}-title"><LeadIn text={TERMS.section.title} /></h1>
+  <h1 id="{TERMS.section.id}-title"><InlineHeadline text={TERMS.section.title} /></h1>
   {#if TERMS.section.intro}<p class="lead"><LeadIn text={TERMS.section.intro} /></p>{/if}
   {#each TERMS.items as item (item.title)}
     <h2>{item.title}</h2>

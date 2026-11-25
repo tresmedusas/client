@@ -2,6 +2,7 @@
   import { Rect } from 'essentia-primitives'
   import { SHOWCASE } from '$lib/content.js'
   import { FIGURE, FONT, PALETTE } from '$lib/tokens.js'
+  import InlineHeadline from './inline-headline.svelte'
   import LeadInText from './lead-in-text.svelte'
   import MeasuredText from './measured-text.svelte'
 
@@ -65,16 +66,12 @@
   {opacity}
   onmeasure={(_, h) => (labelHeight = h)}
 />
-<LeadInText
+<InlineHeadline
   text={SHOWCASE.section.title}
-  plain="ink"
-  font={FONT.black}
   fontSize={titleSize}
   lineHeight={1.04}
   letterSpacing={-titleSize * 0.02}
   maxWidth={compact ? width : Math.min(width, 840)}
-  alignment="center"
-  anchorX={0.5}
   x={cx}
   y={titleY}
   {opacity}

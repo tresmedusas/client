@@ -36,9 +36,12 @@ export interface Link {
 /** Escena de una página: su id es el ancla (`#nosotros`) y el `<section>` de la capa semántica. */
 export interface Section {
   id: string
-  /** Número de la escena, como se muestra: «01». */
-  index: string
-  label: string
+  /**
+   * Etiqueta sobre el título («Showcase»). Las secciones de la home no la
+   * llevan: repetía la navbar (pedido del usuario, 2026-11-25).
+   */
+  label?: string
+  /** Titular inline (DESIGN.md §3): lo que va en tinta y black, entre `**…**`. */
   title: string
   intro?: string
 }
@@ -101,10 +104,8 @@ export const HERO = {
 export const HOW_WORK = {
   section: {
     id: 'como-trabajamos',
-    index: '01',
-    label: 'Cómo trabajamos',
-    title: 'Empezamos por el problema, no por la herramienta.',
-    intro: 'Todos los proyectos recorren los mismos cuatro pasos, y nada llega a tu sistema sin tu aprobación.',
+    title: 'Primero, **el problema.** Después, la herramienta.',
+    intro: 'Cuatro pasos, siempre. Todos los proyectos los recorren, y nada llega a tu sistema sin tu aprobación.',
   } satisfies Section,
   /**
    * Las etapas van una debajo de la otra y cada una aparece con un fundido al
@@ -114,22 +115,22 @@ export const HOW_WORK = {
    */
   steps: [
     {
-      title: 'Entendemos tu operación',
+      title: 'Entendemos **tu operación**',
       body: 'Primero, escuchamos. Vemos cómo se hace hoy, dónde se pierde el tiempo y con qué sistemas trabajas.',
       figure: '/figures/como-trabajamos-1.webp',
     },
     {
-      title: 'Lo dividimos en hitos',
+      title: 'Lo dividimos en **hitos**',
       body: 'Hitos claros. Antes de construir, acordamos contigo qué entrega cada hito.',
       figure: '/figures/como-trabajamos-2.webp',
     },
     {
-      title: 'Construimos con verificación',
+      title: 'Construimos con **verificación**',
       body: 'Nada sin verificar. Cada cambio pasa por tests automáticos y por una revisión independiente.',
       figure: '/figures/como-trabajamos-3.webp',
     },
     {
-      title: 'Lo apruebas tú',
+      title: 'Lo apruebas **tú**',
       body: 'Tú tienes la última palabra. Cada hito llega con un reporte de evidencia, y solo con tu ok pasa a tu sistema.',
       figure: '/figures/como-trabajamos-4.webp',
     },
@@ -150,10 +151,8 @@ export interface Person {
 export const ABOUT = {
   section: {
     id: 'nosotros',
-    index: '02',
-    label: 'Nosotros',
     // TODO: copy definitivo.
-    title: 'Tres fundadores. Un equipo que construye contigo.',
+    title: '**Tres fundadores.** Un equipo que construye **contigo.**',
     intro: 'Hablas con quien construye. Entendemos tu proceso y construimos tu sistema, de la primera llamada a la entrega.',
   } satisfies Section,
   foundersLabel: 'Fundadores',
@@ -176,9 +175,7 @@ export const ABOUT = {
 export const CONTACT_SECTION = {
   section: {
     id: 'contacto',
-    index: '03',
-    label: 'Contacto',
-    title: 'Cuéntanos tu proceso.',
+    title: 'Cuéntanos **tu proceso.** Lo vemos **juntos.**',
     intro: 'Una llamada corta basta. Escríbenos qué se hace hoy a mano y vemos si podemos ayudarte.',
   } satisfies Section,
   primary: WRITE_US,
@@ -206,10 +203,9 @@ export interface Project {
 export const SHOWCASE = {
   section: {
     id: 'showcase',
-    index: '',
     label: 'Showcase',
-    title: 'Lo que ya construimos.',
-    intro: 'Cada proyecto empezó con un proceso que se hacía a mano.',
+    title: 'Lo que ya **construimos.** Proyecto por proyecto.',
+    intro: 'Todo empezó a mano. Cada proyecto partió de un proceso que había que simplificar.',
   } satisfies Section,
   title: 'Showcase — Tres Medusas',
   description: 'Proyectos de software a medida e integraciones construidos por Tres Medusas.',
@@ -245,10 +241,9 @@ export const SHOWCASE = {
   closing: {
     section: {
       id: 'siguiente',
-      index: '',
       label: 'Tu proyecto',
-      title: '¿El próximo es el tuyo?',
-      intro: 'Cuéntanos qué proceso te quita tiempo.',
+      title: '¿El próximo es **el tuyo?** Empecemos por tu proceso.',
+      intro: 'Hablemos primero. Cuéntanos qué proceso te quita tiempo.',
     } satisfies Section,
     primary: WRITE_US,
     secondary: { label: 'Volver al inicio', href: '/' } satisfies Link,
@@ -264,7 +259,6 @@ export const SHOWCASE_SCENES = [SHOWCASE.section.id, ...SHOWCASE.projects.map((p
 export const TERMS = {
   section: {
     id: 'terminos',
-    index: '',
     label: 'Legal',
     title: 'Términos y condiciones.',
     intro: 'Página de ejemplo. El texto definitivo está en preparación.',

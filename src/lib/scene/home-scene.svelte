@@ -49,23 +49,22 @@
 </SceneSlot>
 
 <SceneSlot i={2} {...common} height={heights[2]!}>
-  {#snippet children(d)}
-    <About {width} {viewportHeight} {compact} {d} {focusedHref} onmeasure={(h) => (heights[2] = h)} />
+  {#snippet children()}
+    <About {width} {viewportHeight} {compact} {focusedHref} onmeasure={(h) => (heights[2] = h)} />
   {/snippet}
 </SceneSlot>
 
 <SceneSlot i={3} {...common} height={heights[3]!}>
-  {#snippet children(d, frame)}
+  {#snippet children()}
     <Closing
       section={CONTACT_SECTION.section}
       links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary, CONTACT_SECTION.tertiary]}
       align="center"
+      size="section"
       {width}
       {viewportWidth}
       {viewportHeight}
       {compact}
-      {d}
-      {frame}
       {year}
       {focusedHref}
       onmeasure={(h) => (heights[3] = h)}

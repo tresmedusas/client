@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Rect } from 'essentia-primitives'
   import { HOW_WORK } from '$lib/content.js'
-  import { FIGURE, FONT, PALETTE } from '$lib/tokens.js'
+  import { FIGURE } from '$lib/tokens.js'
   import { ASPECT } from './figures/how-work.js'
+  import InlineHeadline from './inline-headline.svelte'
   import LeadInText from './lead-in-text.svelte'
-  import MeasuredText from './measured-text.svelte'
   import SectionHead from './section-head.svelte'
   import StepFigure from './step-figure.svelte'
 
@@ -15,7 +15,7 @@
    * que entra en la ventana.
    *
    * Cada etapa es una figura 3D line art (DESIGN.md §4, `figures/how-work.ts`)
-   * que lleva el protagonismo, su número, su título y su texto con lead-in. Un
+   * que lleva el protagonismo, su título y su texto con lead-in, sin número. Un
    * trazo fino en tinta (FIGURE) une una etapa con la siguiente.
    */
   interface Props {
@@ -40,7 +40,6 @@
   const STAGE_GAP = $derived(compact ? 72 : 96)
   const LINK_MARGIN = 16
   const FIGURE_GAP = $derived(compact ? 24 : 32)
-  const INDEX_GAP = 16
   const TITLE_GAP = 16
 
   const titleSize = $derived(compact ? 22 : 28)
@@ -54,18 +53,15 @@
   const figureHeight = $derived(figureWidth / ASPECT)
 
   let headHeight = $state(0)
-  let indexHeights = $state<number[]>(STEPS.map(() => 0))
   let titleHeights = $state<number[]>(STEPS.map(() => 0))
   let bodyHeights = $state<number[]>(STEPS.map(() => 0))
 
   const measured = $derived(
-    headHeight > 0 && [indexHeights, titleHeights, bodyHeights].every((list) => list.every((h) => h > 0)),
+    headHeight > 0 && [titleHeights, bodyHeights].every((list) => list.every((h) => h > 0)),
   )
 
-  /** Alto de cada etapa: figura, número, título y texto. */
-  const stageHeights = $derived(
-    STEPS.map((_, k) => figureHeight + FIGURE_GAP + indexHeights[k]! + INDEX_GAP + titleHeights[k]! + TITLE_GAP + bodyHeights[k]!),
-  )
+  /** Alto de cada etapa: figura, título y texto. */
+  const stageHeights = $derived(STEPS.map((_, k) => figureHeight + FIGURE_GAP + titleHeights[k]! + TITLE_GAP + bodyHeights[k]!))
   /** Tope de cada etapa, en px hacia abajo desde el tope del contenido. */
   const stageTops = $derived.by(() => {
     let y = headHeight + HEAD_GAP
@@ -98,8 +94,7 @@
 {#each STEPS as item, k (item.title)}
   {@const opacity = reveal(k)}
   {@const y0 = -(stageTops[k] ?? 0)}
-  {@const indexY = y0 - figureHeight - FIGURE_GAP}
-  {@const titleY = indexY - indexHeights[k]! - INDEX_GAP}
+  {@const titleY = y0 - figureHeight - FIGURE_GAP}
 
   {#if measured && k > 0}
     <!-- Trazo que une esta etapa con la anterior: aparece con ella. -->
@@ -117,30 +112,12 @@
   {#if measured}
     <StepFigure index={k} width={figureWidth} x={cx} y={y0 - figureHeight / 2} {opacity} playing={motion && onScreen(k)} />
   {/if}
-  <MeasuredText
-    text={String(k + 1).padStart(2, '0')}
-    fontSize={13}
-    color={PALETTE.brandInk}
-    font={FONT.black}
-    letterSpacing={1.6}
-    lineHeight={1.2}
-    alignment="center"
-    anchorX={0.5}
-    x={cx}
-    y={indexY}
-    {opacity}
-    onmeasure={(_, h) => (indexHeights[k] = h)}
-  />
-  <MeasuredText
+  <InlineHeadline
     text={item.title}
     fontSize={titleSize}
-    color={PALETTE.ink}
-    font={FONT.bold}
     lineHeight={1.2}
     letterSpacing={-titleSize * 0.01}
     maxWidth={textWidth}
-    alignment="center"
-    anchorX={0.5}
     x={cx}
     y={titleY}
     {opacity}
