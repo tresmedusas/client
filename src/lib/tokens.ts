@@ -61,8 +61,6 @@ export const LOGO = {
   completo: { src: '/brand/imagotipo-completo.svg', aspect: 258 / 44 },
   /** Logo de Essentia para el «Powered by» del pie, a 3× (viewBox 137 × 27), en su gris. */
   essentia: { src: '/brand/essentia.svg', aspect: 137 / 27 },
-  /** La medusa en «s» del hero, animada (cada trazo cambia de forma en un ciclo; viewBox 490 × 524.85). */
-  medusa: { src: '/brand/medusa-s.svg', aspect: 490 / 524.85 },
 } as const
 
 /**
