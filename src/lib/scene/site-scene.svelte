@@ -28,6 +28,8 @@
     project: Project | null
     /** La transición al abrir un caso. */
     transition: CaseTransition
+    /** En el showcase, la card en la que arranca (al volver de su caso); `null`, desde el principio. */
+    returnCase: number | null
     /** El movimiento continuo (medusas, haces, nieve) está permitido. */
     motion: boolean
     focusedHref: string | null
@@ -42,7 +44,7 @@
     onselect: (index: number) => void
   }
 
-  let { deck, page, project, transition, motion, focusedHref: focused, focusInNav, activeHref, year, onnavigate, onopencase, onselect }: Props = $props()
+  let { deck, page, project, transition, returnCase, motion, focusedHref: focused, focusInNav, activeHref, year, onnavigate, onopencase, onselect }: Props = $props()
 
   const engine = useEngine()
 
@@ -122,7 +124,7 @@
   {#if home}
     <HomeScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
   {:else if page === 'showcase'}
-    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} band={restBand} look={baseWarp} {motion} {focusedHref} {onnavigate} {onopencase} onfocus={(f) => (focus = f)} />
+    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} band={restBand} look={baseWarp} {motion} {focusedHref} {onnavigate} {onopencase} startCase={returnCase} onfocus={(f) => (focus = f)} />
   {:else if page === 'case' && project}
     <CaseScene
       {deck}

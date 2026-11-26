@@ -2,7 +2,7 @@
   import { untrack } from 'svelte'
   import { EssentiaRoot } from 'essentia-core'
   import { afterNavigate, goto, replaceState } from '$app/navigation'
-  import { NAV, caseOf, pageOf, scenesOf, type Project } from '$lib/content.js'
+  import { NAV, SHOWCASE, caseOf, pageOf, scenesOf, type Project } from '$lib/content.js'
   import { PALETTE } from '$lib/tokens.js'
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
@@ -34,6 +34,8 @@
   untrack(() => deck.reset(scenes.length, Math.max(0, sceneIndex(scenes, location.hash))))
 
   let focusedHref = $state<string | null>(null)
+  /** Al volver de un caso al showcase: el lugar de ese caso en la fila, para arrancar en su card. */
+  let returnCase = $state<number | null>(null)
   /** El foco está en la navbar (el `header` de la capa semántica): un link del contenido con el mismo href no lleva el anillo, y al revés. */
   let focusInNav = $state(false)
 
@@ -77,7 +79,9 @@
   afterNavigate(() => {
     const next = normalize(location.pathname)
     if (next !== path) {
-      // Otra página: arranca quieta en su escena.
+      // Otra página: arranca quieta en su escena; del caso al showcase, en la card del caso.
+      const left = caseOf(path)
+      returnCase = left && pageOf(next) === 'showcase' ? SHOWCASE.projects.indexOf(left) : null
       path = next
       deck.reset(scenesOf(next).length, Math.max(0, sceneIndex(scenesOf(next), location.hash)))
       transition.arrive(next)
@@ -226,6 +230,7 @@
       {page}
       {project}
       {transition}
+      {returnCase}
       {motion}
       {focusedHref}
       {focusInNav}

@@ -170,3 +170,31 @@ describe('Recorrido horizontal de una escena', () => {
     expect(tracked.position).toBeCloseTo(plain.position)
   })
 })
+
+describe('jump', () => {
+  it('espera a que la escena mida su scroll interno y queda ahí, quieta', () => {
+    const deck = new Deck()
+    deck.reset(1)
+    deck.setViewport(800)
+    deck.jump(0, 1500)
+    // Sin medir, no se mueve.
+    expect(deck.innerOf(0)).toBe(0)
+    deck.setFrame(0, 96, 3000, 2000)
+    expect(deck.innerOf(0)).toBe(1500)
+    expect(deck.moving).toBe(false)
+    // Ya aplicado: otro cambio de medidas no lo repite.
+    deck.wheel(100)
+    run(deck)
+    deck.setFrame(0, 96, 3100, 2100)
+    expect(deck.innerOf(0)).toBeCloseTo(1600, 0)
+  })
+
+  it('un cambio de página lo descarta', () => {
+    const deck = new Deck()
+    deck.reset(1)
+    deck.jump(0, 500)
+    deck.reset(1)
+    deck.setFrame(0, 96, 3000, 2000)
+    expect(deck.innerOf(0)).toBe(0)
+  })
+})

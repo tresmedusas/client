@@ -35,8 +35,8 @@
     slide: number
     /** Cuánto del scroll vertical va (0 a 1): el título se apaga mientras se va. */
     reveal: number
-    /** Alto del contenido y largo del recorrido horizontal (px). */
-    onmeasure: (height: number, track: number) => void
+    /** Alto del contenido, largo del recorrido horizontal y de una card a la siguiente (px). */
+    onmeasure: (height: number, track: number, step: number) => void
     /** La palabra del título rota. */
     motion: boolean
     /** El link con el foco en la capa semántica: la card de ese caso lleva el anillo. */
@@ -85,7 +85,7 @@
 
   $effect(() => {
     if (headHeight === 0) return
-    onmeasure(intro.height, track)
+    onmeasure(intro.height, track, step)
   })
 
   // El reflejo se enciende cuando un caso pasa por el centro de la ventana, y
