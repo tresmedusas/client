@@ -1,6 +1,6 @@
 <script lang="ts">
   import InlineHeadline from '$lib/inline-headline.svelte'
-  import { SHOWCASE } from '$lib/content.js'
+  import { SHOWCASE, caseHref } from '$lib/content.js'
 </script>
 
 <svelte:head>
@@ -17,14 +17,17 @@
   <ul class="cases">
     {#each SHOWCASE.projects as project (project.id)}
       {@const preview = project.preview}
+      <!-- Cada card abre la página del caso. -->
       <li id={project.id}>
-        <img
-          src={preview.src}
-          alt="{project.name}: {preview.alt}"
-          class:contain={preview.fit === 'contain'}
-          class:top={preview.align === 'top'}
-          class:deep={preview.background === 'deep'}
-        />
+        <a href={caseHref(project.id)}>
+          <img
+            src={preview.src}
+            alt="{project.name}: {preview.alt}"
+            class:contain={preview.fit === 'contain'}
+            class:top={preview.align === 'top'}
+            class:deep={preview.background === 'deep'}
+          />
+        </a>
       </li>
     {/each}
   </ul>
@@ -48,6 +51,11 @@
 
   .cases li {
     width: min(90%, 990px);
+  }
+
+  .cases a {
+    display: block;
+    border-radius: 16px;
   }
 
   .cases img {

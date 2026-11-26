@@ -1,7 +1,13 @@
 <script lang="ts">
-  import { useTask } from '@threlte/core'
+  import { T, useTask } from '@threlte/core'
   import { useEngine } from 'essentia-core'
-  import { SHOWCASE, type Page } from '$lib/content.js'
+  import { Rect } from 'essentia-primitives'
+  import { SHOWCASE, type Page, type Project } from '$lib/content.js'
+  import { PALETTE } from '$lib/tokens.js'
+  import CaseCard from './case-card.svelte'
+  import { swallowBand, swallowLook, transitionView, type ScreenRect } from './case-transition.js'
+  import type { CaseTransition } from './case-transition.svelte.js'
+  import CaseScene from './case-scene.svelte'
   import type { Deck } from './deck.svelte.js'
   import HomeScene from './home-scene.svelte'
   import { CASE_LOOK, columnWidth, isCompact, showcaseBand } from './layout.js'
@@ -18,19 +24,33 @@
     deck: Deck
     /** Qué página se dibuja. */
     page: Page
+    /** En la página de un caso, cuál. */
+    project: Project | null
+    /** La transición al abrir un caso. */
+    transition: CaseTransition
+    /** En el showcase, la card en la que arranca (al volver de su caso); `null`, desde el principio. */
+    returnCase: number | null
     /** El movimiento continuo (medusas, haces, nieve) está permitido. */
     motion: boolean
     focusedHref: string | null
+    /** El foco está en un link de la navbar (si no, en uno del contenido). */
+    focusInNav: boolean
     activeHref: string | null
     year: number
     onnavigate: (href: string) => void
+    /** Click en una card del showcase: `from`, dónde está en la ventana. */
+    onopencase: (project: Project, index: number, href: string, from: ScreenRect) => void
     /** Click en una marca del indicador de escenas. */
     onselect: (index: number) => void
   }
 
-  let { deck, page, motion, focusedHref, activeHref, year, onnavigate, onselect }: Props = $props()
+  let { deck, page, project, transition, returnCase, motion, focusedHref: focused, focusInNav, activeHref, year, onnavigate, onopencase, onselect }: Props = $props()
 
   const engine = useEngine()
+
+  /** El anillo de foco va solo donde está el foco: en la navbar o en el contenido. */
+  const focusedHref = $derived(focusInNav ? null : focused)
+  const navFocusedHref = $derived(focusInNav ? focused : null)
 
   const vw = $derived(engine.viewport.width)
   const vh = $derived(engine.viewport.height)
@@ -47,22 +67,30 @@
   const running = $derived(motion && home && deck.position < 1)
   useTask((delta) => (time += delta), { running: () => running })
   useTask((delta) => deck.advance(delta), { running: () => deck.moving })
+  useTask((delta) => transition.advance(delta), { running: () => transition.active })
+
+  // ── Transición a un caso ───────────────────────────────────────
+  const view = $derived(transitionView(transition.kind, transition.phase, transition.t, transition.from, transition.to))
 
   // ── Bordes ─────────────────────────────────────────────────────
   // En el showcase, los bordes son protagonistas: los casos pasan en fila,
   // las franjas de los costados los estiran y los bordes de arriba y abajo
   // los reflejan (pedido del usuario, 2026-11-25). En desarrollo, los
   // valores del banco de pruebas (`$lib/lab`).
-  const warp = $derived(
+  const baseWarp = $derived(
     import.meta.env.DEV && lab ? lab.looks[page === 'showcase' ? 'showcase' : 'home'] : page === 'showcase' ? SHOWCASE_WARP : HOME_WARP,
   )
+  /** Con la transición «los bordes se tragan el showcase», el look se exagera. */
+  const warp = $derived(swallowLook(baseWarp, view.swallow))
   const axis = $derived<WarpAxis>(page === 'showcase' ? 'horizontal' : 'vertical')
   /**
    * Tamaño de las franjas. En el showcase, las de los costados se ajustan a
    * la ventana: le dejan lugar a la card centrada (`showcaseBand`).
    */
   const cases = $derived(import.meta.env.DEV && lab ? lab.cases : CASE_LOOK)
-  const band = $derived(page === 'showcase' ? showcaseBand(warp, cases, vw, vh, compact) : bandHeight(warp, vh, compact))
+  const restBand = $derived(page === 'showcase' ? showcaseBand(baseWarp, cases, vw, vh, compact) : bandHeight(baseWarp, vh, compact))
+  /** Las cards se acomodan a las franjas de siempre; las de la transición solo se ven. */
+  const band = $derived(swallowBand(restBand, axis === 'horizontal' ? vw : vh, view.swallow))
   /** Cuánto se enciende el reflejo: lo informa el showcase. */
   let focus = $state(0)
   $effect(() => {
@@ -92,20 +120,45 @@
   10    navbar fija (pastilla y burbuja del logo) → nivel 2; indicador de escenas
   11    lente del link activo de la navbar y vidrio de su botón → nivel 3 (el último)
 -->
-{#key page}
+{#key `${page}:${project?.id ?? ''}`}
   {#if home}
     <HomeScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
   {:else if page === 'showcase'}
-    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {band} look={warp} {motion} onfocus={(f) => (focus = f)} />
+    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} band={restBand} look={baseWarp} {motion} {focusedHref} {onnavigate} {onopencase} startCase={returnCase} onfocus={(f) => (focus = f)} />
+  {:else if page === 'case' && project}
+    <CaseScene
+      {deck}
+      {project}
+      {width}
+      viewportWidth={vw}
+      viewportHeight={vh}
+      {compact}
+      {year}
+      hideCard={transition.phase === 'in' && transition.kind === 'open'}
+      {focusedHref}
+      {onnavigate}
+      onanchor={(rect) => transition.anchor(rect)}
+    />
   {:else}
     <TermsScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}
 {/key}
 
+<!-- La transición a un caso: el velo de papel tapa el contenido (z 5) y la card viaja sobre él (z 6), debajo de los bordes. -->
+{#if view.veil > 0}
+  <Rect width={vw + 2} height={vh + 2} color={PALETTE.paper} opacity={view.veil} z={5} />
+{/if}
+{#if view.card && transition.project}
+  {@const r = view.card}
+  <T.Group position.z={6}>
+    <CaseCard project={transition.project} index={transition.index} cx={r.x} y={r.y + r.height / 2} cardWidth={r.width} cardHeight={r.height} />
+  </T.Group>
+{/if}
+
 <!-- La fase del líquido sigue al contenido: el paso de escena, el scroll interno y el reloj del hero. -->
 <EdgeWarp look={warp} {axis} {band} {focus} phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
 
-<Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} cta={page === 'showcase' ? SHOWCASE.primary : undefined} {onnavigate} />
+<Nav {width} {compact} logo={navLogo} focusedHref={navFocusedHref} {activeHref} cta={page === 'showcase' ? SHOWCASE.primary : undefined} {onnavigate} />
 {#if !compact && deck.count > 1}
   <SceneDots count={deck.count} position={deck.position} x={vw / 2 - 22} {onselect} />
 {/if}

@@ -70,6 +70,8 @@ export class Deck {
   private _gliding = false
   private _overflow: number[] = [0]
   private _layout: PageLayout = pageLayout([0], [])
+  /** Un `jump` que espera a que la escena mida su scroll interno. */
+  private _pending: { scene: number; inner: number } | null = null
   /**
    * El arrastre en curso. `axis` se decide al pasar el umbral de tap: `x`
    * solo con `swipeX` y un gesto más de costado que vertical. `last` es la
@@ -92,6 +94,7 @@ export class Deck {
     this.inner = Array.from({ length: this.count }, () => 0)
     this.frames = Array.from({ length: this.count }, () => ({ top: 0, height: 0 }))
     this._drag = null
+    this._pending = null
     this._layout = this.measure()
     this._scroll.set(scrollOf(this._layout, start))
     this._gliding = false
@@ -138,9 +141,32 @@ export class Deck {
     return d * (this._layout.travels[upper] ?? this.viewport)
   }
 
+  /**
+   * Deja la página quieta, sin animar, en `inner` px del scroll interno de la
+   * escena `scene` (al volver al showcase, en la card de la que se salió). Si
+   * la escena todavía no midió tanto scroll interno, espera a medirlo.
+   */
+  jump(scene: number, inner: number): void {
+    this._pending = { scene, inner }
+    this.applyPending()
+  }
+
+  private applyPending(): void {
+    const pending = this._pending
+    if (!pending || (this._layout.overflows[pending.scene] ?? 0) + 0.5 < pending.inner) return
+    this._pending = null
+    this._drag = null
+    this._scroll.set(scrollOf(this._layout, pending.scene, pending.inner))
+    this._gliding = false
+    this.sync()
+    this.moving = false
+    this.velocity = 0
+  }
+
   /** Lleva la página al comienzo de la escena `i`; con `jump` (o con `instant`), sin animar. */
   goTo(i: number, jump = this.instant): void {
     this._drag = null
+    this._pending = null
     const target = scrollOf(this._layout, i)
     this._scroll.stiffness = DECK_STIFFNESS
     this._scroll.target = target
@@ -172,6 +198,7 @@ export class Deck {
   }
 
   dragStart(clientY: number, timeStamp: number, clientX = 0): void {
+    this._pending = null
     // Tomar la página en movimiento la frena donde está.
     this._scroll.set(this._scroll.value)
     this._gliding = false
@@ -253,6 +280,7 @@ export class Deck {
 
   /** Scroll de rueda o teclado: suma al destino, o arranca de donde está si iba a otro lado. */
   private scrollBy(delta: number): void {
+    this._pending = null
     const from = this._gliding ? this._scroll.value : this._scroll.target
     this._scroll.stiffness = SCROLL_STIFFNESS
     this._scroll.target = clamp(from + delta, 0, this._layout.total)
@@ -295,6 +323,7 @@ export class Deck {
     if (this._drag) this._drag.startScroll += this._scroll.value - value
     this.sync()
     this.moving = !this._scroll.settled
+    this.applyPending()
   }
 
   /** Layout de la página con los frames y el viewport actuales. */
