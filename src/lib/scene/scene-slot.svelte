@@ -14,7 +14,8 @@
    * Con `track`, la escena tiene además un recorrido horizontal (la fila de
    * casos del showcase): el deck lo scrollea como parte del scroll interno,
    * después del vertical, pero el contenido no sube: lo recibe como `slide`
-   * y lo corre hacia la izquierda.
+   * y lo corre hacia la izquierda. (Las hojas de «Cómo trabajamos» usan el
+   * mismo recorrido para subir una sobre otra con la escena quieta.)
    */
   interface Props {
     i: number

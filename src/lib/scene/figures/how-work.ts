@@ -92,20 +92,22 @@ function understand(kit: Kit): Figure {
   lens.quaternion
     .setFromRotationMatrix(new Matrix4().lookAt(CAMERA_DIR, new Vector3(), new Vector3(0, 1, 0)))
     .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 1, 0).normalize(), 0.16))
-  const rim = new Mesh(new TorusGeometry(R + 3, 3.5, 12, 64), kit.top)
+  // Con el acento sólido, la lupa entera es `deep`: aro, cuello y mango.
+  const solid = kit.solid ? { line: kit.strong, top: kit.deep, side: kit.deep, front: kit.deep } : { line: kit.strong }
+  const rim = new Mesh(new TorusGeometry(R + 3, kit.solid ? 5 : 3.5, 12, 64), kit.solid ? kit.deep : kit.top)
   lens.add(rim)
   const ring = new Group()
   ring.rotation.x = Math.PI / 2
   ring.add(kit.circle(0, 0, R + 6.5, 0, kit.strong, 64))
   ring.add(kit.circle(0, 0, R - 0.5, 0, kit.strong, 64))
   lens.add(ring)
-  const handle = kit.box(74, 12, 12, { line: kit.strong })
+  const handle = kit.box(74, 12, 12, solid)
   const away = R + 6 + 37
   handle.position.set(away * Math.SQRT1_2, -away * Math.SQRT1_2, 0)
   handle.rotation.z = -Math.PI / 4
   lens.add(handle)
   // El cuello entre el aro y el mango.
-  const neck = new Mesh(new CylinderGeometry(4, 4, 10, 16), kit.top)
+  const neck = new Mesh(new CylinderGeometry(4, 4, 10, 16), kit.solid ? kit.deep : kit.top)
   neck.position.set((R + 8) * Math.SQRT1_2, -(R + 8) * Math.SQRT1_2, 0)
   neck.rotation.z = Math.PI / 4
   lens.add(neck)
@@ -235,7 +237,8 @@ function verify(kit: Kit): Figure {
   const tasks = Array.from({ length: rows }, (_, i) => {
     const card = new Group()
     const plain = kit.slab(cardW, rowH, 4, { r: 10 })
-    const active = kit.slab(cardW, rowH, 4, { r: 10, line: kit.strong })
+    // Con el acento sólido, la tarea en curso es una tarjeta `deep` con el check en claro.
+    const active = kit.slab(cardW, rowH, 4, kit.solid ? { r: 10, line: kit.strong, top: kit.deep } : { r: 10, line: kit.strong })
     card.add(plain, active)
     const cx = -cardW / 2 + 24
     card.add(kit.rrect(cx, 0, 18, 18, 5, 4.4))
@@ -243,7 +246,7 @@ function verify(kit: Kit): Figure {
     const check = (material = kit.normal) =>
       kit.polyline([new Vector3(cx - 5, 4.6, 0), new Vector3(cx - 1, 4.6, 4), new Vector3(cx + 6, 4.6, -5)], material)
     const done = check()
-    const doing = check(kit.strong)
+    const doing = check(kit.solid ? kit.onDeep : kit.strong)
     card.add(done, doing)
     card.position.z = z0 + i * (rowH + rowGap) + rowH / 2
     doc.add(card)
