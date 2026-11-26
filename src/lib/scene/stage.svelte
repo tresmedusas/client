@@ -120,11 +120,22 @@
       return
     }
     const url = new URL(href, location.href)
-    if (normalize(url.pathname) === path) {
+    const target = normalize(url.pathname)
+    if (target === path) {
       // La misma página: solo cambia de escena.
       if (url.hash) showScene(url.hash)
       else deck.goTo(0, reducedMotion)
-    } else void goto(`${url.pathname}${url.hash}`)
+      return
+    }
+    const next = `${url.pathname}${url.hash}`
+    // De un caso al showcase (el botón de volver o la navbar), la misma
+    // transición que al abrirlo, al revés de lugar: los bordes del caso se
+    // tragan la página y el showcase aparece cuando las franjas se retiran.
+    if (page === 'case' && target === '/showcase' && transitionKind === 'swallow' && !reducedMotion && !transition.active) {
+      transition.start('swallow', target, () => void goto(next))
+      return
+    }
+    void goto(next)
   }
 
   /** Click en una card del showcase: la transición y, a mitad de ella, la página del caso. */
@@ -134,7 +145,7 @@
       void goto(href)
       return
     }
-    transition.start(transitionKind, project, index, href, from, () => void goto(href))
+    transition.start(transitionKind, href, () => void goto(href), { project, index, from })
   }
 
   // ── Foco ───────────────────────────────────────────────────────

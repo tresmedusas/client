@@ -57,7 +57,7 @@ describe('CaseTransition', () => {
   it('cambia de página al terminar la fase out y espera a que la página informe la card', () => {
     const t = new CaseTransition()
     let navigated = 0
-    t.start('open', project, 0, href, FROM, () => navigated++)
+    t.start('open', href, () => navigated++, { project, index: 0, from: FROM })
     t.advance(TRANSITION_DURATION.open.out)
     expect(navigated).toBe(1)
     // Sigue en `out` hasta que cambia la página, y no vuelve a navegar.
@@ -72,9 +72,21 @@ describe('CaseTransition', () => {
     expect(t.active).toBe(false)
   })
 
+  it('al volver al showcase, sin card: no espera a nadie', () => {
+    const t = new CaseTransition()
+    let navigated = 0
+    t.start('swallow', '/showcase', () => navigated++)
+    expect(t.project).toBeNull()
+    t.advance(TRANSITION_DURATION.swallow.out)
+    expect(navigated).toBe(1)
+    t.arrive('/showcase')
+    t.advance(TRANSITION_DURATION.swallow.in)
+    expect(t.active).toBe(false)
+  })
+
   it('si la página que llega no es la del caso, se corta', () => {
     const t = new CaseTransition()
-    t.start('swallow', project, 0, href, FROM, () => {})
+    t.start('swallow', href, () => {})
     t.advance(1)
     t.arrive('/')
     expect(t.active).toBe(false)
@@ -83,7 +95,7 @@ describe('CaseTransition', () => {
   it('en cámara lenta tarda más', () => {
     const t = new CaseTransition()
     t.speed = 0.5
-    t.start('swallow', project, 0, href, FROM, () => {})
+    t.start('swallow', href, () => {})
     t.advance(TRANSITION_DURATION.swallow.out)
     expect(t.t).toBeCloseTo(0.5)
   })

@@ -12,7 +12,8 @@ import type { WarpLook } from './edge-warp.js'
  *   lugar de su previsualización mientras el velo se va.
  * - `swallow`: los bordes se tragan el showcase. Las franjas crecen hasta
  *   juntarse en el centro, estirando todo, y la página del caso aparece
- *   cuando se retiran.
+ *   cuando se retiran. Al volver al showcase desde un caso (el botón de
+ *   volver o la navbar), lo mismo de vuelta (pedido del usuario, 2026-11-26).
  */
 export type TransitionKind = 'open' | 'swallow'
 

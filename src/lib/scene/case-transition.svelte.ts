@@ -2,11 +2,12 @@ import type { Project } from '$lib/content.js'
 import { TRANSITION_DURATION, type ScreenRect, type TransitionKind, type TransitionPhase } from './case-transition.js'
 
 /**
- * El estado de la transición al abrir un caso (ver `case-transition.ts`). La
- * arranca el stage con el click en una card; avanza desde un `useTask` de la
- * escena mientras está activa. Al terminar la fase `out` llama a `onout` (que
- * cambia de página) y espera a `arrive`; la fase `in` espera a que la página
- * del caso informe dónde queda la card (`to`).
+ * El estado de la transición al abrir un caso, o al volver de él al showcase
+ * (ver `case-transition.ts`). La arranca el stage: con el click en una card,
+ * o al ir de la página de un caso al showcase; avanza desde un `useTask` de
+ * la escena mientras está activa. Al terminar la fase `out` llama a `onout`
+ * (que cambia de página) y espera a `arrive`; con una card (`open`), la fase
+ * `in` espera a que la página del caso informe dónde queda (`to`).
  */
 export class CaseTransition {
   kind = $state<TransitionKind>('open')
@@ -30,12 +31,13 @@ export class CaseTransition {
     return this.phase !== 'idle'
   }
 
-  start(kind: TransitionKind, project: Project, index: number, href: string, from: ScreenRect, onout: () => void): void {
+  /** `card`: el caso que se abre y dónde está su card (sin ella, la transición no lleva card: volver al showcase). */
+  start(kind: TransitionKind, href: string, onout: () => void, card?: { project: Project; index: number; from: ScreenRect }): void {
     this.kind = kind
-    this.project = project
-    this.index = index
+    this.project = card?.project ?? null
+    this.index = card?.index ?? 0
     this.href = href
-    this.from = from
+    this.from = card?.from ?? null
     this.to = null
     this.onout = onout
     this.phase = 'out'
@@ -45,7 +47,7 @@ export class CaseTransition {
   advance(delta: number): void {
     if (this.phase === 'idle') return
     // La card necesita saber adónde va (la página del caso todavía no midió).
-    if (this.phase === 'in' && this.kind !== 'swallow' && !this.to) return
+    if (this.phase === 'in' && this.kind !== 'swallow' && this.from && !this.to) return
     this.t = Math.min(1, this.t + (delta * this.speed) / Math.max(1e-3, TRANSITION_DURATION[this.kind][this.phase]))
     if (this.t < 1) return
     if (this.phase === 'out') {
