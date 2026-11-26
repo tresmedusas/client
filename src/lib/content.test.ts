@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ABOUT, CONTACT_SECTION, HOME_SCENES, HOW_WORK, pageOf, scenesOf, SHOWCASE, SHOWCASE_SCENES, TERMS_SCENES, type Section } from './content.js'
+import { ABOUT, CASE_SCENES, CONTACT_SECTION, HOME_SCENES, caseHref, caseOf, caseSection, HOW_WORK, pageOf, scenesOf, SHOWCASE, SHOWCASE_SCENES, TERMS_SCENES, type Section } from './content.js'
 import { headlineParts } from './inline-headline.js'
 import { leadIn } from './lead-in.js'
 
@@ -17,6 +17,16 @@ describe('scenesOf', () => {
     expect(scenesOf('/showcase')).toBe(SHOWCASE_SCENES)
     expect(scenesOf('/terminos/')).toBe(TERMS_SCENES)
   })
+
+  it('cada caso tiene su página en /showcase/{id}', () => {
+    for (const project of SHOWCASE.projects) {
+      expect(pageOf(caseHref(project.id))).toBe('case')
+      expect(scenesOf(`${caseHref(project.id)}/`)).toBe(CASE_SCENES)
+      expect(caseOf(caseHref(project.id))).toBe(project)
+    }
+    expect(caseOf('/showcase/no-existe')).toBeUndefined()
+    expect(pageOf('/showcase/no-existe')).toBe('home')
+  })
 })
 
 describe('encabezados de sección', () => {
@@ -28,6 +38,15 @@ describe('encabezados de sección', () => {
       expect(parts.some((p) => p.accent), section.title).toBe(true)
       expect(parts.some((p) => !p.accent && p.text.trim() !== ''), section.title).toBe(true)
       if (section.intro) expect(leadIn(section.intro).lead, section.intro).not.toBe('')
+    }
+  })
+
+  it('la página de un caso: el nombre como título (entero destacado) y el contexto con lead-in', () => {
+    for (const project of SHOWCASE.projects) {
+      const section = caseSection(project)
+      expect(section.label).toBeUndefined()
+      expect(headlineParts(section.title).every((p) => p.accent || p.text.trim() === '')).toBe(true)
+      expect(leadIn(section.intro!).lead).not.toBe('')
     }
   })
 

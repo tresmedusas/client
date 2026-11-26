@@ -218,6 +218,8 @@ export interface Project {
   name: string
   /** Qué es: «Landing», «Manual de marca», «Logo», «App». */
   kind: string
+  /** El contexto del caso, para su página (con lead-in). */
+  summary: string
   preview: CasePreview
 }
 
@@ -241,9 +243,9 @@ export const SHOWCASE = {
   title: 'Showcase — Tres Medusas',
   description: 'Landings, identidades, logos y aplicaciones construidos por Tres Medusas.',
   /**
-   * Los casos, uno debajo del otro (pedido del usuario, 2026-11-25): cada
-   * card es la previsualización del caso, sin texto. `name` y `kind` quedan
-   * para la página de cada caso (TODO: al hacer click en la card).
+   * Los casos, en fila (pedido del usuario, 2026-11-25): cada card es la
+   * previsualización del caso, sin texto, y abre la página del caso
+   * (`/showcase/{id}`), con `kind`, `name` y `summary`.
    * TODO: casos reales; por ahora, una previsualización de ejemplo de cada tipo.
    */
   projects: [
@@ -251,24 +253,28 @@ export const SHOWCASE = {
       id: 'proyecto-1',
       name: 'Proyecto de ejemplo 1',
       kind: 'Landing',
+      summary: 'Texto de ejemplo. Aquí va el contexto del caso: qué necesitaba el cliente y qué construimos juntos.',
       preview: { src: '/casos/ejemplo-landing.svg', alt: 'Captura de ejemplo de una landing.', align: 'top' },
     },
     {
       id: 'proyecto-2',
       name: 'Proyecto de ejemplo 2',
       kind: 'Manual de marca',
+      summary: 'Texto de ejemplo. Aquí va el contexto del caso: qué necesitaba el cliente y qué construimos juntos.',
       preview: { src: '/casos/ejemplo-marca.svg', alt: 'Página de ejemplo de un manual de marca.' },
     },
     {
       id: 'proyecto-3',
       name: 'Proyecto de ejemplo 3',
       kind: 'Logo',
+      summary: 'Texto de ejemplo. Aquí va el contexto del caso: qué necesitaba el cliente y qué construimos juntos.',
       preview: { src: '/casos/ejemplo-logo.svg', alt: 'Logo de ejemplo.', fit: 'contain', background: 'deep' },
     },
     {
       id: 'proyecto-4',
       name: 'Proyecto de ejemplo 4',
       kind: 'App',
+      summary: 'Texto de ejemplo. Aquí va el contexto del caso: qué necesitaba el cliente y qué construimos juntos.',
       preview: { src: '/casos/ejemplo-app.svg', alt: 'Pantallas de ejemplo de una app.' },
     },
   ] satisfies Project[] as readonly Project[],
@@ -323,17 +329,48 @@ export const TERMS = {
 /** Escenas de la página de términos: una sola. */
 export const TERMS_SCENES = [TERMS.section.id] as const
 
-export type Page = 'home' | 'showcase' | 'terms'
+// ── Página de cada caso ──────────────────────────────────────────
+/** La ruta de la página de un caso. */
+export const caseHref = (id: string) => `/showcase/${id}`
+
+/**
+ * La página de un caso, que abre su card en el showcase (pedido del usuario,
+ * 2026-11-25): el nombre (el título), con el botón de volver al showcase al
+ * costado, el contexto y la previsualización grande. Sin etiqueta y sin
+ * «Agendar reunión» (pedido del usuario, 2026-11-26).
+ */
+export const CASE_PAGE = {
+  /** Volver al showcase: en la escena es un botón con una flecha, sin texto (el label es para la capa semántica). */
+  back: { label: 'Volver al showcase', href: '/showcase' } satisfies Link,
+} as const
+
+/** El encabezado de la página de un caso: una sección como las demás, sin etiqueta. */
+export function caseSection(project: Project): Section {
+  return { id: 'caso', title: project.name, intro: project.summary }
+}
+
+/** Escenas de la página de un caso: una sola. */
+export const CASE_SCENES = ['caso'] as const
+
+/** El caso de una ruta `/showcase/{id}`, si existe. */
+export function caseOf(path: string): Project | undefined {
+  const match = /^\/showcase\/([^/]+)\/?$/.exec(path)
+  return match ? SHOWCASE.projects.find((p) => p.id === match[1]) : undefined
+}
+
+export type Page = 'home' | 'showcase' | 'case' | 'terms'
 
 /** Qué página del deck es una ruta. */
 export function pageOf(path: string): Page {
   const clean = path.replace(/\/$/, '')
-  return clean === '/showcase' ? 'showcase' : clean === '/terminos' ? 'terms' : 'home'
+  if (clean === '/showcase') return 'showcase'
+  if (caseOf(clean)) return 'case'
+  return clean === '/terminos' ? 'terms' : 'home'
 }
 
 /** Escenas de cada página, por ruta. */
 export function scenesOf(path: string): readonly string[] {
-  return { home: HOME_SCENES, showcase: SHOWCASE_SCENES, terms: TERMS_SCENES }[pageOf(path)]
+  return { home: HOME_SCENES, showcase: SHOWCASE_SCENES, case: CASE_SCENES, terms: TERMS_SCENES }[pageOf(path)]
 }
 
 /** Pie de todas las páginas: logo y términos arriba; copyright y «Powered by Essentia» abajo. */
