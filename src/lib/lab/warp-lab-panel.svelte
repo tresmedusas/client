@@ -3,6 +3,7 @@
   import { CASE_LOOK } from '$lib/scene/layout.js'
   import { CASE_CONTROLS, CONTROL_GROUPS, WARP_CONST, changedKeys, decimals, formatConst, type ControlGroup, type LookName } from './warp-lab.js'
   import { DEFAULT_LOOKS, lab as maybeLab } from './warp-lab.svelte.js'
+  import { TRANSITION_KINDS } from '$lib/scene/case-transition.js'
 
   /**
    * Banco de pruebas (solo en desarrollo): cada valor de los bordes
@@ -46,6 +47,8 @@
     JSON.stringify(lab.looks)
     JSON.stringify(lab.cases)
     void lab.colorCases
+    void lab.transition
+    void lab.slowTransition
     void lab.open
     lab.save()
   })
@@ -123,6 +126,21 @@
       {#if name !== (page === 'showcase' ? 'showcase' : 'home')}
         <p class="note">Estás editando otra página: vas a ver el cambio cuando la abras.</p>
       {/if}
+
+      <fieldset>
+        <legend>Transición al abrir un caso</legend>
+        {#each TRANSITION_KINDS as option (option.kind)}
+          <label class="check">
+            <input type="radio" name="lab-transition" value={option.kind} bind:group={lab.transition} />
+            {option.label}
+          </label>
+        {/each}
+        <label class="check">
+          <input type="checkbox" bind:checked={lab.slowTransition} />
+          En cámara lenta (×0.2)
+        </label>
+        <small>Se ve al hacer click en una card del showcase.</small>
+      </fieldset>
 
       {#if name === 'showcase'}
         {@render controls(CASE_CONTROLS, cases, caseDefaults, casesChanged, 'cases')}

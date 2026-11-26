@@ -2,12 +2,15 @@
   import { untrack } from 'svelte'
   import { EssentiaRoot } from 'essentia-core'
   import { afterNavigate, goto, replaceState } from '$app/navigation'
-  import { NAV, pageOf, scenesOf } from '$lib/content.js'
+  import { NAV, caseOf, pageOf, scenesOf, type Project } from '$lib/content.js'
   import { PALETTE } from '$lib/tokens.js'
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
   import SiteScene from './site-scene.svelte'
+  import { CASE_TRANSITION, type ScreenRect } from './case-transition.js'
+  import { CaseTransition } from './case-transition.svelte.js'
   import WarpLabPanel from '$lib/lab/warp-lab-panel.svelte'
+  import { lab } from '$lib/lab/warp-lab.svelte.js'
 
   interface Props {
     /** La capa semántica: de acá salen el foco y las anclas. */
@@ -27,9 +30,19 @@
   let path = $state(normalize(location.pathname))
   const scenes = $derived(scenesOf(path))
   const page = $derived(pageOf(path))
+  const project = $derived(caseOf(path) ?? null)
   untrack(() => deck.reset(scenes.length, Math.max(0, sceneIndex(scenes, location.hash))))
 
   let focusedHref = $state<string | null>(null)
+  /** El foco está en la navbar (el `header` de la capa semántica): un link del contenido con el mismo href no lleva el anillo, y al revés. */
+  let focusInNav = $state(false)
+
+  /** La transición al abrir un caso: en desarrollo, la que se elija en el banco de pruebas (las demos). */
+  const transition = new CaseTransition()
+  const transitionKind = $derived(import.meta.env.DEV && lab ? lab.transition : CASE_TRANSITION)
+  $effect(() => {
+    transition.speed = import.meta.env.DEV && lab?.slowTransition ? 0.2 : 1
+  })
 
   // ── Movimiento ─────────────────────────────────────────────────
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -67,6 +80,7 @@
       // Otra página: arranca quieta en su escena.
       path = next
       deck.reset(scenesOf(next).length, Math.max(0, sceneIndex(scenesOf(next), location.hash)))
+      transition.arrive(next)
     } else if (location.hash) showScene(location.hash)
     else deck.goTo(0, reducedMotion)
   })
@@ -87,7 +101,8 @@
 
   /** El link de la navbar que corresponde a lo que se ve. */
   const activeHref = $derived.by(() => {
-    if (page === 'showcase') return '/showcase'
+    // Un caso es parte del showcase.
+    if (page === 'showcase' || page === 'case') return '/showcase'
     if (page !== 'home') return null
     const href = `/#${scenes[deck.index]}`
     return NAV.some((l) => l.href === href) ? href : null
@@ -112,12 +127,23 @@
     } else void goto(`${url.pathname}${url.hash}`)
   }
 
+  /** Click en una card del showcase: la transición y, a mitad de ella, la página del caso. */
+  function onOpenCase(project: Project, index: number, href: string, from: ScreenRect) {
+    if (deck.dragged || transition.active) return
+    if (reducedMotion) {
+      void goto(href)
+      return
+    }
+    transition.start(transitionKind, project, index, href, from, () => void goto(href))
+  }
+
   // ── Foco ───────────────────────────────────────────────────────
   // El foco del teclado vive en la capa semántica: Tab recorre sus links y la
   // escena lleva su sección a la vista y le dibuja el anillo.
   function onFocusIn(e: FocusEvent) {
     const target = e.target as Element
     focusedHref = target.getAttribute('href')
+    focusInNav = !!target.closest('header')
     const section = target.closest('section[id]')
     if (section) showScene(section.id)
     // El pie se dibuja en la última escena.
@@ -140,6 +166,8 @@
   // ── Entrada ────────────────────────────────────────────────────
   function onWheel(e: WheelEvent) {
     e.preventDefault()
+    // Durante la transición a un caso, la escena no se mueve.
+    if (transition.active) return
     // deltaMode 1 = líneas, 2 = páginas (algunos mouse y Firefox).
     const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1
     // Un trackpad de costado no cambia de escena, salvo donde los casos pasan en fila.
@@ -152,12 +180,13 @@
 
   // Sin setPointerCapture: le quitaría los eventos al canvas.
   function onPointerDown(e: PointerEvent) {
-    if (e.button === 0) deck.dragStart(e.clientY, e.timeStamp, e.clientX)
+    if (e.button === 0 && !transition.active) deck.dragStart(e.clientY, e.timeStamp, e.clientX)
   }
 
   function onKeyDown(e: KeyboardEvent) {
     const target = e.target as Element
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON') return
+    if (transition.active) return
     const pageStep = window.innerHeight * 0.8
     const steps: Record<string, number> = { ArrowDown: 80, ArrowUp: -80, PageDown: pageStep, PageUp: -pageStep, ' ': pageStep }
     if (e.key === 'Home') deck.goTo(0)
@@ -184,11 +213,15 @@
     <SiteScene
       {deck}
       {page}
+      {project}
+      {transition}
       {motion}
       {focusedHref}
+      {focusInNav}
       {activeHref}
       year={YEAR}
       onnavigate={onNavigate}
+      onopencase={onOpenCase}
       onselect={(i) => deck.goTo(i, reducedMotion)}
     />
   </EssentiaRoot>

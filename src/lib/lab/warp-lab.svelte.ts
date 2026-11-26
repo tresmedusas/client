@@ -1,5 +1,6 @@
 import { HOME_WARP, SHOWCASE_WARP, type WarpLook } from '$lib/scene/edge-warp.js'
 import { CASE_LOOK, type CaseLook } from '$lib/scene/layout.js'
+import { CASE_TRANSITION, TRANSITION_KINDS, type TransitionKind } from '$lib/scene/case-transition.js'
 import { diffValues, mergeValues, type LookName } from './warp-lab.js'
 
 /**
@@ -18,6 +19,9 @@ interface Saved {
   /** El tamaño de las cards (antes `cases`, que guardaba todo: se descarta). */
   cards?: unknown
   colorCases?: boolean
+  /** La transición al abrir un caso (antes `transition`, de las tres demos: se descarta). */
+  caseTransition?: string
+  slowTransition?: boolean
   open?: boolean
 }
 
@@ -36,6 +40,10 @@ class WarpLab {
   cases = $state<CaseLook>({ ...CASE_LOOK })
   /** Previsualizaciones de colores en lugar de los casos: el reflejo toma el color del caso. */
   colorCases = $state(false)
+  /** La transición al abrir un caso: la elegida o la guardada para más adelante. */
+  transition = $state<TransitionKind>(CASE_TRANSITION)
+  /** La transición en cámara lenta (×0.2), para mirarla. */
+  slowTransition = $state(false)
   open = $state(true)
 
   constructor() {
@@ -46,6 +54,8 @@ class WarpLab {
     }
     this.cases = mergeValues(CASE_LOOK, saved.cards)
     this.colorCases = saved.colorCases ?? false
+    this.transition = TRANSITION_KINDS.find((t) => t.kind === saved.caseTransition)?.kind ?? CASE_TRANSITION
+    this.slowTransition = saved.slowTransition ?? false
     this.open = saved.open ?? true
   }
 
@@ -64,6 +74,8 @@ class WarpLab {
       looks: { home: diffValues(HOME_WARP, looks.home), showcase: diffValues(SHOWCASE_WARP, looks.showcase) },
       cards: diffValues(CASE_LOOK, $state.snapshot(this.cases)),
       colorCases: this.colorCases,
+      caseTransition: this.transition !== CASE_TRANSITION ? this.transition : undefined,
+      slowTransition: this.slowTransition,
       open: this.open,
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))

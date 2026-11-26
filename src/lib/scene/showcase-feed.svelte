@@ -1,6 +1,7 @@
 <script lang="ts">
   import { T } from '@threlte/core'
-  import { HERO, SHOWCASE } from '$lib/content.js'
+  import { HERO, SHOWCASE, caseHref, type Project } from '$lib/content.js'
+  import type { ScreenRect } from './case-transition.js'
   import CaseCard from './case-card.svelte'
   import { reflectFocus, type WarpLook } from './edge-warp.js'
   import { widestHeadline } from './headline.js'
@@ -38,11 +39,17 @@
     onmeasure: (height: number, track: number) => void
     /** La palabra del título rota. */
     motion: boolean
+    /** El link con el foco en la capa semántica: la card de ese caso lleva el anillo. */
+    focusedHref: string | null
+    /** La y en la ventana (origen en el centro, hacia arriba) del tope del contenido: dónde está cada card. */
+    originY: number
+    /** Click en una card: la transición a la página del caso, desde donde está la card. */
+    onopencase: (project: Project, index: number, href: string, from: ScreenRect) => void
     /** Cuánto se enciende el reflejo: según cuán centrada está la card más cercana. */
     onfocus: (focus: number) => void
   }
 
-  let { width, viewportWidth, viewportHeight, compact, band, look, d, slide, reveal, motion, onmeasure, onfocus }: Props = $props()
+  let { width, viewportWidth, viewportHeight, compact, band, look, d, slide, reveal, motion, focusedHref, originY, onopencase, onmeasure, onfocus }: Props = $props()
 
   /** El tamaño de las cards: en desarrollo, el del banco de pruebas (`$lib/lab`). */
   const cases = $derived(import.meta.env.DEV && lab ? lab.cases : CASE_LOOK)
@@ -106,6 +113,22 @@
 
 <T.Group position.y={-intro.cardTop}>
   {#each SHOWCASE.projects as project, i (project.id)}
-    <CaseCard {project} index={i} cx={cx + offsets[i]!} y={0} cardWidth={card.width} cardHeight={card.height} />
+    {@const href = caseHref(project.id)}
+    <CaseCard
+      {project}
+      index={i}
+      cx={cx + offsets[i]!}
+      y={0}
+      cardWidth={card.width}
+      cardHeight={card.height}
+      focused={focusedHref === href}
+      onopen={() =>
+        onopencase(project, i, href, {
+          x: offsets[i]!,
+          y: originY - intro.cardTop - card.height / 2,
+          width: card.width,
+          height: card.height,
+        })}
+    />
   {/each}
 </T.Group>
