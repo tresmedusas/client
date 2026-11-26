@@ -4,8 +4,28 @@
     {
       "name": "landing",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5180", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
       "port": 5180
+    },
+    {
+      "name": "landing-build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "4180",
+        "--strictPort"
+      ],
+      "port": 4180
     }
   ]
 }

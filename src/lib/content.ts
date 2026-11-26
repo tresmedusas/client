@@ -238,6 +238,11 @@ export const SHOWCASE = {
     /** En escritorio, la segunda línea empieza en «en» (como los cortes del hero). */
     after: 'que confiaron\nen nosotros.',
   } satisfies RotatingTitle,
+  /**
+   * En la navbar, a la derecha de los links, el mismo botón del hero (pedido
+   * del usuario, 2026-11-25): «Agendar reunión», con su estilo y su destino.
+   */
+  primary: HERO.primary,
   title: 'Showcase — Tres Medusas',
   description: 'Landings, identidades, logos y aplicaciones construidos por Tres Medusas.',
   /**
