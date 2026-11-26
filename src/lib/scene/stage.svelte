@@ -7,6 +7,7 @@
   import { Deck } from './deck.svelte.js'
   import { sceneIndex } from './deck-logic.js'
   import SiteScene from './site-scene.svelte'
+  import PrismLabPanel from '$lib/lab/prism-lab-panel.svelte'
 
   interface Props {
     /** La capa semántica: de acá salen el foco y las anclas. */
@@ -184,6 +185,11 @@
     />
   </EssentiaRoot>
 </div>
+
+<!-- Banco de pruebas del botón del hero: solo en desarrollo (no entra al build). Afuera del stage: la rueda no cambia de escena. -->
+{#if import.meta.env.DEV}
+  <PrismLabPanel />
+{/if}
 
 <style>
   .stage {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { useTask } from '@threlte/core'
   import { useEngine } from 'essentia-core'
-  import type { Page } from '$lib/content.js'
+  import { SHOWCASE, type Page } from '$lib/content.js'
   import type { Deck } from './deck.svelte.js'
   import HomeScene from './home-scene.svelte'
   import { columnWidth, isCompact } from './layout.js'
@@ -65,7 +65,7 @@
    1.01 texto sobre los paneles
    9.9995 bordes de arriba y abajo: curva, aberración, blur y líquido → nivel 2 (con la navbar)
   10    navbar fija (pastilla y burbuja del logo) → nivel 2; indicador de escenas
-  11    lente del link activo de la navbar → nivel 3 (el último)
+  11    lente del link activo de la navbar y vidrio de su botón → nivel 3 (el último)
 -->
 {#key page}
   {#if home}
@@ -80,7 +80,7 @@
 <!-- La fase del líquido sigue al contenido: el paso de escena, el scroll interno y el reloj del hero. -->
 <EdgeWarp phase={time * 0.6 + deck.position * 2.4 + deck.innerOf(deck.index) * 0.012} />
 
-<Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} {onnavigate} />
+<Nav {width} {compact} logo={navLogo} {focusedHref} {activeHref} cta={page === 'showcase' ? SHOWCASE.primary : undefined} {onnavigate} />
 {#if !compact && deck.count > 1}
   <SceneDots count={deck.count} position={deck.position} x={vw / 2 - 22} {onselect} />
 {/if}

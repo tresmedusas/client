@@ -207,6 +207,11 @@ export const SHOWCASE = {
     title: 'Lo que ya **construimos.** Proyecto por proyecto.',
     intro: 'Todo empezó a mano. Cada proyecto partió de un proceso que había que simplificar.',
   } satisfies Section,
+  /**
+   * En la navbar, a la derecha de los links, el mismo botón del hero (pedido
+   * del usuario, 2026-11-25): «Agendar reunión», con su estilo y su destino.
+   */
+  primary: HERO.primary,
   title: 'Showcase — Tres Medusas',
   description: 'Proyectos de software a medida e integraciones construidos por Tres Medusas.',
   problemLabel: 'El problema',

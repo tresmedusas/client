@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, type Component, type Snippet } from 'svelte'
   import { page } from '$app/state'
-  import { FOOTER, NAV, SITE } from '$lib/content.js'
+  import { FOOTER, NAV, SHOWCASE, SITE } from '$lib/content.js'
   import { FONT, LOGO, TOKENS_CSS } from '$lib/tokens.js'
   import '../app.css'
 
@@ -66,6 +66,14 @@
         <a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
       {/each}
     </nav>
+    {#if page.url.pathname === '/showcase'}
+      <!-- El botón del hero, como en la navbar de la escena del showcase. -->
+      <a class="button deep with-lens" href={SHOWCASE.primary.href}>
+        <span class="lens" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" /></svg>
+        </span>{SHOWCASE.primary.label}
+      </a>
+    {/if}
   </header>
 
   <main>
