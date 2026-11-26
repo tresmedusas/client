@@ -10,7 +10,7 @@
 // través de un canto de vidrio que hace de lente (`lensBeams`).
 //
 // Los valores no están acá: cada shader que incluye este archivo define antes
-// sus constantes (BEAMS, ANGLE, ANGLE_SPREAD, WOBBLE, WIDTH, SPEED, RANGE,
+// MAX_BEAMS y sus valores, como constantes o uniforms (BEAMS, ANGLE, ANGLE_SPREAD, WOBBLE, WIDTH, SPEED, RANGE,
 // SOFT, SPECTRUM, SPEC_VAR, SPEC_RATE, SPREAD, CORE, CORE_WIDTH, STRIPES,
 // STRIPE_GAP, FLOOR, PEAK, FLICKER, PATCH, LENS, LENS_SHIFT, LENS_AB) y su
 // `hueRange`, con lo que el usuario eligió en el banco de pruebas para cada uno.
@@ -81,7 +81,8 @@ float profile(float x, float w) {
 // multiplica su brillo.
 vec3 beams(vec2 p, vec2 extent, float t, float boost) {
   vec3 light = vec3(0.0);
-  for (int i = 0; i < BEAMS; i++) {
+  for (int i = 0; i < MAX_BEAMS; i++) {
+    if (i >= BEAMS) break;
     float seed = float(i) * 17.31 + 3.0;
     // Cada haz con su velocidad, ángulo, vaivén y ancho.
     float pace = 0.55 + 0.9 * hash1(seed + 2.0);
@@ -111,7 +112,7 @@ vec3 beams(vec2 p, vec2 extent, float t, float boost) {
     float span = SPECTRUM * mix(1.0, 0.3 + 1.4 * noise(tr * 0.9 + seed + 40.0), min(SPEC_VAR, 1.0));
     float raw = x / w * 0.5 * span + SPEC_VAR * (noise(tr + seed * 3.0) * 1.6 + 0.5 * noise(tr * 2.3 + seed)) + 0.25 * SPEC_VAR * noise2(vec2(v / 30.0 + seed, tr * 1.5));
 #ifdef COLOR_FLOW
-    raw += FLOW_AMT * (colorFlow(p, t, seed) - 0.5) * 4.0;
+    if (FLOW_AMT > 0.0) raw += FLOW_AMT * (colorFlow(p, t, seed) - 0.5) * 4.0;
 #endif
     // Dentro del rango del haz, de ida y vuelta.
     float bounce = abs(fract(raw * 0.5) * 2.0 - 1.0);

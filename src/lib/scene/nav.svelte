@@ -5,9 +5,12 @@
   import { Spring, useEngine } from 'essentia-core'
   import { Glass } from 'essentia-crystal'
   import { Image, Rect } from 'essentia-primitives'
+  import type { Link } from '$lib/content.js'
   import { LOGO, PALETTE } from '$lib/tokens.js'
+  import { CTA_HEIGHT } from './layout.js'
   import NavLink from './nav-link.svelte'
   import { NAV_GLASS, NAV_MARGIN, clamp01, navIcon, navLinks, stepOsc, still, type Osc } from './nav-parts.js'
+  import PrismCta from './prism-cta.svelte'
 
   interface Props {
     /** Ancho de la columna: la pastilla nunca lo pasa. */
@@ -18,10 +21,15 @@
     focusedHref: string | null
     /** Link de la escena que se ve (o de la página): lo envuelve el lente. */
     activeHref: string | null
+    /**
+     * Botón del hero en su propia isla, a la derecha de la pastilla (el
+     * showcase: «Agendar reunión»). Si no entra en `width`, no se muestra.
+     */
+    cta?: Link
     onnavigate: (href: string) => void
   }
 
-  let { width, compact, logo = 1, focusedHref, activeHref, onnavigate }: Props = $props()
+  let { width, compact, logo = 1, focusedHref, activeHref, cta, onnavigate }: Props = $props()
 
   const engine = useEngine()
   const { onPointerEnter, onPointerLeave } = useCursor()
@@ -95,7 +103,21 @@
   const BUBBLE = HEIGHT
   const ISLAND_GAP = 10
   /** La pastilla lleva solo los links. */
-  const pillWidth = $derived(Math.min(width - BUBBLE - ISLAND_GAP, PADDING * 2 + linksWidth))
+  const fullPill = $derived(PADDING * 2 + linksWidth)
+
+  // ── Botón ──────────────────────────────────────────────────────
+  // El botón del hero (`cta`), en su propia isla a la derecha de la pastilla:
+  // el mismo componente, con su lente, su aro y su destello. Solo si entra
+  // al lado de la burbuja y la pastilla enteras (en un teléfono, no).
+  let ctaWidth = $state(0)
+  const showCta = $derived(cta !== undefined && ctaWidth > 0 && BUBBLE + ISLAND_GAP + fullPill + ISLAND_GAP + ctaWidth <= width)
+  /** Lo que el botón suma a la derecha de la pastilla. */
+  const ctaSpace = $derived(showCta ? ISLAND_GAP + ctaWidth : 0)
+  const pillWidth = $derived(Math.min(width - BUBBLE - ISLAND_GAP - ctaSpace, fullPill))
+
+  // Los haces del aro corren con su propio reloj, sin movimiento reducido.
+  let ctaTime = $state(0)
+  useTask((delta) => (ctaTime += delta), { running: () => showCta && !prefersReducedMotion.current })
 
   /** Cuánto salió la burbuja: sigue a `logo` con un resorte que rebota. */
   const drop: Osc = { x: 0, v: 0 }
@@ -140,8 +162,8 @@
   const layout = $derived.by(() => {
     const d = dropVis
     const s = clamp01(d)
-    // El conjunto (burbuja + pastilla) queda centrado; con el rebote se pasa un poco.
-    const pillLeft = -((BUBBLE + ISLAND_GAP) * d + pillWidth) / 2 + (BUBBLE + ISLAND_GAP) * d
+    // El conjunto (burbuja + pastilla + botón) queda centrado; con el rebote se pasa un poco.
+    const pillLeft = -((BUBBLE + ISLAND_GAP) * d + pillWidth + ctaSpace) / 2 + (BUBBLE + ISLAND_GAP) * d
     const bubbleX = pillLeft + BUBBLE / 2 - (BUBBLE + ISLAND_GAP) * d
     const items: number[] = []
     let x = pillLeft + PADDING
@@ -152,6 +174,7 @@
     }
     return {
       barX: pillLeft + pillWidth / 2,
+      ctaLeft: pillLeft + pillWidth + ISLAND_GAP,
       /** Borde izquierdo del logo; se escala desde ahí. */
       logoLeft: bubbleX - (logoWidth / 2) * s,
       logoScale: s,
@@ -309,6 +332,9 @@
   z = 11: el lente oscuro del link activo (`LENS_SHAPE` + `LENS_LOOK`), adentro de la
   pastilla; refracta la barra y lo que pasa por debajo (nivel 3, el último).
   z = 11.05: el ícono y el texto del activo en blanco, encima del lente.
+  z = 11: el botón (`cta`), en su isla a la derecha de la pastilla (nivel 3, como el
+  lente): sus haces van detrás de su vidrio (z 10.999), fuera de la captura de los
+  bordes que deforman, que si no los reflejarían.
   Sin los anchos medidos la pastilla no sabe cuánto mide: aparece con el texto.
 -->
 {#if measured}
@@ -390,3 +416,18 @@
     onnavigate={choose}
   />
 {/each}
+
+{#if cta}
+  <!-- Fuera de pantalla hasta que se sabe su ancho y si entra. -->
+  <PrismCta
+    link={cta}
+    x={showCta ? layout.ctaLeft : -100000}
+    y={y + CTA_HEIGHT / 2}
+    time={ctaTime}
+    focused={showCta && focusedHref === cta.href}
+    motion={!prefersReducedMotion.current}
+    z={11}
+    onmeasure={(w) => (ctaWidth = w)}
+    {onnavigate}
+  />
+{/if}

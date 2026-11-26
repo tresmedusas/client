@@ -9,6 +9,7 @@
   import SiteScene from './site-scene.svelte'
   import { CASE_TRANSITION, type ScreenRect } from './case-transition.js'
   import { CaseTransition } from './case-transition.svelte.js'
+  import PrismLabPanel from '$lib/lab/prism-lab-panel.svelte'
   import WarpLabPanel from '$lib/lab/warp-lab-panel.svelte'
   import { lab } from '$lib/lab/warp-lab.svelte.js'
 
@@ -243,8 +244,9 @@
   </EssentiaRoot>
 </div>
 
-<!-- Banco de pruebas de los bordes: solo en desarrollo (no entra al build). Afuera del stage: la rueda no cambia de escena. -->
+<!-- Bancos de pruebas (solo en desarrollo, no entran al build): el del botón del hero a la izquierda y el de los bordes a la derecha. Afuera del stage: la rueda no cambia de escena. -->
 {#if import.meta.env.DEV}
+  <PrismLabPanel />
   <WarpLabPanel {page} />
 {/if}
 
