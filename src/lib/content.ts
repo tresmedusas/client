@@ -11,6 +11,8 @@
  * Lo marcado con TODO es provisorio: placeholders hasta tener el contenido real.
  */
 
+import type { RotatingTitle } from './scene/headline.js'
+
 /** Contacto. TODO: dominio, página de empresa y número de WhatsApp reales. */
 export const CONTACT = {
   email: 'hola@tresmedusas.com',
@@ -37,8 +39,9 @@ export interface Link {
 export interface Section {
   id: string
   /**
-   * Etiqueta sobre el título («Showcase»). Las secciones de la home no la
-   * llevan: repetía la navbar (pedido del usuario, 2026-11-25).
+   * Etiqueta sobre el título («Tu proyecto»). Las secciones de la home y la
+   * entrada del showcase no la llevan: repetía la navbar (pedido del usuario,
+   * 2026-11-25).
    */
   label?: string
   /** Titular inline (DESIGN.md §3): lo que va en tinta y black, entre `**…**`. */
@@ -188,61 +191,93 @@ export const HOME_SCENES = [HERO.id, HOW_WORK.section.id, ABOUT.section.id, CONT
 
 // ── Showcase ─────────────────────────────────────────────────────
 
+/**
+ * La previsualización de un caso: una captura o una imagen (por ahora, sin
+ * video). Los casos van de una landing a un manual de marca, un logo o una
+ * app, así que cada uno dice cómo encaja en su card (3:2; 4:5 en un teléfono).
+ */
+export interface CasePreview {
+  /** Imagen en `static/casos/`. Un SVG va con `width`/`height` a 3× de su `viewBox` (DESIGN.md §4). */
+  src: string
+  /** Qué se ve, para quien no la ve. */
+  alt: string
+  /**
+   * `cover` (por defecto): llena la card y recorta, como una captura de
+   * pantalla. `contain`: entra entera, con aire, sobre `background`, como un logo.
+   */
+  fit?: 'cover' | 'contain'
+  /** `top`: una captura alta (una landing entera) se ve desde arriba. @default 'center' */
+  align?: 'top' | 'center'
+  /** Fondo de la card detrás de la imagen: el papel o `brandDeep`. @default 'paper' */
+  background?: 'paper' | 'deep'
+}
+
 export interface Project {
   id: string
+  /** Titular inline (DESIGN.md §3): sin `**…**`, va entero destacado. */
   name: string
-  client: string
-  /** Qué tipo de trabajo fue: «Integración», «Sistema interno». */
-  tags: readonly string[]
-  problem: string
-  solution: string
-  /** Imagen 16:10 en `static/`; sin ella se dibuja un panel de la marca. */
-  image?: string
+  /** Qué es: «Landing», «Manual de marca», «Logo», «App». */
+  kind: string
+  preview: CasePreview
 }
 
 export const SHOWCASE = {
   section: {
     id: 'showcase',
-    label: 'Showcase',
-    title: 'Lo que ya **construimos.** Proyecto por proyecto.',
-    intro: 'Todo empezó a mano. Cada proyecto partió de un proceso que había que simplificar.',
+    /** La primera variante de `headline` (la capa semántica y el movimiento reducido). */
+    title: '**Empresas** que confiaron en nosotros.',
+    // Sin bajada: el título y los casos (pedido del usuario, 2026-11-25).
   } satisfies Section,
+  /**
+   * El título, animado como el del hero (pedido del usuario, 2026-11-25): la
+   * primera palabra rota entre quienes confiaron en el estudio.
+   */
+  headline: {
+    before: '',
+    words: ['Empresas', 'Marcas', 'Emprendedores', 'Colegios'],
+    /** En escritorio, la segunda línea empieza en «en» (como los cortes del hero). */
+    after: 'que confiaron\nen nosotros.',
+  } satisfies RotatingTitle,
   /**
    * En la navbar, a la derecha de los links, el mismo botón del hero (pedido
    * del usuario, 2026-11-25): «Agendar reunión», con su estilo y su destino.
    */
   primary: HERO.primary,
   title: 'Showcase — Tres Medusas',
-  description: 'Proyectos de software a medida e integraciones construidos por Tres Medusas.',
-  problemLabel: 'El problema',
-  solutionLabel: 'Lo que hicimos',
-  // TODO: proyectos reales (sin métricas que no estén medidas).
+  description: 'Landings, identidades, logos y aplicaciones construidos por Tres Medusas.',
+  /**
+   * Los casos, uno debajo del otro (pedido del usuario, 2026-11-25): cada
+   * card es la previsualización del caso, sin texto. `name` y `kind` quedan
+   * para la página de cada caso (TODO: al hacer click en la card).
+   * TODO: casos reales; por ahora, una previsualización de ejemplo de cada tipo.
+   */
   projects: [
     {
       id: 'proyecto-1',
       name: 'Proyecto de ejemplo 1',
-      client: 'Cliente por definir',
-      tags: ['Integración'],
-      problem: 'Descripción breve del proceso que se hacía a mano.',
-      solution: 'Descripción breve de lo que construimos y cómo se usa hoy.',
+      kind: 'Landing',
+      preview: { src: '/casos/ejemplo-landing.svg', alt: 'Captura de ejemplo de una landing.', align: 'top' },
     },
     {
       id: 'proyecto-2',
       name: 'Proyecto de ejemplo 2',
-      client: 'Cliente por definir',
-      tags: ['Sistema interno'],
-      problem: 'Descripción breve del proceso que se hacía a mano.',
-      solution: 'Descripción breve de lo que construimos y cómo se usa hoy.',
+      kind: 'Manual de marca',
+      preview: { src: '/casos/ejemplo-marca.svg', alt: 'Página de ejemplo de un manual de marca.' },
     },
     {
       id: 'proyecto-3',
       name: 'Proyecto de ejemplo 3',
-      client: 'Cliente por definir',
-      tags: ['Reportes'],
-      problem: 'Descripción breve del proceso que se hacía a mano.',
-      solution: 'Descripción breve de lo que construimos y cómo se usa hoy.',
+      kind: 'Logo',
+      preview: { src: '/casos/ejemplo-logo.svg', alt: 'Logo de ejemplo.', fit: 'contain', background: 'deep' },
+    },
+    {
+      id: 'proyecto-4',
+      name: 'Proyecto de ejemplo 4',
+      kind: 'App',
+      preview: { src: '/casos/ejemplo-app.svg', alt: 'Pantallas de ejemplo de una app.' },
     },
   ] satisfies Project[] as readonly Project[],
+  /** El cierre: por ahora no se muestra (pedido del usuario, 2026-11-25). */
   closing: {
     section: {
       id: 'siguiente',
@@ -255,8 +290,12 @@ export const SHOWCASE = {
   },
 } as const
 
-/** Escenas del showcase, en orden. */
-export const SHOWCASE_SCENES = [SHOWCASE.section.id, ...SHOWCASE.projects.map((p) => p.id), SHOWCASE.closing.section.id] as const
+/**
+ * Escenas del showcase: la entrada con los casos (una sola escena, que
+ * scrollea adentro). Por ahora sin el cierre (`SHOWCASE.closing`; pedido del
+ * usuario, 2026-11-25).
+ */
+export const SHOWCASE_SCENES = [SHOWCASE.section.id] as const
 
 // ── Términos y condiciones ───────────────────────────────────────
 

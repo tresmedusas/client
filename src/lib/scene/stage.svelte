@@ -8,6 +8,7 @@
   import { sceneIndex } from './deck-logic.js'
   import SiteScene from './site-scene.svelte'
   import PrismLabPanel from '$lib/lab/prism-lab-panel.svelte'
+  import WarpLabPanel from '$lib/lab/warp-lab-panel.svelte'
 
   interface Props {
     /** La capa semántica: de acá salen el foco y las anclas. */
@@ -41,6 +42,11 @@
   // escena sin transición.
   $effect(() => {
     deck.instant = reducedMotion
+  })
+
+  // En el showcase los casos pasan en fila: un gesto de costado también scrollea.
+  $effect(() => {
+    deck.swipeX = page === 'showcase'
   })
 
   $effect(() => {
@@ -137,14 +143,17 @@
     e.preventDefault()
     // deltaMode 1 = líneas, 2 = páginas (algunos mouse y Firefox).
     const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1
-    // Un trackpad horizontal no cambia de escena.
-    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return
+    // Un trackpad de costado no cambia de escena, salvo donde los casos pasan en fila.
+    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) {
+      if (deck.swipeX) deck.wheel(e.deltaX * unit, e.timeStamp)
+      return
+    }
     deck.wheel(e.deltaY * unit, e.timeStamp)
   }
 
   // Sin setPointerCapture: le quitaría los eventos al canvas.
   function onPointerDown(e: PointerEvent) {
-    if (e.button === 0) deck.dragStart(e.clientY, e.timeStamp)
+    if (e.button === 0) deck.dragStart(e.clientY, e.timeStamp, e.clientX)
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -163,7 +172,7 @@
 <svelte:window
   onhashchange={onHashChange}
   onkeydown={onKeyDown}
-  onpointermove={(e) => deck.dragMove(e.clientY, e.timeStamp)}
+  onpointermove={(e) => deck.dragMove(e.clientY, e.timeStamp, e.clientX)}
   onpointerup={(e) => deck.dragEnd(e.timeStamp)}
   onpointercancel={() => deck.dragEnd()}
 />
@@ -186,9 +195,10 @@
   </EssentiaRoot>
 </div>
 
-<!-- Banco de pruebas del botón del hero: solo en desarrollo (no entra al build). Afuera del stage: la rueda no cambia de escena. -->
+<!-- Bancos de pruebas (solo en desarrollo, no entran al build): el del botón del hero a la izquierda y el de los bordes a la derecha. Afuera del stage: la rueda no cambia de escena. -->
 {#if import.meta.env.DEV}
   <PrismLabPanel />
+  <WarpLabPanel {page} />
 {/if}
 
 <style>
