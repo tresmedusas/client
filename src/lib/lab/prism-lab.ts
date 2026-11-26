@@ -178,11 +178,11 @@ export function decimals(step: number): number {
   return dot < 0 ? 0 : text.length - dot - 1
 }
 
-const CONTROLS = CONTROL_GROUPS.flatMap((group) => group.controls)
-
 /** Un valor redondeado al paso de su control. */
 export function rounded(key: keyof PrismLook, value: number): number {
-  const control = CONTROLS.find((c) => c.key === key)
+  // Se busca al llamar, sin una lista armada al cargar el módulo: así el
+  // build de producción descarta el banco entero (no queda nada que corra).
+  const control = CONTROL_GROUPS.flatMap((group) => group.controls).find((c) => c.key === key)
   return control ? Number(value.toFixed(decimals(control.step))) : value
 }
 
