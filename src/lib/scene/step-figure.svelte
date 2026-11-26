@@ -19,7 +19,7 @@
     Vector3,
     WebGLRenderTarget,
   } from 'three'
-  import { CAMERA_DIR, Kit } from './figures/kit.js'
+  import { CAMERA_DIR, Kit, type KitStyle } from './figures/kit.js'
   import { ASPECT, DESIGN_WIDTH, FIGURES, REST, TARGET_Y } from './figures/how-work.js'
 
   /**
@@ -43,9 +43,16 @@
     opacity: number
     /** Anima (movimiento permitido y en pantalla). Si no, queda quieta. */
     playing: boolean
+    /** Cómo se dibuja (se lee al montar: para cambiarlo, se vuelve a montar). @default {} */
+    style?: KitStyle
+    /** z del quad. @default 0 */
+    z?: number
+    /** Fundido de la lente de vidrio, si va distinto que la figura (una hoja que la tapa). @default opacity */
+    lensOpacity?: number
   }
 
-  let { index, width, x, y, opacity, playing }: Props = $props()
+  let { index, width, x, y, opacity, playing, style = {}, z = 0, lensOpacity }: Props = $props()
+  const glassOpacity = $derived(Math.min(opacity, lensOpacity ?? opacity))
 
   const height = $derived(width / ASPECT)
   /** Franja del borde del marco en la que la figura se desvanece, en px CSS. */
@@ -55,7 +62,7 @@
   const engine = useEngine()
   const { renderer, invalidate } = useThrelte()
 
-  const kit = new Kit()
+  const kit = untrack(() => new Kit(style))
   const figure = untrack(() => FIGURES[index]!(kit))
   const scene = new Scene()
   const pivot = new Group()
@@ -189,21 +196,21 @@
   const lensSize = $derived(figure.lens ? figure.lens.radius * 2 * zoom : 0)
 </script>
 
-<T is={quad} position.x={x} position.y={y} scale.x={width} scale.y={height} />
+<T is={quad} position.x={x} position.y={y} position.z={z} scale.x={width} scale.y={height} />
 
-{#if figure.lens && opacity > 0}
+{#if figure.lens && glassOpacity > 0}
   <!-- Al fundirse, la refracción y el brillo crecen desde 0: sin ellos el vidrio no se ve. -->
   <Glass
     preset="lens"
     width={lensSize}
     height={lensSize}
     radius={lensSize / 2}
-    magnify={1 + 0.31 * opacity}
-    refraction={opacity}
-    dispersion={0.05 * opacity}
+    magnify={1 + 0.31 * glassOpacity}
+    refraction={glassOpacity}
+    dispersion={0.05 * glassOpacity}
     saturation={0}
-    specular={0.28 * opacity}
-    rim={0.05 * opacity}
+    specular={0.28 * glassOpacity}
+    rim={0.05 * glassOpacity}
     shadowOpacity={0}
     x={x + lensX}
     y={y + lensY}

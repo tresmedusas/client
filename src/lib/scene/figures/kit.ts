@@ -73,6 +73,21 @@ interface SlabOptions {
   top?: Material
 }
 
+/**
+ * Cómo se dibuja una figura (ajustes del banco de pruebas de HowWork). Sin
+ * nada, la estética de DESIGN.md §4 tal cual.
+ */
+export interface KitStyle {
+  /** Multiplica la tinta de los lados de los volúmenes (1 = 5 % y 9 %). @default 1 */
+  ink?: number
+  /** Opacidad de los trazos normales. @default FIGURE.strokeOpacity */
+  stroke?: number
+  /** Sobre una placa `brandDeep`: la tinta pasa a ser luz (trazos y caras claras sobre lo oscuro). @default false */
+  dark?: boolean
+  /** El acento de la figura es un sólido `deep` (en lugar de solo un trazo destacado). @default false */
+  solid?: boolean
+}
+
 interface BoxOptions {
   line?: LineMaterial
   top?: Material
@@ -95,16 +110,27 @@ export class Kit {
   readonly side: MeshBasicMaterial
   readonly front: MeshBasicMaterial
   readonly deep: MeshBasicMaterial
+  /** El acento es un sólido `deep`. */
+  readonly solid: boolean
+  /** Sobre una placa oscura. */
+  readonly dark: boolean
+  /** La «tinta» al `a` sobre el fondo de la figura: el papel, o la placa oscura. */
+  readonly mix: (a: number) => Color
   private readonly disposables: { dispose(): void }[] = []
 
-  constructor() {
-    this.normal = this.line(FIGURE.strokeWidth, tint(FIGURE.strokeOpacity))
-    this.strong = this.line(FIGURE.strokeStrongWidth, tint(FIGURE.strokeStrongOpacity))
-    this.onDeep = this.line(FIGURE.strokeStrongWidth, new Color(PALETTE.brand))
-    this.top = this.face(new Color(PALETTE.brand))
-    this.side = this.face(tint(0.05))
-    this.front = this.face(tint(0.09))
-    this.deep = this.face(new Color(PALETTE.brandDeep))
+  constructor({ ink = 1, stroke = FIGURE.strokeOpacity, dark = false, solid = false }: KitStyle = {}) {
+    this.solid = solid
+    this.dark = dark
+    // Sobre la placa oscura la tinta es la luz: el blanco mezclado con `brandDeep`.
+    this.mix = dark ? (a) => new Color(PALETTE.brandDeep).lerp(new Color(PALETTE.paper), a) : tint
+    this.normal = this.line(FIGURE.strokeWidth, this.mix(stroke))
+    this.strong = this.line(FIGURE.strokeStrongWidth, this.mix(FIGURE.strokeStrongOpacity))
+    this.onDeep = this.line(FIGURE.strokeStrongWidth, new Color(dark ? PALETTE.brandDeep : PALETTE.brand))
+    this.top = this.face(dark ? this.mix(0.1 * ink) : new Color(PALETTE.brand))
+    this.side = this.face(this.mix(dark ? 0.03 * ink : 0.05 * ink))
+    this.front = this.face(this.mix(dark ? 0.06 * ink : 0.09 * ink))
+    // El acento: oscuro sobre el papel, luz sobre la placa oscura.
+    this.deep = this.face(new Color(dark ? PALETTE.brand : PALETTE.brandDeep))
   }
 
   private track<T extends { dispose(): void }>(item: T): T {
@@ -215,7 +241,7 @@ export class Kit {
         if (d > 1) continue
         position.push(x, 0, z)
         // Un punto de 2 px se lee más claro que una línea: al 6 % no se vería.
-        const c = tint(FIGURE.gridOpacity * 1.6 * (1 - d * d))
+        const c = this.mix(FIGURE.gridOpacity * (this.dark ? 2.4 : 1.6) * (1 - d * d))
         color.push(c.r, c.g, c.b)
       }
     }
