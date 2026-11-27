@@ -9,7 +9,13 @@
  * descripción salen la figura de la escena (`scene/hero-figure.svelte`) y la
  * de la capa semántica (`lib/hero-figure.svelte`).
  */
-import { STEP, variant, type Headline } from "../headline.js";
+import {
+  HEADLINE_TIMING,
+  stepOf,
+  variant,
+  type Headline,
+  type HeadlineTiming,
+} from "../headline.js";
 
 export const DESIGN_WIDTH = 520;
 
@@ -33,9 +39,7 @@ export type Shape =
     } & Style)
   | ({ kind: "circle"; x: number; y: number; r: number } & Style)
   /** Trazo abierto, o cerrado con `closed`. */
-  | ({ kind: "line"; points: [number, number][]; closed?: boolean } & Style)
-  /** Sombra suave de tinta hacia el papel, debajo de la placa (≤ 0.1, DESIGN.md §5). */
-  | { kind: "shadow"; x: number; y: number; w: number; h: number };
+  | ({ kind: "line"; points: [number, number][]; closed?: boolean } & Style);
 
 export interface HeroFigure {
   /** De atrás hacia adelante. */
@@ -48,21 +52,24 @@ export interface HeroFigure {
  */
 export const LOOK = {
   /** Alto del marco, en fracción de su ancho. */
-  height: 0.41,
+  height: 0.45,
   /** Escala de la placa en el marco (1: 340 px de diseño en 520). */
-  scale: 1.52,
+  scale: 1.5,
   /** Corrimiento de la placa hacia abajo, en px de diseño: con el difuminado, la figura se pierde abajo. */
-  offsetY: -5,
+  offsetY: -10,
   /** Franja de los bordes de arriba y de los costados en la que la figura se desvanece, en px CSS. */
   edgeFade: 0,
   /** Difuminado blanco del borde de abajo: qué parte del alto del marco toma, y su curva (más, más concentrado abajo). */
-  bottomFade: 0.4,
-  bottomCurve: 2.6,
+  bottomFade: 0.14,
+  bottomCurve: 2,
   /** El panel de vidrio del cambio: su ancho en px de diseño, lo que tarda en cruzar (s) y su intensidad (0..1). */
   panelWidth: 70,
   wipe: 1.1,
   glass: 1,
 } as const;
+
+/** Los mismos valores, como números: lo que ajusta el banco de pruebas (`src/lib/lab/hero-lab*`). */
+export type FigureLook = { [K in keyof typeof LOOK]: number };
 
 /** Proporción del marco (ancho / alto) y su alto en px de diseño. */
 export const ASPECT = 1 / LOOK.height;
@@ -108,15 +115,45 @@ const bars = (
   fill = BODY,
 ): Shape[] => widths.map((w, i) => bar(x, y + i * gap, w, h, fill));
 
-/** La placa de fondo de cada figura: 340 × 130, con su sombra. */
+/**
+ * La placa de fondo de cada figura: una ventana de 340 de ancho, sin sombra,
+ * que sigue hacia abajo hasta salir del marco (pedido del usuario,
+ * 2026-11-27). El contenido se arma en los primeros 130 px (`H`); la placa,
+ * sus paneles y sus divisores llegan hasta `BOTTOM`.
+ */
 const W = 340;
 const H = 130;
 const L = -W / 2;
 const T = -H / 2;
+/** Borde de abajo de la placa: más abajo que el del marco, que la corta. */
+const BOTTOM = 140;
+/** Radio de las esquinas de arriba; las de abajo van rectas. */
+const RADIUS = 14;
+/** Un cuarto de círculo de radio `RADIUS` con centro en (`cx`, `cy`), desde el ángulo `from` (rad). */
+const corner = (cx: number, cy: number, from: number): [number, number][] =>
+  Array.from({ length: 9 }, (_, i) => {
+    const a = from + (i / 8) * (Math.PI / 2);
+    return [cx + Math.cos(a) * RADIUS, cy + Math.sin(a) * RADIUS];
+  });
 const board = (): Shape[] => [
-  { kind: "shadow", x: 0, y: 14, w: W + 90, h: H + 70 },
-  rect(0, 0, W, H, 14, { fill: SURFACE }),
+  {
+    kind: "line",
+    points: [
+      [L, BOTTOM],
+      ...corner(L + RADIUS, T + RADIUS, Math.PI),
+      ...corner(-L - RADIUS, T + RADIUS, -Math.PI / 2),
+      [-L, BOTTOM],
+    ],
+    closed: true,
+    fill: SURFACE,
+  },
 ];
+/** Un panel de `w` de ancho centrado en `x`, un paso más oscuro, desde la barra de arriba hasta el borde de abajo de la placa. */
+const column = (x: number, w: number): Shape =>
+  rect(x, (T + 16 + BOTTOM) / 2, w, BOTTOM - (T + 16), 0, {
+    fill: PANEL,
+    bare: true,
+  });
 /** La barra de arriba de una ventana: tres puntos, el divisor y lo que vaya en el medio. */
 const titleBar = (y = T + 16): Shape[] => [
   ...[0, 9, 18].map((dx) =>
@@ -137,11 +174,11 @@ function software(): HeroFigure {
     shapes: [
       ...board(),
       // Barra lateral, un paso más oscura, con la marca y la navegación.
-      rect(L + side / 2, 8, side, H - 16, 0, { fill: PANEL, bare: true }),
+      column(L + side / 2, side),
       ...titleBar(),
       rect(10, T + 8, 120, 9, 4.5, { fill: 0.05, bare: true }),
       bar(-18, T + 8, 46, 3, SOFT),
-      line([L + side, T + 16], [L + side, -T]),
+      line([L + side, T + 16], [L + side, BOTTOM]),
       rect(L + 14, -38, 9, 9, 2.5, { fill: HEAD, bare: true }),
       bar(L + 23, -38, 28, 4, HEAD),
       rect(L + side / 2, -10 + 0, side - 10, 11, 5.5, {
@@ -237,7 +274,7 @@ function identity(): HeroFigure {
         ),
       ),
       // Componentes: botones, interruptor y casillas.
-      line([108, T + 16], [108, -T]),
+      line([108, T + 16], [108, BOTTOM]),
       bar(118, -38, 32, 3.5, SOFT),
       rect(142, -22, 46, 13, 6.5, { fill: 0.75, bare: true }),
       bar(128, -22, 28, 3, 0),
@@ -271,8 +308,8 @@ function design(): HeroFigure {
     shapes: [
       ...board(),
       // Paneles de los costados, un paso más oscuros.
-      rect(L + panel / 2, 8, panel, H - 16, 0, { fill: PANEL, bare: true }),
-      rect(-L - panel / 2, 8, panel, H - 16, 0, { fill: PANEL, bare: true }),
+      column(L + panel / 2, panel),
+      column(-L - panel / 2, panel),
       ...titleBar(),
       // Herramientas, al medio de la barra de arriba; la elegida, rellena.
       ...tools.map((i) =>
@@ -286,8 +323,8 @@ function design(): HeroFigure {
         ),
       ),
       rect(-L - 22, T + 8, 26, 9, 4.5, { fill: 0.05, bare: true }),
-      line([left, T + 16], [left, -T]),
-      line([right, T + 16], [right, -T]),
+      line([left, T + 16], [left, BOTTOM]),
+      line([right, T + 16], [right, BOTTOM]),
       // Capas.
       bar(L + 8, -40, 24, 3.5, SOFT),
       rect(L + panel / 2, -16, panel - 8, 10, 5, { fill: 0.09, bare: true }),
@@ -374,19 +411,23 @@ export const WIPE = LOOK.wipe;
  * titular: cuando cambia «qué construimos», el panel arranca con el fundido
  * de salida de esas palabras y cruza durante `WIPE` segundos. `from` es la
  * figura de antes, `to` la nueva y `p` (0..1) cuánto cruzó; quieta, `from`
- * y `to` son la misma y `p` es 1.
+ * y `to` son la misma y `p` es 1. `timing` son los tiempos del titular y
+ * `wipe`, lo que tarda el panel (s).
  */
 export function figureAt(
   h: Headline,
   t: number,
+  timing: HeadlineTiming = HEADLINE_TIMING,
+  wipe: number = WIPE,
 ): { from: number; to: number; p: number } {
-  const k = Math.max(0, Math.floor(t / STEP));
+  const step = stepOf(timing);
+  const k = Math.max(0, Math.floor(t / step));
   const to = variant(h, k).what;
-  const u = t - k * STEP;
+  const u = t - k * step;
   if (k === 0) return { from: to, to, p: 1 };
   const from = variant(h, k - 1).what;
-  if (from === to || u >= WIPE) return { from: to, to, p: 1 };
+  if (from === to || u >= wipe) return { from: to, to, p: 1 };
   // Con el titular: arranca cuando las palabras empiezan a irse.
-  const x = Math.min(1, u / WIPE);
+  const x = Math.min(1, u / wipe);
   return { from, to, p: x * x * (3 - 2 * x) };
 }

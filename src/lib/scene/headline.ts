@@ -29,11 +29,27 @@ export interface HeadlineWord {
   opacity: number
 }
 
-/** Segundos que se queda cada combinación, y los del fundido de salida y de entrada. */
-export const HOLD = 2.4
-export const FADE_OUT = 0.3
-export const FADE_IN = 0.45
-export const STEP = HOLD + FADE_OUT + FADE_IN
+/** Los tiempos de la rotación, en segundos: lo que se queda cada combinación, y el fundido de salida y el de entrada. */
+export interface HeadlineTiming {
+  hold: number
+  fadeOut: number
+  fadeIn: number
+}
+
+/** Rigen el titular del hero y el título del showcase. Se ajustan con el banco de pruebas (`src/lib/lab/hero-lab*`). */
+export const HEADLINE_TIMING: HeadlineTiming = {
+  hold: 2.4,
+  fadeOut: 0.3,
+  fadeIn: 0.45,
+}
+
+/** Lo que dura un paso entero: la combinación quieta más sus dos fundidos (s). */
+export const stepOf = (timing: HeadlineTiming) => timing.hold + timing.fadeOut + timing.fadeIn
+
+export const HOLD = HEADLINE_TIMING.hold
+export const FADE_OUT = HEADLINE_TIMING.fadeOut
+export const FADE_IN = HEADLINE_TIMING.fadeIn
+export const STEP = stepOf(HEADLINE_TIMING)
 
 /** Qué variante muestra cada grupo en el paso `k`: los pasos impares cambian `what`, los pares `who`. */
 export function variant(h: Headline, k: number): { what: number; who: number } {
@@ -62,15 +78,17 @@ export const headlineText = (h: Headline, k = 0) => headlineWords(h, k).map((w) 
  * Las palabras a los `t` segundos: en cada paso, primero se desvanecen las
  * que cambian (todavía con el texto anterior), y después aparecen las nuevas.
  */
-export function headlineAt(h: Headline, t: number): HeadlineWord[] {
-  const k = Math.max(0, Math.floor(t / STEP))
-  const u = t - k * STEP
+export function headlineAt(h: Headline, t: number, timing: HeadlineTiming = HEADLINE_TIMING): HeadlineWord[] {
+  const step = stepOf(timing)
+  const k = Math.max(0, Math.floor(t / step))
+  const u = t - k * step
   if (k === 0) return headlineWords(h, 0)
   const before = headlineWords(h, k - 1)
   const after = headlineWords(h, k)
-  const fadingOut = u < FADE_OUT
+  const fadingOut = u < timing.fadeOut
   const words = fadingOut ? before : after
-  const opacity = fadingOut ? 1 - u / FADE_OUT : Math.min(1, (u - FADE_OUT) / FADE_IN)
+  // Un fundido de 0 s es un corte.
+  const opacity = fadingOut ? 1 - u / timing.fadeOut : timing.fadeIn > 0 ? Math.min(1, (u - timing.fadeOut) / timing.fadeIn) : 1
   return words.map((w, i) => (before[i]!.text === after[i]!.text ? w : { ...w, opacity: smooth(opacity) }))
 }
 
