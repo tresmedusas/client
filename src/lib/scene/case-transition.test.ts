@@ -8,8 +8,8 @@ const FROM: ScreenRect = { x: 0, y: -120, width: 990, height: 660 }
 const TO: ScreenRect = { x: 0, y: 40, width: 990, height: 660 }
 
 describe('transitionView', () => {
-  it('la que se usa: los bordes se tragan el showcase', () => {
-    expect(CASE_TRANSITION).toBe('swallow')
+  it('la que se usa: la card se abre en su página', () => {
+    expect(CASE_TRANSITION).toBe('open')
   })
 
   it('quieta, no se ve nada', () => {

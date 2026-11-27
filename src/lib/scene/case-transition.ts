@@ -26,7 +26,7 @@ export const TRANSITION_KINDS: readonly { kind: TransitionKind; label: string }[
 ]
 
 /** La que se usa (pedido del usuario, 2026-11-27). En desarrollo se puede probar la otra en el banco de pruebas. */
-export const CASE_TRANSITION: TransitionKind = 'swallow'
+export const CASE_TRANSITION: TransitionKind = 'open'
 
 export type TransitionPhase = 'idle' | 'out' | 'in'
 
