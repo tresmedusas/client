@@ -11,12 +11,16 @@
   import { HERO_LOOK } from '$lib/scene/hero-look.js'
   import { FIGURE_CONTROLS as HERO_FIGURE_CONTROLS, HERO_CONTROLS, TIMING_CONTROLS, formatHero } from './hero-lab.js'
   import { FIGURE_LOOK, heroLab } from './hero-lab.svelte.js'
+  import { FOUNDER_OPENS } from '$lib/founder-open.js'
+  import { ABOUT } from '$lib/content.js'
+  import { openFounder } from '$lib/founder-dialog.svelte.js'
+  import { founderLab } from './founder-lab.svelte.js'
 
   /**
    * Banco de pruebas (solo en desarrollo): cada valor de los bordes
    * (`edge-warp.ts`), del tamaño de las cards del showcase (`layout.ts`), del
    * hero de la home (`hero-look.ts`) y de «Cómo trabajamos», en vivo sobre la
-   * escena. Es una herramienta de trabajo, no parte del sitio:
+   * escena, y la apertura del modal de los fundadores (`founder-open.ts`). Es una herramienta de trabajo, no parte del sitio:
    * no se publica en el build.
    */
   interface Props {
@@ -31,17 +35,21 @@
 
   type Values = Record<string, number>
 
-  type Tab = LookName | 'hero' | 'how'
+  type Tab = LookName | 'hero' | 'how' | 'founders'
   const TABS: readonly { tab: Tab; label: string }[] = [
     { tab: 'showcase', label: 'Showcase' },
     { tab: 'home', label: 'Bordes home' },
     { tab: 'hero', label: 'Hero' },
     { tab: 'how', label: 'Cómo trabajamos' },
+    { tab: 'founders', label: 'Nosotros' },
   ]
   let picked = $state<Tab | null>(null)
   const tab = $derived<Tab>(picked ?? (page === 'showcase' ? 'showcase' : page === 'home' ? 'hero' : 'home'))
   /** El look de los bordes que se edita: en las pestañas del hero y de Cómo trabajamos, el de la home. */
-  const name = $derived<LookName>(tab === 'how' || tab === 'hero' ? 'home' : tab)
+  const name = $derived<LookName>(tab === 'how' || tab === 'hero' || tab === 'founders' ? 'home' : tab)
+
+  // Nosotros: la apertura del modal.
+  const founders = founderLab!
 
   // Hero de la home: las medidas, los tiempos del titular y la figura.
   const hero = heroLab!
@@ -77,7 +85,7 @@
   const casesCode = $derived(formatConst('CASE_LOOK', 'CaseLook', cases, CASE_CONTROLS))
 
   const total = $derived(
-    tab === 'how' ? howChanged.size : tab === 'hero' ? heroTotal : lookChanged.size + (name === 'showcase' ? casesChanged.size : 0),
+    tab === 'founders' ? 0 : tab === 'how' ? howChanged.size : tab === 'hero' ? heroTotal : lookChanged.size + (name === 'showcase' ? casesChanged.size : 0),
   )
 
   let copied = $state<string | null>(null)
@@ -91,6 +99,13 @@
     void lab.slowTransition
     void lab.open
     lab.save()
+  })
+
+  $effect(() => {
+    void founders.kind
+    void founders.stagger
+    void founders.slow
+    founders.save()
   })
 
   $effect(() => {
@@ -208,6 +223,27 @@
           </details>
         {/each}
         <small>La capa semántica (sin WebGL) no sigue al banco: toma los valores al pegarlos.</small>
+      {:else if tab === 'founders'}
+        <fieldset>
+          <legend>Apertura del modal</legend>
+          {#each FOUNDER_OPENS as option (option.kind)}
+            <label class="check">
+              <input type="radio" name="founder-open" value={option.kind} bind:group={founders.kind} />
+              {option.label}
+            </label>
+          {/each}
+          <label class="check">
+            <input type="checkbox" bind:checked={founders.stagger} />
+            Contenido escalonado
+          </label>
+          <label class="check">
+            <input type="checkbox" bind:checked={founders.slow} />
+            En cámara lenta (×0.2)
+          </label>
+          <small>Se ve al hacer clic en una card de Nosotros. «La card se abre» necesita la card: desde el botón de abajo (o el link de la capa semántica) es un fundido.</small>
+          <button onclick={() => openFounder(ABOUT.founders[0]!.id)}>Abrir sin card</button>
+        </fieldset>
+        <small>Para quedarte con una, pegá su nombre en <code>FOUNDER_OPEN</code> (<code>founder-open.ts</code>).</small>
       {:else if tab === 'how'}
         <fieldset>
           <legend>De una etapa a la otra</legend>

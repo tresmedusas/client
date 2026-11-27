@@ -7,6 +7,13 @@
  * pantalla nativos) y queda por encima de la escena.
  */
 
+/**
+ * A qué altura cruza el haz, en fracción del alto desde abajo (pedido del
+ * usuario, 2026-11-27: más cerca del borde de abajo; antes, 0.34). El nombre
+ * gigante del modal va detrás, a la misma altura.
+ */
+export const BEAM_HEIGHT = 0.18
+
 const VERTEX = `#version 300 es
 void main() {
   // Un triángulo que cubre la pantalla.
@@ -33,7 +40,7 @@ float beam(float dy, float x) {
 void main() {
   vec2 uv = gl_FragCoord.xy / u_res;
   float aspect = u_res.x / u_res.y;
-  vec2 p = vec2((uv.x - 0.5) * aspect, uv.y - 0.34);
+  vec2 p = vec2((uv.x - 0.5) * aspect, uv.y - ${BEAM_HEIGHT.toFixed(3)});
   float x = p.x;
 
   // Ondulación que se concentra donde cruzan.

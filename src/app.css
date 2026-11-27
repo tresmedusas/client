@@ -276,12 +276,6 @@ body {
   border-radius: 1rem;
 }
 
-.semantic .founders .more {
-  display: inline-block;
-  margin-top: 0.75rem;
-  font-weight: 700;
-}
-
 .semantic .cards p:last-child,
 .semantic .steps p {
   margin: 0;
