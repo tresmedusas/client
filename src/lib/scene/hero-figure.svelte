@@ -23,7 +23,7 @@
   } from 'three'
   import { PALETTE } from '$lib/tokens.js'
   import { Kit, roundedShape } from './figures/kit.js'
-  import { ASPECT, DESIGN_WIDTH, HERO_FIGURES, LOOK, type Shape } from './figures/hero.js'
+  import { DESIGN_WIDTH, HERO_FIGURES, LOOK, type FigureLook, type Shape } from './figures/hero.js'
 
   /**
    * La figura del hero (DESIGN.md §4): la interfaz de lo que nombra el
@@ -33,14 +33,14 @@
    *
    * Cada figura se dibuja una vez en su propio target (plana, vista desde
    * arriba) y entra a la escena como un quad transparente; el panel es un
-   * `<Glass>` de Essentia a z 1, que refracta ese quad. Los valores salen de `LOOK`.
+   * `<Glass>` de Essentia a z 1, que refracta ese quad. Los valores salen de `look`.
    */
   interface Props {
     /** Figura de antes y figura nueva (índices de `HERO_FIGURES`), y cuánto cruzó el panel (0..1). */
     from: number
     to: number
     p: number
-    /** Ancho y alto del marco en px CSS. Si es más bajo que el natural (`ASPECT`), la figura se recorta por abajo. */
+    /** Ancho y alto del marco en px CSS. Si es más bajo que el natural (`look.height`), la figura se recorta por abajo. */
     width: number
     height: number
     /** Centro del marco. */
@@ -48,14 +48,16 @@
     y: number
     /** Fundido: 0 no se dibuja. */
     opacity: number
+    /** Cómo se ve en su marco y cómo cambia: el banco de pruebas pasa el suyo. @default LOOK */
+    look?: FigureLook
   }
 
-  let { from, to, p, width, height, x, y, opacity }: Props = $props()
+  let { from, to, p, width, height, x, y, opacity, look = LOOK }: Props = $props()
 
   /** El alto natural del marco: la placa se acomoda a él, desde arriba. */
-  const natural = $derived(width / ASPECT)
-  /** px CSS por px de diseño: el marco y, con `LOOK.scale`, la placa. */
-  const zoom = $derived((width / DESIGN_WIDTH) * LOOK.scale)
+  const natural = $derived(width / (1 / look.height))
+  /** px CSS por px de diseño: el marco y, con `look.scale`, la placa. */
+  const zoom = $derived((width / DESIGN_WIDTH) * look.scale)
 
   const engine = useEngine()
   const { renderer, invalidate } = useThrelte()
@@ -91,12 +93,6 @@
     shapes.forEach((s, i) => {
       // Cada forma, un poco más arriba que la anterior: tapa lo que tiene debajo.
       const h = 1 + i
-      if (s.kind === 'shadow') {
-        const shadow = kit.shadow(s.w, s.h)
-        shadow.position.set(s.x, 0.5, s.y)
-        scene.add(shadow)
-        return
-      }
       const stroke = s.strong ? kit.strong : kit.normal
       if (s.kind === 'rect') {
         if (s.fill !== undefined) scene.add(surface(new ShapeGeometry(roundedShape(s.w, s.h, Math.min(s.r, s.w / 2, s.h / 2))), s.fill, s.x, s.y, h))
@@ -134,6 +130,9 @@
       split: { value: -1 },
       opacity: { value: 0 },
       size: { value: new Vector2(1, 1) },
+      edgeFade: { value: 0 },
+      bottomFade: { value: 0 },
+      bottomCurve: { value: 1 },
     },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -148,6 +147,9 @@
       uniform float split;
       uniform float opacity;
       uniform vec2 size;
+      uniform float edgeFade;
+      uniform float bottomFade;
+      uniform float bottomCurve;
       varying vec2 vUv;
       void main() {
         vec2 p = vUv * size;
@@ -156,10 +158,11 @@
         vec3 rgb = c.a > 0.0 ? c.rgb / c.a : vec3(0.0);
         rgb = mix(rgb * 12.92, pow(rgb, vec3(1.0 / 2.4)) * 1.055 - 0.055, step(0.0031308, rgb));
         // Nada se corta en el borde del marco: lo que llega se desvanece en
-        // ${LOOK.edgeFade} px; abajo, en un difuminado largo hasta el papel.
+        // edgeFade px; abajo, en un difuminado largo hasta el papel. Con un
+        // fundido de 0 el borde es un corte: el mínimo evita un smoothstep(0, 0).
         float edge = min(min(p.x, size.x - p.x), size.y - p.y);
-        float mask = smoothstep(0.0, ${LOOK.edgeFade.toFixed(1)}, edge);
-        mask *= pow(smoothstep(0.0, ${LOOK.bottomFade.toFixed(3)} * size.y, p.y), ${LOOK.bottomCurve.toFixed(3)});
+        float mask = smoothstep(0.0, max(edgeFade, 0.0001), edge);
+        mask *= pow(smoothstep(0.0, max(bottomFade * size.y, 0.0001), p.y), bottomCurve);
         gl_FragColor = vec4(rgb * c.a, c.a) * opacity * mask;
       }
     `,
@@ -205,30 +208,38 @@
     camera.top = height / 2
     camera.bottom = -height / 2
     // La placa queda donde va en el marco natural, medida desde arriba
-    // (`LOOK.offsetY` más abajo del medio): si el marco es más bajo, se recorta abajo.
-    const look = (height - natural) / 2 / zoom - LOOK.offsetY
-    camera.position.set(0, 1000, look)
-    camera.lookAt(0, 0, look)
+    // (`look.offsetY` más abajo del medio): si el marco es más bajo, se recorta abajo.
+    const target = (height - natural) / 2 / zoom - look.offsetY
+    camera.position.set(0, 1000, target)
+    camera.lookAt(0, 0, target)
     camera.updateMatrixWorld()
     camera.zoom = zoom
     camera.updateProjectionMatrix()
     kit.setResolution(width, height)
     material.uniforms.size!.value.set(width, height)
+    material.uniforms.edgeFade!.value = look.edgeFade
+    material.uniforms.bottomFade!.value = look.bottomFade
+    material.uniforms.bottomCurve!.value = look.bottomCurve
     dirty = true
     invalidate()
   })
 
   // ── El panel ─────────────────────────────────────────────────────
   /** Ancho del panel, en px de diseño; cruza de afuera de la placa a afuera de la placa. */
-  const PANEL = LOOK.panelWidth
-  const RANGE = 170 + PANEL
+  const PANEL = $derived(look.panelWidth)
+  const RANGE = $derived(170 + PANEL)
   const moving = $derived(from !== to && p < 1)
   /** Centro del panel respecto del centro del marco, en px CSS. */
   const panelX = $derived((-RANGE + 2 * RANGE * p) * zoom)
   /** El panel aparece y se va desde 0: sin refracción ni brillo, el vidrio no se ve. */
-  const panelOn = $derived(moving ? Math.sin(Math.PI * p) * opacity * LOOK.glass : 0)
+  const panelOn = $derived(moving ? Math.sin(Math.PI * p) * opacity * look.glass : 0)
   /** Centro de la placa respecto del centro del marco, en px CSS (y hacia arriba). */
-  const boardY = $derived(height / 2 - natural / 2 - LOOK.offsetY * zoom)
+  const boardY = $derived(height / 2 - natural / 2 - look.offsetY * zoom)
+  // El panel va de un poco arriba de la placa (que mide 130 px de diseño
+  // hasta donde llega su contenido) hasta pasar el borde de abajo del marco,
+  // por donde la placa sale: así su canto de abajo no se ve.
+  const panelTop = $derived(boardY + 75 * zoom)
+  const panelBottom = $derived(-height / 2 - 14 * zoom)
 
   $effect(() => {
     material.uniforms.mapFrom!.value = targets[from]!.texture
@@ -251,11 +262,11 @@
 <T is={quad} position.x={x} position.y={y} scale.x={width} scale.y={height} />
 
 {#if panelOn > 0.001}
-  <!-- El panel que hace el cambio: un vidrio limpio, alto como la placa, que cruza el marco. -->
+  <!-- El panel que hace el cambio: un vidrio limpio que cruza el marco, de arriba de la placa hasta el borde de abajo. -->
   <Glass
     preset="clear"
     width={PANEL * zoom}
-    height={150 * zoom}
+    height={panelTop - panelBottom}
     radius={14 * zoom}
     magnify={1}
     refraction={panelOn}
@@ -265,7 +276,7 @@
     rim={0.06 * panelOn}
     shadowOpacity={0}
     x={x + panelX}
-    y={y + boardY}
+    y={y + (panelTop + panelBottom) / 2}
     z={1}
   />
 {/if}

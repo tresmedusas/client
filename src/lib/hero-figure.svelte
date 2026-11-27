@@ -58,21 +58,13 @@
   aria-hidden="true"
   focusable="false"
 >
-  <defs>
-    <radialGradient id="hero-figure-shadow">
-      <stop offset="0" stop-color={FIGURE.stroke} stop-opacity="0.09" />
-      <stop offset="1" stop-color={FIGURE.stroke} stop-opacity="0" />
-    </radialGradient>
-  </defs>
   <g transform="scale({LOOK.scale}) translate(0 {LOOK.offsetY})">
   {#each dots as d (`${d.x},${d.y}`)}
     <circle cx={d.x} cy={d.y} r={1 / LOOK.scale} fill={FIGURE.stroke} fill-opacity={d.o} />
   {/each}
   {#each figure.shapes as s, i (i)}
     <!-- Un relleno es el papel con la tinta encima: tapa lo que tiene debajo. -->
-    {#if s.kind === 'shadow'}
-      <ellipse cx={s.x} cy={s.y} rx={s.w / 2} ry={s.h / 2} fill="url(#hero-figure-shadow)" />
-    {:else if s.kind === 'rect'}
+    {#if s.kind === 'rect'}
       {#if s.fill !== undefined}
         <rect x={s.x - s.w / 2} y={s.y - s.h / 2} width={s.w} height={s.h} rx={Math.min(s.r, s.w / 2, s.h / 2)} fill={PALETTE.paper} />
         <rect x={s.x - s.w / 2} y={s.y - s.h / 2} width={s.w} height={s.h} rx={Math.min(s.r, s.w / 2, s.h / 2)} fill={FIGURE.stroke} fill-opacity={s.fill} />
