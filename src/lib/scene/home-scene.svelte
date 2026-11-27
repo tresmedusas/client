@@ -55,12 +55,16 @@
 </SceneSlot>
 
 <SceneSlot i={3} {...common} height={heights[3]!}>
-  {#snippet children()}
+  {#snippet children(d)}
     <Closing
       section={CONTACT_SECTION.section}
-      links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary, CONTACT_SECTION.tertiary]}
+      links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary]}
       align="center"
       size="section"
+      fullscreen
+      prism
+      {d}
+      {motion}
       {width}
       {viewportWidth}
       {viewportHeight}
