@@ -9,6 +9,7 @@
 
 import { bandHeight, type WarpLook } from './edge-warp.js'
 import { ASPECT as FIGURE_ASPECT } from './figures/hero.js'
+import { HERO_LOOK, type HeroLook } from './hero-look.js'
 
 /** Ancho máximo de la columna de contenido. */
 export const MAX_COLUMN = 1080
@@ -131,20 +132,6 @@ export const LEAD_LINE = 1.35
 /** Ancho medio de un carácter de Lato Black, en em (con el interletrado del display). */
 const TITLE_CHAR = 0.56
 
-/** Ancho máximo del titular del hero en escritorio: el protagonista, en dos líneas. */
-const HERO_TEXT_MAX = 960
-
-/**
- * La figura del hero (su alto natural sale de `figures/hero.ts`): ancho
- * máximo del marco, el alto por debajo del cual no se muestra, la separación
- * mínima desde el botón y qué parte del alto que sobra va arriba del titular
- * (el resto, entre el botón y la figura).
- */
-const HERO_FIGURE_MAX = 1100
-const HERO_FIGURE_MIN_HEIGHT = 120
-const HERO_FIGURE_GAP = 28
-const HERO_SPARE_ABOVE = 0.65
-
 /**
  * Para una columna de `width` en una ventana de `vh` de alto. `title` es el
  * titular más ancho que se va a mostrar, con sus cortes de línea (`\n`).
@@ -158,39 +145,53 @@ const HERO_SPARE_ABOVE = 0.65
  * difumina (y nada si queda muy baja). Lo que sobra se reparte entre arriba
  * del titular y entre el botón y la figura. Sin figura, el titular y el botón
  * quedan centrados en el alto libre, entre la navbar y el margen de abajo.
+ *
+ * Las medidas salen de `look` (`hero-look.ts`) y la proporción del marco de
+ * la figura (ancho / alto), de `figureAspect` (`figures/hero.ts`): el banco
+ * de pruebas pasa las suyas.
  */
-export function heroLayout(width: number, vh: number, compact: boolean, title: string, textHeight?: number): HeroLayout {
-  const textWidth = compact ? width : Math.min(width, HERO_TEXT_MAX)
+export function heroLayout(
+  width: number,
+  vh: number,
+  compact: boolean,
+  title: string,
+  textHeight?: number,
+  look: HeroLook = HERO_LOOK,
+  figureAspect: number = FIGURE_ASPECT,
+): HeroLayout {
+  const textWidth = compact ? width : Math.min(width, look.textMax)
   const lines = title.split('\n')
   const longest = (parts: string[]) => Math.max(...parts.map((p) => p.length))
   const fit = textWidth / ((compact ? longest(title.split(/\s+/)) : longest(lines)) * TITLE_CHAR)
-  const cap = compact ? Math.min(44, width * 0.12) : Math.max(48, Math.min(80, width * 0.07))
+  const cap = compact
+    ? Math.min(look.compactSizeMax, width * look.compactSizeFraction)
+    : Math.max(look.sizeMin, Math.min(look.sizeMax, width * look.sizeFraction))
   const titleSize = Math.min(fit, cap)
   // Cada línea fija ocupa las líneas que necesite a ese tamaño.
   const rows = lines.reduce((n, line) => n + Math.max(1, Math.ceil((line.length * TITLE_CHAR * titleSize) / textWidth)), 0)
-  const gap = compact ? 28 : 40
+  const gap = compact ? look.compactGap : look.gap
   const text = (textHeight ?? titleSize * TITLE_LINE * rows) + gap + CTA_HEIGHT
 
   // La figura llega hasta el borde de abajo de la ventana (pasa el margen de abajo).
-  const figureWidth = Math.floor(Math.min(HERO_FIGURE_MAX, width))
-  const below = vh - NAV_SPACE - text - HERO_FIGURE_GAP
-  const figureHeight = Math.min(Math.floor(figureWidth / FIGURE_ASPECT), below)
-  if (figureHeight >= HERO_FIGURE_MIN_HEIGHT) {
+  const figureWidth = Math.floor(Math.min(look.figureMax, width))
+  const below = vh - NAV_SPACE - text - look.figureGap
+  const figureHeight = Math.min(Math.floor(figureWidth / figureAspect), below)
+  if (figureHeight >= look.figureMinHeight) {
     const spare = below - figureHeight
     return {
       titleSize,
       textWidth,
-      textTop: NAV_SPACE + spare * HERO_SPARE_ABOVE,
+      textTop: NAV_SPACE + spare * look.spareAbove,
       gap,
       figureWidth,
       figureHeight,
-      figureGap: HERO_FIGURE_GAP + spare * (1 - HERO_SPARE_ABOVE),
+      figureGap: look.figureGap + spare * (1 - look.spareAbove),
     }
   }
 
   // Sin figura: el titular y el botón, centrados entre la navbar y el margen de abajo.
   const free = vh - NAV_SPACE - SCENE_BOTTOM
-  return { titleSize, textWidth, textTop: NAV_SPACE + Math.max(0, (free - text) / 2), gap, figureWidth: 0, figureHeight: 0, figureGap: HERO_FIGURE_GAP }
+  return { titleSize, textWidth, textTop: NAV_SPACE + Math.max(0, (free - text) / 2), gap, figureWidth: 0, figureHeight: 0, figureGap: look.figureGap }
 }
 
 /**

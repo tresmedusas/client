@@ -2,10 +2,12 @@
   import { untrack } from 'svelte'
   import { useTask } from '@threlte/core'
   import { HERO } from '$lib/content.js'
-  import { figureAt } from './figures/hero.js'
+  import { heroLab } from '$lib/lab/hero-lab.svelte.js'
+  import { LOOK as FIGURE_LOOK, figureAt } from './figures/hero.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
   import type { SceneFrame } from './deck-logic.js'
-  import { headlineAt, headlineWords, widestHeadline, type HeadlineWord } from './headline.js'
+  import { HEADLINE_TIMING, headlineAt, headlineWords, stepOf, widestHeadline, type HeadlineWord } from './headline.js'
+  import { HERO_LOOK } from './hero-look.js'
   import HeroFigure from './hero-figure.svelte'
   import { CTA_HEIGHT, NAV_SPACE, SCENE_BOTTOM, TITLE_LINE, flow, heroLayout } from './layout.js'
   import MeasuredText from './measured-text.svelte'
@@ -40,12 +42,29 @@
 
   const H = HERO.headline
 
+  // En desarrollo, el banco de pruebas ajusta estos valores en vivo (`$lib/lab`).
+  const look = $derived(heroLab?.look ?? HERO_LOOK)
+  const figureLook = $derived(heroLab?.figure ?? FIGURE_LOOK)
+  const timing = $derived(heroLab?.timing ?? HEADLINE_TIMING)
+
   // Reloj del titular, la figura y el botón: corre solo con el hero a la vista.
   let time = $state(0)
 
+  // Banco de pruebas: «Siguiente combinación» adelanta el reloj al próximo paso.
+  let skipped = heroLab?.skips ?? 0
+  $effect(() => {
+    const skips = heroLab?.skips ?? 0
+    if (skips === skipped) return
+    skipped = skips
+    untrack(() => {
+      const step = stepOf(timing)
+      time = (Math.floor(time / step) + 1) * step
+    })
+  })
+
   // ── Titular ──────────────────────────────────────────────────────
   // Con movimiento reducido, quieto en la primera combinación.
-  const now = $derived<HeadlineWord[]>(motion ? headlineAt(H, time) : headlineWords(H))
+  const now = $derived<HeadlineWord[]>(motion ? headlineAt(H, time, timing) : headlineWords(H))
   // Las palabras cambian de texto cada tanto, la opacidad en cada frame: por
   // separado, para que el texto no se vuelva a maquetar en cada frame.
   const signature = $derived(now.map((w) => w.text).join(' '))
@@ -60,10 +79,12 @@
 
   let titleHeight = $state(0)
   let ctaWidth = $state(0)
-  const layout = $derived(heroLayout(width, viewportHeight, compact, widestHeadline(H), titleHeight || undefined))
+  const layout = $derived(
+    heroLayout(width, viewportHeight, compact, widestHeadline(H), titleHeight || undefined, look, 1 / figureLook.height),
+  )
   /** Entre líneas, y entre palabras (el espacio de Lato, con el interletrado). */
   const lineStep = $derived(layout.titleSize * TITLE_LINE)
-  const space = $derived(layout.titleSize * 0.24)
+  const space = $derived(layout.titleSize * look.wordSpace)
 
   /**
    * Dónde va cada palabra: en escritorio, una línea por cada corte del
@@ -99,9 +120,8 @@
   // Lo que se ve: cada palabra (y el alto del titular) se acerca a su lugar.
   let shown = $state<Record<string, { x: number; row: number }>>({})
   let shownHeight = $state(0)
-  const EASE = 10
   function settle(delta: number) {
-    const k = ready && motion ? 1 - Math.exp(-delta * EASE) : 1
+    const k = ready && motion ? 1 - Math.exp(-delta * look.ease) : 1
     const next: Record<string, { x: number; row: number }> = {}
     for (const [key, to] of Object.entries(target.at)) {
       const from = shown[key] ?? to
@@ -112,7 +132,8 @@
   }
   useTask(
     (delta) => {
-      time += delta
+      // El banco de pruebas puede frenar la rotación para mirar una combinación.
+      if (!heroLab?.paused) time += delta
       settle(delta)
     },
     { running: () => motion && Math.abs(d) < 1 },
@@ -132,7 +153,7 @@
 
   // ── Figura ───────────────────────────────────────────────────────
   // Sigue al titular: cambia cuando cambia «qué construimos».
-  const figure = $derived(motion ? figureAt(H, time) : { from: 0, to: 0, p: 1 })
+  const figure = $derived(motion ? figureAt(H, time, timing, figureLook.wipe) : { from: 0, to: 0, p: 1 })
   const figureY = $derived(ctaY - CTA_HEIGHT - layout.figureGap - layout.figureHeight / 2)
 
   $effect(() => {
@@ -148,7 +169,7 @@
     font={w.accent ? FONT.black : FONT.regular}
     color={w.accent ? PALETTE.ink : PALETTE.muted}
     lineHeight={TITLE_LINE}
-    letterSpacing={-layout.titleSize * 0.02}
+    letterSpacing={-layout.titleSize * look.tracking}
     x={at?.x ?? 0}
     y={titleY - (at?.row ?? 0) * lineStep}
     opacity={ready ? (opacity[w.key] ?? 1) : 0}
@@ -165,6 +186,7 @@
     x={width / 2}
     y={figureY}
     opacity={ready ? 1 : 0}
+    look={figureLook}
   />
 {/if}
 <PrismCta

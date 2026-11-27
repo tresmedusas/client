@@ -26,7 +26,7 @@ npm run build
 | Colores, fuentes y logo | `src/lib/tokens.ts`; fuentes (Lato) en `static/fonts/`, logo en `static/brand/` |
 | Fondo: papel liso | `src/lib/scene/backdrop.frag.glsl` |
 | Comportamiento de las escenas (rueda, arrastre, teclado) | `src/lib/scene/deck.svelte.ts` y `deck-logic.ts` |
-| Hero: posición del texto y del logo | `heroLayout()` en `src/lib/scene/layout.ts` |
+| Hero: tamaño del titular, separaciones y lugar de la figura | `HERO_LOOK` en `src/lib/scene/hero-look.ts` (lo usa `heroLayout()` en `layout.ts`); tiempos de la rotación, `HEADLINE_TIMING` en `headline.ts`; la figura, `LOOK` en `figures/hero.ts`. Se ajustan en vivo en la pestaña «Hero» del banco de pruebas (`npm run dev`) |
 | Logo animado del hero, lente del botón, franja de luz y grano | `src/lib/scene/hero-logo.svelte` (anima `static/brand/medusa-s.svg`), `prism-beams.glsl` (los haces), `prism-ring.frag.glsl` (lente del botón, con la flecha y el aro) y `hero-edge.svelte` + `prism-edge.frag.glsl` (franja de arriba y grano) |
 | Estilo sin WebGL | `src/app.css` |
 
