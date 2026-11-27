@@ -47,9 +47,12 @@
     onopencase: (project: Project, index: number, href: string, from: ScreenRect) => void
     /** Cuánto se enciende el reflejo: según cuán centrada está la card más cercana. */
     onfocus: (focus: number) => void
+    /** La card que trae la transición al volver de su caso: no se dibuja, e informa dónde queda. */
+    landingCase: number | null
+    onanchor: (rect: ScreenRect) => void
   }
 
-  let { width, viewportWidth, viewportHeight, compact, band, look, d, slide, reveal, motion, focusedHref, originY, onopencase, onmeasure, onfocus }: Props = $props()
+  let { width, viewportWidth, viewportHeight, compact, band, look, d, slide, reveal, motion, focusedHref, originY, onopencase, onmeasure, onfocus, landingCase, onanchor }: Props = $props()
 
   /** El tamaño de las cards: en desarrollo, el del banco de pruebas (`$lib/lab`). */
   const cases = $derived(import.meta.env.DEV && lab ? lab.cases : CASE_LOOK)
@@ -96,6 +99,18 @@
   })
   const focus = $derived(headHeight === 0 ? 0 : reflectFocus(offsets, card.width, look) * presence)
   $effect(() => onfocus(focus))
+
+  /** Dónde está la card `i` en la ventana: de dónde sale la transición al abrirla, y adónde llega al volver. */
+  const rectOf = (i: number): ScreenRect => ({
+    x: offsets[i]!,
+    y: originY - intro.cardTop - card.height / 2,
+    width: card.width,
+    height: card.height,
+  })
+
+  $effect(() => {
+    if (landingCase !== null && headHeight > 0) onanchor(rectOf(landingCase))
+  })
 </script>
 
 <T.Group position.x={(width - headWidth) / 2} position.y={-intro.titleTop}>
@@ -114,21 +129,17 @@
 <T.Group position.y={-intro.cardTop}>
   {#each SHOWCASE.projects as project, i (project.id)}
     {@const href = caseHref(project.id)}
-    <CaseCard
-      {project}
-      index={i}
-      cx={cx + offsets[i]!}
-      y={0}
-      cardWidth={card.width}
-      cardHeight={card.height}
-      focused={focusedHref === href}
-      onopen={() =>
-        onopencase(project, i, href, {
-          x: offsets[i]!,
-          y: originY - intro.cardTop - card.height / 2,
-          width: card.width,
-          height: card.height,
-        })}
-    />
+    {#if i !== landingCase}
+      <CaseCard
+        {project}
+        index={i}
+        cx={cx + offsets[i]!}
+        y={0}
+        cardWidth={card.width}
+        cardHeight={card.height}
+        focused={focusedHref === href}
+        onopen={() => onopencase(project, i, href, rectOf(i))}
+      />
+    {/if}
   {/each}
 </T.Group>

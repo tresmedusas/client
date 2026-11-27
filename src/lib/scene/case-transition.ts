@@ -1,19 +1,22 @@
 import type { WarpLook } from './edge-warp.js'
 
 /**
- * La transición al abrir un caso desde su card del showcase (pedido del
- * usuario, 2026-11-26). De tres demos, el usuario eligió `swallow` y guardó
- * `open` para más adelante (la zambullida se descartó). Cada una tiene dos fases:
- * `out`, todavía en el showcase, y `in`, ya en la página del caso. Entre las
- * dos cambia la página, siempre tapada (por el velo de papel o por la card).
+ * La transición al abrir un caso desde su card del showcase, y al volver de
+ * él (pedidos del usuario, 2026-11-26). De tres demos, el usuario eligió
+ * `open` (2026-11-27; antes había elegido `swallow`, que queda guardada en el
+ * banco de pruebas; la zambullida se descartó). Cada una tiene dos fases:
+ * `out`, todavía en la página de la que se sale, y `in`, ya en la nueva. Entre
+ * las dos cambia la página, siempre tapada (por el velo de papel o por la card).
  *
  * - `open`: la card se abre en su página. Las demás cosas se apagan bajo un
  *   velo de papel, la card queda, y en la página del caso viaja hasta el
- *   lugar de su previsualización mientras el velo se va.
+ *   lugar de su previsualización mientras el velo se va. Al volver al
+ *   showcase (el botón de volver o la navbar), lo mismo de vuelta (pedido del
+ *   usuario, 2026-11-27): la previsualización queda sola bajo el velo y viaja
+ *   hasta su card en el showcase.
  * - `swallow`: los bordes se tragan el showcase. Las franjas crecen hasta
  *   juntarse en el centro, estirando todo, y la página del caso aparece
- *   cuando se retiran. Al volver al showcase desde un caso (el botón de
- *   volver o la navbar), lo mismo de vuelta (pedido del usuario, 2026-11-26).
+ *   cuando se retiran. Al volver al showcase, lo mismo de vuelta.
  */
 export type TransitionKind = 'open' | 'swallow'
 
@@ -22,8 +25,8 @@ export const TRANSITION_KINDS: readonly { kind: TransitionKind; label: string }[
   { kind: 'swallow', label: 'Los bordes se tragan el showcase' },
 ]
 
-/** La que se usa (pedido del usuario, 2026-11-26). En desarrollo se puede probar la otra en el banco de pruebas. */
-export const CASE_TRANSITION: TransitionKind = 'swallow'
+/** La que se usa (pedido del usuario, 2026-11-27). En desarrollo se puede probar la otra en el banco de pruebas. */
+export const CASE_TRANSITION: TransitionKind = 'open'
 
 export type TransitionPhase = 'idle' | 'out' | 'in'
 
@@ -74,8 +77,10 @@ export function mixRect(a: ScreenRect, b: ScreenRect, t: number): ScreenRect {
 }
 
 /**
- * Cómo se ve la transición: `from`, la card que se tocó; `to`, dónde queda en
- * la página del caso (la informa la página: hasta entonces, la fase `in` espera).
+ * Cómo se ve la transición: `from`, dónde está la card al salir (la que se
+ * tocó en el showcase, o la previsualización del caso al volver); `to`, dónde
+ * queda en la página nueva (la informa la página: hasta entonces, la fase
+ * `in` espera).
  */
 export function transitionView(
   kind: TransitionKind,

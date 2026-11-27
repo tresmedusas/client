@@ -40,7 +40,7 @@
   /** El foco está en la navbar (el `header` de la capa semántica): un link del contenido con el mismo href no lleva el anillo, y al revés. */
   let focusInNav = $state(false)
 
-  /** La transición al abrir un caso: en desarrollo, la que se elija en el banco de pruebas (las demos). */
+  /** La transición al abrir un caso y al volver de él: en desarrollo, la que se elija en el banco de pruebas (las demos). */
   const transition = new CaseTransition()
   const transitionKind = $derived(import.meta.env.DEV && lab ? lab.transition : CASE_TRANSITION)
   $effect(() => {
@@ -84,6 +84,7 @@
       const left = caseOf(path)
       returnCase = left && pageOf(next) === 'showcase' ? SHOWCASE.projects.indexOf(left) : null
       path = next
+      transition.placed = null
       deck.reset(scenesOf(next).length, Math.max(0, sceneIndex(scenesOf(next), location.hash)))
       transition.arrive(next)
     } else if (location.hash) showScene(location.hash)
@@ -134,11 +135,20 @@
     }
     const next = `${url.pathname}${url.hash}`
     // De un caso al showcase (el botón de volver o la navbar), la misma
-    // transición que al abrirlo, al revés de lugar: los bordes del caso se
-    // tragan la página y el showcase aparece cuando las franjas se retiran.
-    if (page === 'case' && target === '/showcase' && transitionKind === 'swallow' && !reducedMotion && !transition.active) {
-      transition.start('swallow', target, () => void goto(next))
-      return
+    // transición que al abrirlo, de vuelta. Con «la card se abre», la
+    // previsualización queda sola bajo el velo y viaja hasta su card en el
+    // showcase; con «los bordes se tragan», los del caso se tragan la página
+    // y el showcase aparece cuando las franjas se retiran.
+    if (page === 'case' && target === '/showcase' && !reducedMotion && !transition.active) {
+      if (transitionKind === 'swallow') {
+        transition.start('swallow', target, () => void goto(next))
+        return
+      }
+      const from = transition.placed
+      if (project && from) {
+        transition.start('open', target, () => void goto(next), { project, index: SHOWCASE.projects.indexOf(project), from })
+        return
+      }
     }
     void goto(next)
   }

@@ -3,8 +3,9 @@
   import { useEngine } from 'essentia-core'
   import { Rect, TextNode } from 'essentia-primitives'
   import { untrack } from 'svelte'
-  import { Color, LinearFilter, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, SRGBColorSpace, Texture, TextureLoader, Vector2, WebGLRenderTarget } from 'three'
-  import { ABOUT, initials, type Person } from '$lib/content.js'
+  import { Color, LinearFilter, Mesh, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, SRGBColorSpace, Texture, TextureLoader, Vector2, Vector3, WebGLRenderTarget } from 'three'
+  import { initials, type Person } from '$lib/content.js'
+  import type { ViewportRect } from '$lib/founder-open.js'
   import { FONT, PALETTE } from '$lib/tokens.js'
   import fragmentShader from './founder-card.frag.glsl'
   import vertexShader from './founder-card.vert.glsl'
@@ -12,8 +13,8 @@
   /**
    * Card de un fundador: oscura, con un tilt 3D hacia el puntero. La foto va
    * a sangre y el contenido, centrado
-   * (DESIGN.md §6): «Fundador» arriba, el nombre y la profesión abajo, y al
-   * pie «Conocer a …», que abre su modal.
+   * (DESIGN.md §6): «Fundador» arriba y el nombre y la profesión al pie. Un
+   * clic en la card abre su modal.
    *
    * El texto se dibuja una vez en una textura (`content`) y la card entera es
    * un solo quad: así se inclina con perspectiva sin que sus partes se
@@ -27,9 +28,10 @@
     width: number
     height: number
     compact: boolean
-    /** Tiene el foco del teclado (el link «Conocer a …» de la capa semántica). */
+    /** Tiene el foco del teclado (el link del nombre en la capa semántica). */
     focused: boolean
-    onopen: (id: string) => void
+    /** Abre el modal, desde donde está la card en la ventana. */
+    onopen: (id: string, from: ViewportRect | null) => void
   }
 
   let { person, x, y, width, height, compact, focused, onopen }: Props = $props()
@@ -43,7 +45,7 @@
   const MAX_TILT = 0.2
   const PERSPECTIVE = 900
 
-  const { renderer, invalidate } = useThrelte()
+  const { renderer, camera, invalidate } = useThrelte()
   const engine = useEngine()
   const dpr = $derived(engine.viewport.dpr)
 
@@ -58,14 +60,12 @@
   target.texture.minFilter = LinearFilter
 
   const nodes = untrack(() => {
-    const cta = ABOUT.card.cta(person.name).toUpperCase()
     const center = { anchorX: 0.5, alignment: 'center', anchorY: 1 } as const
     return {
-      label: new TextNode({ text: ABOUT.card.label, fontSize: 18, color: PALETTE.white, font: FONT.bold, letterSpacing: -0.2, anchorX: 0.5, anchorY: 0.5, dpr }),
+      label: new TextNode({ text: person.label, fontSize: 18, color: PALETTE.white, font: FONT.bold, letterSpacing: -0.2, anchorX: 0.5, anchorY: 0.5, dpr }),
       initials: new TextNode({ text: initials(person.name), fontSize: 30, color: PALETTE.white, font: FONT.bold, letterSpacing: 1, anchorX: 0.5, anchorY: 0.5, dpr }),
       name: new TextNode({ text: person.name, fontSize: 26, color: PALETTE.white, font: FONT.regular, lineHeight: 1.15, letterSpacing: -0.3, ...center, dpr }),
       role: new TextNode({ text: person.role, fontSize: 13, color: dim(0.4), font: FONT.regular, lineHeight: 1.35, ...center, dpr }),
-      cta: new TextNode({ text: cta, color: dim(0.35), fontSize: 10.5, font: FONT.bold, letterSpacing: 1.8, lineHeight: 1.2, ...center, dpr }),
     }
   })
   const all = Object.values(nodes)
@@ -79,9 +79,7 @@
   /** Ubica el texto (con los altos ya medidos) y lo dibuja en la textura. */
   function paint() {
     if (width <= 0 || height <= 0) return
-    const footerY = -(height - INSET)
-    const ctaHeight = heightOf(nodes.cta)
-    const roleBottom = footerY + ctaHeight + 30
+    const roleBottom = -(height - INSET)
     const nameBottom = roleBottom + heightOf(nodes.role) + 6
     nodes.initials.setFontSize(Math.round(width * 0.28))
 
@@ -89,7 +87,6 @@
     nodes.initials.setPosition(width / 2, -height / 2, 0)
     nodes.name.setPosition(width / 2, nameBottom, 0)
     nodes.role.setPosition(width / 2, roleBottom, 0)
-    nodes.cta.setPosition(width / 2, footerY, 0)
 
     const previous = renderer.getRenderTarget()
     const clearColor = renderer.getClearColor(new Color())
@@ -210,10 +207,23 @@
     { running: () => settling },
   )
 
-  // El pie se enciende con el puntero encima: el texto se vuelve a dibujar.
-  $effect(() => {
-    nodes.cta.setColor(hovering || focused ? PALETTE.white : dim(0.35))
-  })
+  // ── Dónde está la card en la ventana, para que el modal se abra desde ella ──
+  let mesh = $state<Mesh>()
+  const corner = new Vector3()
+
+  function viewportRect(): ViewportRect | null {
+    if (!mesh) return null
+    const canvas = renderer.domElement.getBoundingClientRect()
+    mesh.updateWorldMatrix(true, false)
+    const toViewport = (cx: number, cy: number) => {
+      corner.set(cx, cy, 0)
+      mesh!.localToWorld(corner).project(camera.current)
+      return { x: canvas.left + ((corner.x + 1) / 2) * canvas.width, y: canvas.top + ((1 - corner.y) / 2) * canvas.height }
+    }
+    const a = toViewport(-width / 2, height / 2)
+    const b = toViewport(width / 2, -height / 2)
+    return { left: a.x, top: a.y, width: b.x - a.x, height: b.y - a.y }
+  }
 
   $effect(() => () => {
     for (const off of offs) off()
@@ -225,7 +235,7 @@
 </script>
 
 <!-- El quad: centrado en la card, con el margen de la sombra alrededor. -->
-<T.Mesh position.x={x} position.y={y} position.z={0} frustumCulled={false}>
+<T.Mesh bind:ref={mesh} position.x={x} position.y={y} position.z={0} frustumCulled={false}>
   <T is={geometry} />
   <T is={material} />
 </T.Mesh>
@@ -255,6 +265,6 @@
   onclick={(e) => {
     // Un arrastre del deck que termina sobre la card no la abre.
     if (e.delta > 6) return
-    onopen(person.id)
+    onopen(person.id, viewportRect())
   }}
 />
