@@ -74,6 +74,16 @@ export const FIGURE_CONTROLS: readonly ControlGroup<keyof FigureLook>[] = [
       { key: 'glass', label: 'Intensidad del vidrio', min: 0, max: 1, step: 0.01 },
     ],
   },
+  {
+    title: 'Volumen (vista oblicua)',
+    controls: [
+      { key: 'plateDepth', label: 'Alto de la placa (px de diseño)', min: 0, max: 30, step: 0.5 },
+      { key: 'depth', label: 'Alto de cards y botones (px de diseño)', min: 0, max: 20, step: 0.5, hint: 'Nunca más del 40 % del lado más corto de cada forma.' },
+      { key: 'accentDepth', label: 'Alto del acento (px de diseño)', min: 0, max: 30, step: 0.5 },
+      { key: 'obliqueAngle', label: 'Ángulo de la oblicua (°)', min: 0, max: 360, step: 1, hint: 'Hacia dónde se corre lo alto: 0, a la izquierda; 90, hacia arriba; 180, a la derecha; 270, hacia abajo.' },
+      { key: 'obliqueRatio', label: 'Cuánto se corre por px de alto', min: 0, max: 1.5, step: 0.01, hint: '0.5: oblicua «cabinet»; 1: «cavalier».' },
+    ],
+  },
 ]
 
 /** El look de la figura como código para pegar en `figures/hero.ts` (ahí va `as const` y sin tipo). */
