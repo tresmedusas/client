@@ -132,12 +132,19 @@
   // Cuánto espera la página antes de bajar después del click (`clickDelay`, en
   // ms): lo que tarda la onda en cruzar la píldora, para que se vea el destello.
   let pending: ReturnType<typeof setTimeout> | undefined
+  /**
+   * Un link afuera (WhatsApp, en Contacto) abre otra pestaña: va enseguida,
+   * dentro del click, o el navegador puede bloquearla; el destello sigue en
+   * esta página.
+   */
+  const external = $derived(/^https?:/.test(link.href))
   function activate() {
     if (pending) return
     // En el banco de pruebas, el click puede solo destellar, sin navegar.
     const navigate = prismLab?.navigate ?? true
     if (!motion) return navigate ? onnavigate(link.href) : undefined
     clickAt = time
+    if (external) return navigate ? onnavigate(link.href) : undefined
     pending = setTimeout(() => {
       pending = undefined
       if (navigate) onnavigate(link.href)

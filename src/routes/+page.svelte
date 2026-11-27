@@ -77,8 +77,11 @@
   <h2 id="{CONTACT_SECTION.section.id}-title"><InlineHeadline text={CONTACT_SECTION.section.title} /></h2>
   <p><LeadIn text={CONTACT_SECTION.section.intro} /></p>
   <p class="actions">
-    <a class="button" href={CONTACT_SECTION.primary.href} rel="noopener" target="_blank">{CONTACT_SECTION.primary.label}</a>
+    <a class="button deep with-lens" href={CONTACT_SECTION.primary.href} rel="noopener" target="_blank">
+      <span class="lens" aria-hidden="true">
+        <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" /></svg>
+      </span>{CONTACT_SECTION.primary.label}
+    </a>
     <a class="button secondary" href={CONTACT_SECTION.secondary.href}>{CONTACT_SECTION.secondary.label}</a>
-    <a class="button secondary" href={CONTACT_SECTION.tertiary.href} rel="noopener" target="_blank">{CONTACT_SECTION.tertiary.label}</a>
   </p>
 </section>
