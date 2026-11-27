@@ -7,7 +7,7 @@ Leé esta guía antes de crear una rama, commitear o abrir un PR.
 - **`main`** es la rama estable y **`develop`** la de integración. Ninguna de las dos recibe commits directos.
 - **Las ramas de trabajo salen de `develop`** y se llaman `<tipo>/<descripcion-en-kebab-case>`, en inglés (`feat/case-page`, `fix/showcase-scene-bottom`). El `<tipo>` es el mismo que el de los commits. Las ramas `claude/<descripcion>` que crea Claude Code al abrir un worktree también valen.
 - **Flujo:** rama de trabajo → PR a `develop` → PR de `develop` a `main`.
-- **El PR de `develop` a `main` es un release:** revisá qué incluye antes de pedir el merge.
+- **El PR de `develop` a `main` es un release:** revisá qué incluye antes de pedir el merge. El flujo completo está en la skill `/release` ([`.claude/skills/release/SKILL.md`](../../.claude/skills/release/SKILL.md)), que solo corre cuando el usuario la invoca.
 - **Nunca** hagas force push a `main` ni a `develop`. En tu propia rama, solo si nadie más trabaja sobre ella.
 
 ## Commits
