@@ -4,6 +4,9 @@
   import { CASE_CONTROLS, CONTROL_GROUPS, WARP_CONST, changedKeys, decimals, formatConst, type ControlGroup, type LookName } from './warp-lab.js'
   import { DEFAULT_LOOKS, lab as maybeLab } from './warp-lab.svelte.js'
   import { TRANSITION_KINDS } from '$lib/scene/case-transition.js'
+  import { FIGURE_PLATES, HOW_LOOK, SHEET_MODES } from '$lib/scene/how-work-look.js'
+  import { FIGURE_CONTROLS, HOW_GROUPS, SHEET_CONTROLS, formatHowLook } from './how-lab.js'
+  import { howLab } from './how-lab.svelte.js'
 
   /**
    * Banco de pruebas (solo en desarrollo): cada valor de los bordes
@@ -23,8 +26,18 @@
 
   type Values = Record<string, number>
 
-  let picked = $state<LookName | null>(null)
-  const name = $derived<LookName>(picked ?? (page === 'showcase' ? 'showcase' : 'home'))
+  type Tab = LookName | 'how'
+  let picked = $state<Tab | null>(null)
+  const tab = $derived<Tab>(picked ?? (page === 'showcase' ? 'showcase' : 'home'))
+  /** El look de los bordes que se edita: en la pestaña de Cómo trabajamos, el de la home. */
+  const name = $derived<LookName>(tab === 'how' ? 'home' : tab)
+
+  // Cómo trabajamos.
+  const how = howLab!
+  const howValues = $derived(how.look as unknown as Values)
+  const howDefaults = HOW_LOOK as unknown as Values
+  const howChanged = $derived(new Set<string>(changedKeys(howDefaults, howValues, HOW_GROUPS)))
+  const howCode = $derived(formatHowLook(how.look, how.sheets, how.plate, how.solid))
 
   // Bordes del look elegido.
   const look = $derived(lab.looks[name] as unknown as Values)
@@ -38,7 +51,7 @@
   const casesChanged = $derived(new Set<string>(changedKeys(caseDefaults, cases, CASE_CONTROLS)))
   const casesCode = $derived(formatConst('CASE_LOOK', 'CaseLook', cases, CASE_CONTROLS))
 
-  const total = $derived(lookChanged.size + (name === 'showcase' ? casesChanged.size : 0))
+  const total = $derived(tab === 'how' ? howChanged.size : lookChanged.size + (name === 'showcase' ? casesChanged.size : 0))
 
   let copied = $state<string | null>(null)
 
@@ -51,6 +64,14 @@
     void lab.slowTransition
     void lab.open
     lab.save()
+  })
+
+  $effect(() => {
+    JSON.stringify(how.look)
+    void how.sheets
+    void how.plate
+    void how.solid
+    how.save()
   })
 
   async function copy(what: string, code: string) {
@@ -117,15 +138,51 @@
   {#if lab.open}
     <div class="body">
       <div class="tabs" role="tablist">
-        {#each ['showcase', 'home'] as const as option (option)}
-          <button role="tab" aria-selected={name === option} onclick={() => (picked = option)}>
-            {option === 'showcase' ? 'Showcase' : 'Home'}
+        {#each ['showcase', 'home', 'how'] as const as option (option)}
+          <button role="tab" aria-selected={tab === option} onclick={() => (picked = option)}>
+            {option === 'showcase' ? 'Showcase' : option === 'home' ? 'Home' : 'Cómo trabajamos'}
           </button>
         {/each}
       </div>
-      {#if name !== (page === 'showcase' ? 'showcase' : 'home')}
+      {#if (tab === 'showcase') !== (page === 'showcase')}
         <p class="note">Estás editando otra página: vas a ver el cambio cuando la abras.</p>
       {/if}
+
+      {#if tab === 'how'}
+        <fieldset>
+          <legend>De una etapa a la otra</legend>
+          {#each SHEET_MODES as option (option.mode)}
+            <label class="check">
+              <input type="radio" name="how-sheets" value={option.mode} bind:group={how.sheets} />
+              {option.label}
+            </label>
+          {/each}
+          <small>En hojas, cada etapa llena la ventana y la siguiente sube y la tapa.</small>
+        </fieldset>
+        {@render controls(SHEET_CONTROLS, howValues, howDefaults, howChanged, 'how-sheets')}
+        <fieldset>
+          <legend>Detrás de la figura</legend>
+          {#each FIGURE_PLATES as option (option.plate)}
+            <label class="check">
+              <input type="radio" name="how-plate" value={option.plate} bind:group={how.plate} />
+              {option.label}
+            </label>
+          {/each}
+          <label class="check">
+            <input type="checkbox" bind:checked={how.solid} />
+            Acento sólido oscuro (la lupa, la tarea en curso)
+          </label>
+        </fieldset>
+        {@render controls(FIGURE_CONTROLS, howValues, howDefaults, howChanged, 'how-figures')}
+        <div class="actions">
+          <button class="primary" onclick={() => copy('how', howCode)}>{copied === 'how' ? 'Copiado' : 'Copiar look'}</button>
+          <button onclick={() => how.reset()}>Restablecer</button>
+        </div>
+        <details>
+          <summary>Código para <code>how-work-look.ts</code></summary>
+          <pre>{howCode}</pre>
+        </details>
+      {:else}
 
       <fieldset>
         <legend>Transición al abrir un caso</legend>
@@ -169,6 +226,7 @@
         <summary>Código para <code>edge-warp.ts</code></summary>
         <pre>{lookCode}</pre>
       </details>
+      {/if}
     </div>
   {/if}
 </aside>
@@ -238,7 +296,7 @@
 
   .tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1.6fr;
     gap: 4px;
   }
 

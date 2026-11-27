@@ -178,12 +178,14 @@ export const ABOUT = {
 export const CONTACT_SECTION = {
   section: {
     id: 'contacto',
-    title: 'Cuéntanos **tu proceso.** Lo vemos **juntos.**',
-    intro: 'Una llamada corta basta. Escríbenos qué se hace hoy a mano y vemos si podemos ayudarte.',
+    /** Pedido del usuario, 2026-11-27: Tres Medusas hace soluciones integrales, sin foco en WhatsApp ni solo en el software. */
+    title: 'Lo que necesites, **lo solucionamos.**',
+    intro: 'No hace falta tenerlo claro. Cuéntanos qué te frena y armamos juntos la mejor forma de resolverlo.',
   } satisfies Section,
-  primary: WRITE_US,
-  secondary: { label: CONTACT.email, href: `mailto:${CONTACT.email}` } satisfies Link,
-  tertiary: { label: 'LinkedIn', href: CONTACT.linkedin } satisfies Link,
+  /** Por WhatsApp, con el botón del hero (pedido del usuario, 2026-11-27: «Contáctanos»; sin el mail ni LinkedIn). */
+  primary: { ...WRITE_US, label: 'Contáctanos' } satisfies Link,
+  /** Pedido del usuario, 2026-11-27. */
+  secondary: { label: 'Conocer nuestros trabajos', href: '/showcase' } satisfies Link,
 } as const
 
 /** Escenas de la home, en orden. */

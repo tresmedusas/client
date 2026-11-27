@@ -24,6 +24,8 @@
   let { deck, width, viewportWidth, viewportHeight, compact, year, focusedHref, onnavigate, motion = true }: Props = $props()
 
   let heights = $state(HOME_SCENES.map(() => 0))
+  /** El recorrido de las hojas de «Cómo trabajamos» (0 si van de corrido). */
+  let howTrack = $state(0)
   const common = $derived({ deck, width, viewportHeight })
 </script>
 
@@ -33,17 +35,20 @@
   {/snippet}
 </SceneSlot>
 
-<SceneSlot i={1} {...common} height={heights[1]!}>
-  {#snippet children(d, frame)}
-    <!-- Cuánto subió el contenido (transición más scroll interno): las etapas aparecen según dónde quedan en la ventana. -->
+<SceneSlot i={1} {...common} height={heights[1]!} track={howTrack}>
+  {#snippet children(d, frame, slide, rise)}
+    <!-- Cuánto subió el contenido (transición más scroll interno): las etapas aparecen según dónde quedan en la ventana. En hojas, el resto del scroll interno (`slide`) sube las hojas. -->
     <HowWork
       {width}
+      {viewportWidth}
       {viewportHeight}
       {compact}
       {d}
-      top={frame.top - deck.shift(1) - deck.innerOf(1)}
+      top={frame.top - deck.shift(1) - rise}
+      {slide}
       {motion}
       onmeasure={(h) => (heights[1] = h)}
+      ontrack={(t) => (howTrack = t)}
     />
   {/snippet}
 </SceneSlot>
@@ -55,12 +60,16 @@
 </SceneSlot>
 
 <SceneSlot i={3} {...common} height={heights[3]!}>
-  {#snippet children()}
+  {#snippet children(d)}
     <Closing
       section={CONTACT_SECTION.section}
-      links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary, CONTACT_SECTION.tertiary]}
+      links={[CONTACT_SECTION.primary, CONTACT_SECTION.secondary]}
       align="center"
       size="section"
+      fullscreen
+      prism
+      {d}
+      {motion}
       {width}
       {viewportWidth}
       {viewportHeight}

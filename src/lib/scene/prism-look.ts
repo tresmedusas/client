@@ -5,71 +5,13 @@
  * desarrollo se ajustan en vivo y «Copiar valores» da este objeto para pegar.
  */
 
-/** Cuántos haces puede haber como mucho (el shader reserva lugar para todos). */
-export const MAX_BEAMS = 4
+import { BEAM_UNIFORMS, type BeamLook } from './beam-look.js'
 
-export interface PrismLook {
-  // ── Haces ──
-  /** Cuántos haces (1 a `MAX_BEAMS`). */
-  beams: number
-  /** Inclinación base, en grados. */
-  angle: number
-  /** Cuánto se separa cada haz de la base, al azar, en grados. */
-  angleSpread: number
-  /** Vaivén del ángulo, en grados. */
-  wobble: number
-  /** Ancho del haz, en px. */
-  width: number
-  speed: number
-  /** Recorrido (1: llega a los bordes de lo que cruzan). */
-  range: number
-  /** 0: borde del haz duro, 1: suave. */
-  soft: number
+export { MAX_BEAMS, hueRanges } from './beam-look.js'
 
-  // ── Color de cada haz: centro y amplitud del rango, en grados ──
-  hue1: number
-  hueRange1: number
-  hue2: number
-  hueRange2: number
-  hue3: number
-  hueRange3: number
-  hue4: number
-  hueRange4: number
-
-  // ── Espectro ──
-  /** Cuánto espectro entra a lo ancho del haz. */
-  spectrum: number
-  /** Cuánto cambian los colores al azar. */
-  specVar: number
-  /** Qué tan rápido cambian. */
-  specRate: number
-  /** Corrimiento entre canales, en px. */
-  spread: number
-  /** Núcleo blanco. */
-  core: number
-  /** Ancho del núcleo, en anchos de haz. */
-  coreWidth: number
-  /** Bandas finas. */
-  stripes: number
-  /** Separación de las bandas, en px. */
-  stripeGap: number
-  /** Manchas de color que fluyen por el haz (0: sin manchas). */
-  flowAmount: number
-  /** Tamaño de las manchas, en px. */
-  flowScale: number
-  flowSpeed: number
-  /** Cuánto se deforman las manchas. */
-  flowWarp: number
-  /** Cuánto se corren a lo largo. */
-  flowDrift: number
-
-  // ── Brillo ──
-  floor: number
-  peak: number
-  /** Velocidad del titileo. */
-  flicker: number
-  /** Tamaño de los tramos que titilan, en px. */
-  patch: number
+/** Los haces son los de `beam-look.ts`; lo demás es del botón. */
+export interface PrismLook extends BeamLook {
+  // ── Brillo con el puntero ──
   /** Cuánto más brillan los haces con el puntero encima (0.3 = 30 %). */
   hover: number
   /** Qué tan rápido entra y sale el brillo del hover (por segundo). */
@@ -243,35 +185,11 @@ export const PRISM_LOOK: PrismLook = {
 
 /**
  * Las claves del look que van al shader, con el nombre de su uniform (en
- * mayúsculas, como eran las constantes). Los colores de cada haz van aparte,
- * en `HUES`.
+ * mayúsculas, como eran las constantes): las de los haces (`BEAM_UNIFORMS`) y
+ * las del botón. Los colores de cada haz van aparte, en `HUES`.
  */
 export const SHADER_UNIFORMS = {
-  beams: 'BEAMS',
-  angle: 'ANGLE',
-  angleSpread: 'ANGLE_SPREAD',
-  wobble: 'WOBBLE',
-  width: 'WIDTH',
-  speed: 'SPEED',
-  range: 'RANGE',
-  soft: 'SOFT',
-  spectrum: 'SPECTRUM',
-  specVar: 'SPEC_VAR',
-  specRate: 'SPEC_RATE',
-  spread: 'SPREAD',
-  core: 'CORE',
-  coreWidth: 'CORE_WIDTH',
-  stripes: 'STRIPES',
-  stripeGap: 'STRIPE_GAP',
-  flowAmount: 'FLOW_AMT',
-  flowScale: 'FLOW_SCALE',
-  flowSpeed: 'FLOW_SPEED',
-  flowWarp: 'FLOW_WARP',
-  flowDrift: 'FLOW_DRIFT',
-  floor: 'FLOOR',
-  peak: 'PEAK',
-  flicker: 'FLICKER',
-  patch: 'PATCH',
+  ...BEAM_UNIFORMS,
   hover: 'HOVER',
   ring: 'RING',
   lens: 'LENS',
@@ -296,13 +214,3 @@ export const SHADER_UNIFORMS = {
   pillBend: 'PILL_BEND',
   pillRoam: 'PILL_ROAM',
 } as const satisfies Partial<Record<keyof PrismLook, string>>
-
-/** Centro y amplitud del rango de color de cada haz, en grados. */
-export function hueRanges(look: PrismLook): [number, number][] {
-  return [
-    [look.hue1, look.hueRange1],
-    [look.hue2, look.hueRange2],
-    [look.hue3, look.hueRange3],
-    [look.hue4, look.hueRange4],
-  ]
-}
