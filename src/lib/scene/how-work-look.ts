@@ -74,7 +74,7 @@ export const HOW_LOOK: HowWorkLook = {
   hold: 0.35,
   sink: 0.92,
   veil: 0.005,
-  radius: 0,
+  radius: 58,
   shadow: 0.015,
   shadowSpread: 40,
   glassBlur: 14,
