@@ -38,11 +38,11 @@ El historial anterior a esta guía está en español y sin tipo: no lo reescriba
 - **Capturas** si cambia algo visual.
 - **Base del PR:** `develop`. Solo el PR de release apunta a `main`.
 - **Un tema por PR,** chico y revisable. Los refactors y reformateos van en PRs separados.
-- **Verificación:** no hay CI, así que la Definition of Done de `AGENTS.md` se corre en local antes de pedir el merge. Qué correr, en [`environment.md`](./environment.md#verificación-local).
+- **Verificación:** no hay CI de tests ni de tipos, así que la Definition of Done de `AGENTS.md` se corre en local antes de pedir el merge. Qué correr, en [`environment.md`](./environment.md#verificación-local). El check `Vercel` solo dice que el build pasó y deja la preview para revisar.
 - **Merge:** con merge commit.
 
 ## Deploy
 
-- **Qué se deploya:** `npm run build` deja el sitio estático en `build/`, que sirve cualquier hosting estático. El repo no tiene configuración de hosting ni un workflow que deploye.
+- **Qué se deploya:** `npm run build` deja el sitio estático en `build/`. Lo deploya Vercel con su integración de GitHub: cada PR recibe un deploy de preview, que aparece como check `Vercel`. La configuración vive en Vercel, no en el repo.
 - **El paquete es privado** (`"private": true`) y no se versiona: no hay bumps ni CHANGELOG.
 - **Un agente no deploya** ni configura un hosting sin un pedido explícito.

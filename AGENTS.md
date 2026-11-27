@@ -11,7 +11,7 @@ Tres Medusas — landing es el sitio de Tres Medusas, hecho con [Essentia](https
 - **Repo:** un solo paquete privado (`tres-medusas`), npm con `package-lock.json`, Node 24 (`.nvmrc`).
 - **Aplicación:** SvelteKit 2 con `adapter-static` (todo prerenderizado), Svelte 5, Threlte 8, three 0.186 y Essentia (`essentia-core`, `essentia-primitives`, `essentia-crystal`, `essentia-ui`). Shaders propios con `vite-plugin-glsl`.
 - **Tests:** Vitest (`src/**/*.test.ts`).
-- **Versionado:** no se publica ni se versiona; `build/` es un sitio estático (ver [`docs/agent/git.md`](docs/agent/git.md#deploy)).
+- **Versionado:** no se publica ni se versiona; `build/` es un sitio estático que deploya Vercel (ver [`docs/agent/git.md`](docs/agent/git.md#deploy)).
 
 ## Comandos
 
@@ -24,7 +24,7 @@ npx vitest run src/lib/scene/layout    # un archivo de tests
 npm run dev                            # servidor de desarrollo
 ```
 
-No hay CI: la verificación es local (ver [`docs/agent/environment.md`](docs/agent/environment.md#verificación-local)). Para ver el sitio desde Claude Code, la preview es `landing` en [`.claude/launch.json`](.claude/launch.json) (`landing-build` sirve el build).
+No hay CI de tests ni de tipos (el único check de un PR es el deploy de preview de Vercel): la verificación es local (ver [`docs/agent/environment.md`](docs/agent/environment.md#verificación-local)). Para ver el sitio desde Claude Code, la preview es `landing` en [`.claude/launch.json`](.claude/launch.json) (`landing-build` sirve el build).
 
 ## Reglas transversales
 
