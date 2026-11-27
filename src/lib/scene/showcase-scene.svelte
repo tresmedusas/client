@@ -36,11 +36,14 @@
     onopencase: (project: Project, index: number, href: string, from: ScreenRect) => void
     /** Arranca con esta card centrada (al volver de su caso), con el título ya ido; `null`, desde el principio. */
     startCase: number | null
+    /** La card que trae la transición al volver de su caso: no se dibuja, e informa dónde queda (`onanchor`). */
+    landingCase: number | null
+    onanchor: (rect: ScreenRect) => void
     /** Cuánto se enciende el reflejo (0 a 1): un caso en el centro de la ventana. */
     onfocus: (focus: number) => void
   }
 
-  let { deck, width, viewportWidth, viewportHeight, compact, band, look, motion, focusedHref, onnavigate, onopencase, startCase, onfocus }: Props = $props()
+  let { deck, width, viewportWidth, viewportHeight, compact, band, look, motion, focusedHref, onnavigate, onopencase, startCase, landingCase, onanchor, onfocus }: Props = $props()
 
   let height = $state(0)
   let track = $state(0)
@@ -74,6 +77,8 @@
       {motion}
       {focusedHref}
       {onopencase}
+      {landingCase}
+      {onanchor}
       originY={viewportHeight / 2 - frame.top + deck.shift(0) + rise}
       reveal={frame.overflow > 0 ? rise / frame.overflow : 0}
       onmeasure={(h, t, s) => {

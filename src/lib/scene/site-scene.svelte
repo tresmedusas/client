@@ -26,7 +26,7 @@
     page: Page
     /** En la página de un caso, cuál. */
     project: Project | null
-    /** La transición al abrir un caso. */
+    /** La transición al abrir un caso o al volver de él. */
     transition: CaseTransition
     /** En el showcase, la card en la que arranca (al volver de su caso); `null`, desde el principio. */
     returnCase: number | null
@@ -71,6 +71,8 @@
 
   // ── Transición a un caso ───────────────────────────────────────
   const view = $derived(transitionView(transition.kind, transition.phase, transition.t, transition.from, transition.to))
+  /** «La card se abre», ya en la página nueva: la card viaja, así que la de la página no se dibuja hasta que llega. */
+  const landing = $derived(transition.phase === 'in' && transition.kind === 'open' && transition.project !== null)
 
   // ── Bordes ─────────────────────────────────────────────────────
   // En el showcase, los bordes son protagonistas: los casos pasan en fila,
@@ -124,7 +126,23 @@
   {#if home}
     <HomeScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} {motion} />
   {:else if page === 'showcase'}
-    <ShowcaseScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} band={restBand} look={baseWarp} {motion} {focusedHref} {onnavigate} {onopencase} startCase={returnCase} onfocus={(f) => (focus = f)} />
+    <ShowcaseScene
+      {deck}
+      {width}
+      viewportWidth={vw}
+      viewportHeight={vh}
+      {compact}
+      band={restBand}
+      look={baseWarp}
+      {motion}
+      {focusedHref}
+      {onnavigate}
+      {onopencase}
+      startCase={returnCase}
+      landingCase={landing ? transition.index : null}
+      onanchor={(rect) => transition.anchor(rect, 'showcase')}
+      onfocus={(f) => (focus = f)}
+    />
   {:else if page === 'case' && project}
     <CaseScene
       {deck}
@@ -134,17 +152,17 @@
       viewportHeight={vh}
       {compact}
       {year}
-      hideCard={transition.phase === 'in' && transition.kind === 'open'}
+      hideCard={landing}
       {focusedHref}
       {onnavigate}
-      onanchor={(rect) => transition.anchor(rect)}
+      onanchor={(rect) => transition.anchor(rect, 'case')}
     />
   {:else}
     <TermsScene {deck} {width} viewportWidth={vw} viewportHeight={vh} {compact} {year} {focusedHref} {onnavigate} />
   {/if}
 {/key}
 
-<!-- La transición a un caso: el velo de papel tapa el contenido (z 5) y la card viaja sobre él (z 6), debajo de los bordes. -->
+<!-- La transición a un caso (o de vuelta al showcase): el velo de papel tapa el contenido (z 5) y la card viaja sobre él (z 6), debajo de los bordes. -->
 {#if view.veil > 0}
   <Rect width={vw + 2} height={vh + 2} color={PALETTE.paper} opacity={view.veil} z={5} />
 {/if}
