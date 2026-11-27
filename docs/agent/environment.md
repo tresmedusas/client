@@ -35,7 +35,7 @@ Leé esta guía antes de tocar dependencias, la versión de Node o la configurac
 
 ## Verificación local
 
-No hay CI de tests ni de tipos: el único check de un PR es el deploy de preview de Vercel, que solo corre el build. Antes de abrir un PR corré, en este orden:
+No hay CI de tests ni de tipos: el único check de un PR es el deploy de preview de Vercel, que solo corre el build. Estos comandos se corren solo antes de pushear (no después de cada cambio), en este orden:
 
 ```bash
 npm ci
