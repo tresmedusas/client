@@ -3,11 +3,15 @@
   import { useEngine } from 'essentia-core'
   import { Glass } from 'essentia-crystal'
   import {
-    CircleGeometry,
     Color,
     CustomBlending,
+    ExtrudeGeometry,
+    Float32BufferAttribute,
+    Group,
     HalfFloatType,
+    Matrix4,
     Mesh,
+    MeshBasicMaterial,
     OneFactor,
     OneMinusSrcAlphaFactor,
     OrthographicCamera,
@@ -23,7 +27,17 @@
   } from 'three'
   import { PALETTE } from '$lib/tokens.js'
   import { Kit, roundedShape } from './figures/kit.js'
-  import { DESIGN_WIDTH, HERO_FIGURES, LOOK, type FigureLook, type Shape } from './figures/hero.js'
+  import {
+    DESIGN_WIDTH,
+    HERO_FIGURES,
+    LOOK,
+    STACK_STEP,
+    obliqueOffset,
+    stack,
+    type Depths,
+    type FigureLook,
+    type Shape,
+  } from './figures/hero.js'
 
   /**
    * La figura del hero (DESIGN.md §4): la interfaz de lo que nombra el
@@ -31,8 +45,10 @@
    * «qué construimos», un panel de vidrio cruza el marco: a su izquierda ya
    * está la figura nueva, a su derecha todavía la de antes. Quieta, no se mueve.
    *
-   * Cada figura se dibuja una vez en su propio target (plana, vista desde
-   * arriba) y entra a la escena como un quad transparente; el panel es un
+   * Cada figura se dibuja una vez en su propio target, de frente y en vista
+   * oblicua: las caras quedan 1:1 y lo que tiene volumen (las cards, los
+   * botones, el acento) muestra sus lados, corridos según la oblicua
+   * (`stack` en `figures/hero.ts`). Entra a la escena como un quad transparente; el panel es un
    * `<Glass>` de Essentia a z 1, que refracta ese quad. Los valores salen de `look`.
    */
   interface Props {
@@ -62,9 +78,8 @@
   const engine = useEngine()
   const { renderer, invalidate } = useThrelte()
 
-  // ── Las figuras, planas ──────────────────────────────────────────
+  // ── Las figuras, en volumen ──────────────────────────────────────
   const kit = new Kit()
-  const geometries: BufferGeometry[] = []
   const fills = new Map<number, ReturnType<Kit['face']>>()
   /**
    * El relleno: la tinta sobre el papel con opacidad `a`, mezclada en sRGB
@@ -78,48 +93,131 @@
   }
   const fillOf = (a: number) => fills.get(a) ?? fills.set(a, kit.face(srgbTint(a))).get(a)!
 
+  /**
+   * Los lados de los volúmenes (DESIGN.md §4, figuras 3D): los que miran a la
+   * derecha, la tinta al 5 %; los que miran abajo, al 9 %. Cada vértice lleva
+   * su tono según su normal, así una esquina redondeada pasa de uno al otro.
+   */
+  const SIDE_RIGHT = srgbTint(0.05)
+  const SIDE_DOWN = srgbTint(0.09)
+  const sides = new MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
+  function paintSides(geometry: BufferGeometry) {
+    const normal = geometry.getAttribute('normal')!
+    const colors = new Float32Array(normal.count * 3)
+    const c = new Color()
+    for (let i = 0; i < normal.count; i++) {
+      const nx = normal.getX(i)
+      const nz = normal.getZ(i)
+      c.copy(SIDE_RIGHT).lerp(SIDE_DOWN, (nz * nz) / (nx * nx + nz * nz || 1))
+      colors.set([c.r, c.g, c.b], i * 3)
+    }
+    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
+  }
+
+  /** El contorno de una forma con superficie, en el plano xy (y hacia arriba: acostado, pasa a +z). */
+  function planeShape(s: Shape): ThreeShape {
+    if (s.kind === 'rect') return roundedShape(s.w, s.h, Math.min(s.r, s.w / 2, s.h / 2))
+    if (s.kind === 'circle') return new ThreeShape().absarc(0, 0, s.r, 0, Math.PI * 2, false)
+    return new ThreeShape(s.points.map(([px, py]) => new Vector2(px, -py)))
+  }
+  /** Dónde va el centro de la forma en el piso (la polilínea ya trae sus coordenadas). */
+  const centerOf = (s: Shape): [number, number] => (s.kind === 'line' ? [0, 0] : [s.x, s.y])
+
   /** Una superficie rellena, acostada en el piso a la altura `h`. */
-  function surface(geometry: BufferGeometry, fill: number, px: number, pz: number, h: number): Mesh {
-    geometries.push(geometry)
+  function surface(s: Shape, fill: number, h: number): Mesh {
+    const geometry = new ShapeGeometry(planeShape(s), s.kind === 'circle' ? 48 : 12)
     geometry.rotateX(-Math.PI / 2)
     const mesh = new Mesh(geometry, fillOf(fill))
+    const [px, pz] = centerOf(s)
     mesh.position.set(px, h, pz)
     return mesh
   }
 
-  function build(shapes: Shape[]): Scene {
+  /** Un volumen: la forma levantada `lift` desde `base`, con su relleno arriba (papel si no tiene) y sus bordes. */
+  function volume(s: Shape, base: number, lift: number): Group {
+    const geometry = new ExtrudeGeometry(planeShape(s), {
+      depth: lift,
+      bevelEnabled: false,
+      // Con pasos de menos de 20° los lados curvos no dibujan aristas (el umbral de `kit.edges`).
+      curveSegments: s.kind === 'circle' ? 48 : 12,
+    })
+    geometry.rotateX(-Math.PI / 2)
+    paintSides(geometry)
+    const g = new Group()
+    g.add(new Mesh(geometry, [fillOf(s.fill ?? 0), sides]))
+    g.add(kit.edges(geometry, s.strong ? kit.strong : kit.normal))
+    const [px, pz] = centerOf(s)
+    g.position.set(px, base, pz)
+    return g
+  }
+
+  function build(shapes: Shape[], depths: Depths): Scene {
     const scene = new Scene()
     scene.add(kit.dotGrid(250))
+    const levels = stack(shapes, depths)
     shapes.forEach((s, i) => {
-      // Cada forma, un poco más arriba que la anterior: tapa lo que tiene debajo.
-      const h = 1 + i
+      const { base, lift } = levels[i]!
+      if (lift > 0) {
+        scene.add(volume(s, base, lift))
+        return
+      }
+      // Plana: pegada a lo que tiene debajo; el trazo, apenas encima de su relleno.
       const stroke = s.strong ? kit.strong : kit.normal
+      const h = base + STACK_STEP / 2
       if (s.kind === 'rect') {
-        if (s.fill !== undefined) scene.add(surface(new ShapeGeometry(roundedShape(s.w, s.h, Math.min(s.r, s.w / 2, s.h / 2))), s.fill, s.x, s.y, h))
-        if (!s.bare) scene.add(kit.rrect(s.x, s.y, s.w, s.h, s.r, h + 0.5, stroke))
+        if (s.fill !== undefined) scene.add(surface(s, s.fill, base))
+        if (!s.bare) scene.add(kit.rrect(s.x, s.y, s.w, s.h, s.r, h, stroke))
       } else if (s.kind === 'circle') {
-        if (s.fill !== undefined) scene.add(surface(new CircleGeometry(s.r, 48), s.fill, s.x, s.y, h))
-        if (!s.bare) scene.add(kit.circle(s.x, s.y, s.r, h + 0.5, stroke, 48))
+        if (s.fill !== undefined) scene.add(surface(s, s.fill, base))
+        if (!s.bare) scene.add(kit.circle(s.x, s.y, s.r, h, stroke, 48))
       } else {
-        if (s.fill !== undefined && s.closed) {
-          // La forma va en el plano xy; acostada, su y pasa a −z.
-          const shape = new ThreeShape(s.points.map(([px, py]) => new Vector2(px, -py)))
-          scene.add(surface(new ShapeGeometry(shape), s.fill, 0, 0, h))
-        }
-        if (!s.bare) scene.add(kit.polyline(s.points.map(([px, py]) => new Vector3(px, h + 0.5, py)), stroke, s.closed))
+        if (s.fill !== undefined && s.closed) scene.add(surface(s, s.fill, base))
+        if (!s.bare) scene.add(kit.polyline(s.points.map(([px, py]) => new Vector3(px, h, py)), stroke, s.closed))
       }
     })
     return scene
   }
 
-  const scenes = HERO_FIGURES.map((f) => build(f.shapes))
+  /** Las geometrías de una escena (los materiales son del kit y se liberan con él). */
+  function disposeScene(scene: Scene) {
+    scene.traverse((o) => (o as Partial<Mesh>).geometry?.dispose())
+  }
 
-  // Vista desde arriba: x a la derecha, z hacia abajo en pantalla.
-  const camera = new OrthographicCamera(-1, 1, 1, -1, -3000, 3000)
+  // Las figuras no se mueven: se dibujan una vez, y de nuevo si cambia el tamaño o el volumen.
+  let dirty = $state(true)
+
+  // Se arman de nuevo solo si cambian los altos (en el build, una vez).
+  const depths = $derived<Depths>({ plateDepth: look.plateDepth, depth: look.depth, accentDepth: look.accentDepth })
+  let scenes = $state.raw<Scene[]>([])
+  $effect(() => {
+    const built = HERO_FIGURES.map((f) => build(f.shapes, depths))
+    scenes = built
+    dirty = true
+    invalidate()
+    return () => built.forEach(disposeScene)
+  })
+
+  // Vista de frente, desde arriba: x a la derecha, z hacia abajo en pantalla.
+  // La oblicua es un cizallamiento en la proyección (`obliqueShear`): las
+  // caras de frente quedan 1:1 y lo alto se corre según `obliqueAngle`.
+  const camera = new OrthographicCamera(-1, 1, 1, -1, 500, 1500)
   camera.up.set(0, 0, -1)
+  const CAMERA_HEIGHT = 1000
+  const shear = new Matrix4()
+
+  /**
+   * El cizallamiento de la oblicua, en el espacio de la cámara (z hacia ella,
+   * que es la altura): lo que está `h` arriba de la placa se corre lo mismo
+   * que en el SVG de la capa semántica (`obliqueOffset`, con y hacia abajo).
+   */
+  function obliqueShear(m: Matrix4, l: FigureLook): Matrix4 {
+    const [dx, dy] = obliqueOffset(l.plateDepth + 1, l)
+    const z0 = l.plateDepth - CAMERA_HEIGHT
+    return m.set(1, 0, dx, -dx * z0, 0, 1, -dy, dy * z0, 0, 0, 1, 0, 0, 0, 0, 1)
+  }
 
   // Lineal y en media precisión: los grises claros no se escalonan. MSAA para los trazos.
-  const targets = scenes.map(() => new WebGLRenderTarget(1, 1, { samples: 4, type: HalfFloatType }))
+  const targets = HERO_FIGURES.map(() => new WebGLRenderTarget(1, 1, { samples: 4, type: HalfFloatType }))
 
   // Los targets guardan color lineal premultiplicado: el shader lo pasa a
   // sRGB, elige la figura según de qué lado del panel cae y la funde con `opacity`.
@@ -176,8 +274,6 @@
   })
   const quad = new Mesh(new PlaneGeometry(1, 1), material)
 
-  // Las figuras no se mueven: se dibujan una vez, y de nuevo si cambia el tamaño.
-  let dirty = $state(true)
   const clearColor = new Color()
 
   useTask(
@@ -197,7 +293,7 @@
       renderer.autoClear = previousAutoClear
       dirty = false
     },
-    { running: () => opacity > 0 && dirty },
+    { running: () => opacity > 0 && dirty && scenes.length > 0 },
   )
 
   $effect(() => {
@@ -210,11 +306,13 @@
     // La placa queda donde va en el marco natural, medida desde arriba
     // (`look.offsetY` más abajo del medio): si el marco es más bajo, se recorta abajo.
     const target = (height - natural) / 2 / zoom - look.offsetY
-    camera.position.set(0, 1000, target)
+    camera.position.set(0, CAMERA_HEIGHT, target)
     camera.lookAt(0, 0, target)
     camera.updateMatrixWorld()
     camera.zoom = zoom
     camera.updateProjectionMatrix()
+    camera.projectionMatrix.multiply(obliqueShear(shear, look))
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()
     kit.setResolution(width, height)
     material.uniforms.size!.value.set(width, height)
     material.uniforms.edgeFade!.value = look.edgeFade
@@ -252,7 +350,7 @@
 
   $effect(() => () => {
     for (const t of targets) t.dispose()
-    for (const g of geometries) g.dispose()
+    sides.dispose()
     material.dispose()
     quad.geometry.dispose()
     kit.dispose()

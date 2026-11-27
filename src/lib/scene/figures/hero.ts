@@ -26,6 +26,8 @@ interface Style {
   fill?: number;
   /** Sin trazo: solo el relleno (los renglones de texto y las superficies). */
   bare?: boolean;
+  /** La placa de fondo: su volumen mide `LOOK.plateDepth`. */
+  plate?: boolean;
 }
 
 export type Shape =
@@ -66,6 +68,22 @@ export const LOOK = {
   panelWidth: 70,
   wipe: 1.1,
   glass: 1,
+  /**
+   * El volumen, en vista oblicua (pedido del usuario, 2026-11-27): las caras
+   * de frente quedan 1:1 y lo alto se corre según la oblicua. Alto de la placa, de
+   * lo que tiene superficie (cards, botones, fichas) y del acento, en px de
+   * diseño; ninguno pasa del 40 % de su lado más corto.
+   */
+  plateDepth: 8,
+  depth: 5,
+  accentDepth: 10,
+  /**
+   * Hacia dónde se corre lo alto, en grados (0: a la izquierda; 90: hacia
+   * arriba, el que eligió el usuario en el banco de pruebas, 2026-11-27: se
+   * ven solo los lados de abajo), y cuánto por px de alto (0.5: oblicua «cabinet»).
+   */
+  obliqueAngle: 90,
+  obliqueRatio: 0.5,
 } as const;
 
 /** Los mismos valores, como números: lo que ajusta el banco de pruebas (`src/lib/lab/hero-lab*`). */
@@ -146,6 +164,7 @@ const board = (): Shape[] => [
     ],
     closed: true,
     fill: SURFACE,
+    plate: true,
   },
 ];
 /** Un panel de `w` de ancho centrado en `x`, un paso más oscuro, desde la barra de arriba hasta el borde de abajo de la placa. */
@@ -395,6 +414,165 @@ function design(): HeroFigure {
       },
     ],
   };
+}
+
+// ── El volumen ──────────────────────────────────────────────────────
+
+/** Caja de una forma, en px de diseño (y hacia abajo). */
+export interface Bounds {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+export function boundsOf(s: Shape): Bounds {
+  if (s.kind === "rect")
+    return { x0: s.x - s.w / 2, y0: s.y - s.h / 2, x1: s.x + s.w / 2, y1: s.y + s.h / 2 };
+  if (s.kind === "circle")
+    return { x0: s.x - s.r, y0: s.y - s.r, x1: s.x + s.r, y1: s.y + s.r };
+  const xs = s.points.map(([x]) => x);
+  const ys = s.points.map(([, y]) => y);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
+/** `b` entra en `a` (con medio px de tolerancia: los renglones van justo al borde). */
+const contains = (a: Bounds, b: Bounds) =>
+  b.x0 >= a.x0 - 0.5 && b.x1 <= a.x1 + 0.5 && b.y0 >= a.y0 - 0.5 && b.y1 <= a.y1 + 0.5;
+const intersects = (a: Bounds, b: Bounds) =>
+  a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+/** Un anillo: el acento sin relleno. Lo que encierra sube con él, aunque se dibuje antes. */
+const isRing = (s: Shape) => !!s.strong && s.fill === undefined && s.kind !== "line";
+
+/** Los altos del volumen: lo que el banco de pruebas ajusta de `LOOK`. */
+export type Depths = Pick<FigureLook, "plateDepth" | "depth" | "accentDepth">;
+
+/**
+ * Cuánto se levanta una forma, en px de diseño. Tiene volumen lo que tiene
+ * superficie (relleno con trazo: cards, botones, fichas) y el acento; los
+ * renglones, los paneles y los trazos sueltos van pegados a lo que tienen
+ * debajo. Ningún volumen pasa del 40 % de su lado más corto: un ícono de 6 px
+ * no se vuelve una torre.
+ */
+export function liftOf(s: Shape, d: Depths): number {
+  if (s.plate) return d.plateDepth;
+  const b = boundsOf(s);
+  const cap = 0.4 * Math.min(b.x1 - b.x0, b.y1 - b.y0);
+  if (s.kind !== "line" && s.strong) return Math.min(d.accentDepth, cap);
+  const surface = s.kind !== "line" || s.closed;
+  if (surface && s.fill !== undefined && !s.bare) return Math.min(d.depth, cap);
+  return 0;
+}
+
+/** Dónde apoya una forma (`base`) y cuánto se levanta (`lift`), en px de diseño. */
+export interface Level {
+  base: number;
+  lift: number;
+}
+
+/** Separación entre formas que apoyan a la misma altura: la que va después tapa a la de antes. */
+export const STACK_STEP = 0.002;
+
+/**
+ * Apila las formas de una figura: cada una apoya sobre lo más alto de los
+ * volúmenes que tiene debajo. Tiene debajo un volumen anterior que se le
+ * superpone (como en el dibujo plano, lo de después tapa) y un anillo que la
+ * encierra, aunque el anillo venga después: así la fila elegida sube entera.
+ */
+export function stack(shapes: readonly Shape[], d: Depths): Level[] {
+  const bounds = shapes.map(boundsOf);
+  const lifts = shapes.map((s) => liftOf(s, d));
+  const levels: (Level | undefined)[] = [];
+  const visiting = new Set<number>();
+  const level = (i: number): Level => {
+    const known = levels[i];
+    if (known) return known;
+    // Sin ciclos por construcción; si los hubiera, la forma apoya en el papel.
+    if (visiting.has(i)) return { base: 0, lift: lifts[i]! };
+    visiting.add(i);
+    let base = 0;
+    shapes.forEach((c, j) => {
+      if (j === i || lifts[j] === 0) return;
+      const ring = isRing(c) && contains(bounds[j]!, bounds[i]!);
+      const under =
+        j < i &&
+        intersects(bounds[j]!, bounds[i]!) &&
+        !(isRing(shapes[i]!) && contains(bounds[i]!, bounds[j]!));
+      if (ring || under) {
+        const below = level(j);
+        base = Math.max(base, below.base + below.lift);
+      }
+    });
+    visiting.delete(i);
+    const result = { base: base + (i + 1) * STACK_STEP, lift: lifts[i]! };
+    levels[i] = result;
+    return result;
+  };
+  return shapes.map((_, i) => level(i));
+}
+
+/**
+ * Cuánto se corre en el dibujo algo que está a la altura `h`, en px de diseño
+ * (y hacia abajo). La cara de arriba de la placa no se corre: queda donde
+ * estaba la figura plana.
+ */
+export function obliqueOffset(
+  h: number,
+  look: Pick<FigureLook, "plateDepth" | "obliqueAngle" | "obliqueRatio">,
+): [number, number] {
+  const k = (h - look.plateDepth) * look.obliqueRatio;
+  const a = (look.obliqueAngle * Math.PI) / 180;
+  return [-k * Math.cos(a), -k * Math.sin(a)];
+}
+
+/** El contorno de una forma con superficie, en px de diseño (y hacia abajo). */
+export function outlineOf(s: Shape): [number, number][] {
+  if (s.kind === "line") return s.points;
+  if (s.kind === "circle")
+    return Array.from({ length: 48 }, (_, i) => {
+      const a = (i / 48) * Math.PI * 2;
+      return [s.x + Math.cos(a) * s.r, s.y + Math.sin(a) * s.r];
+    });
+  const r = Math.min(s.r, s.w / 2, s.h / 2);
+  const hx = s.w / 2 - r;
+  const hy = s.h / 2 - r;
+  const points: [number, number][] = [];
+  for (const [cx, cy, from] of [
+    [hx, hy, 0],
+    [-hx, hy, Math.PI / 2],
+    [-hx, -hy, Math.PI],
+    [hx, -hy, (3 * Math.PI) / 2],
+  ] as const) {
+    for (let i = 0; i <= 6; i++) {
+      const a = from + (i / 6) * (Math.PI / 2);
+      points.push([s.x + cx + Math.cos(a) * r, s.y + cy + Math.sin(a) * r]);
+    }
+  }
+  return points;
+}
+
+/**
+ * Lo que barre un contorno al correrse `v`: la envolvente convexa del
+ * contorno y su copia corrida. Es el lado del volumen en la capa semántica
+ * (exacto para las formas convexas, que son casi todas).
+ */
+export function sweep(points: readonly [number, number][], v: [number, number]): [number, number][] {
+  const all = [...points, ...points.map(([x, y]) => [x + v[0], y + v[1]] as [number, number])].sort(
+    (a, b) => a[0] - b[0] || a[1] - b[1],
+  );
+  const cross = (o: [number, number], a: [number, number], b: [number, number]) =>
+    (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const half = (ps: [number, number][]) => {
+    const h: [number, number][] = [];
+    for (const p of ps) {
+      while (h.length >= 2 && cross(h[h.length - 2]!, h[h.length - 1]!, p) <= 0) h.pop();
+      h.push(p);
+    }
+    h.pop();
+    return h;
+  };
+  return [...half(all), ...half([...all].reverse())];
 }
 
 export const HERO_FIGURES: readonly HeroFigure[] = [
