@@ -8,8 +8,8 @@ const FROM: ScreenRect = { x: 0, y: -120, width: 990, height: 660 }
 const TO: ScreenRect = { x: 0, y: 40, width: 990, height: 660 }
 
 describe('transitionView', () => {
-  it('la que se usa: los bordes se tragan el showcase', () => {
-    expect(CASE_TRANSITION).toBe('swallow')
+  it('la que se usa: la card se abre en su página', () => {
+    expect(CASE_TRANSITION).toBe('open')
   })
 
   it('quieta, no se ve nada', () => {
@@ -67,7 +67,36 @@ describe('CaseTransition', () => {
     expect(t.phase).toBe('in')
     t.advance(10)
     expect(t.t).toBe(0)
-    t.anchor(TO)
+    t.anchor(TO, 'case')
+    t.advance(TRANSITION_DURATION.open.in)
+    expect(t.active).toBe(false)
+  })
+
+  it('la página del caso informa dónde está su previsualización, aunque no haya transición', () => {
+    const t = new CaseTransition()
+    t.anchor(TO, 'case')
+    expect(t.placed).toEqual(TO)
+    expect(t.to).toBeNull()
+    t.anchor(FROM, 'showcase')
+    expect(t.placed).toEqual(TO)
+  })
+
+  it('al volver con la card: sale de la previsualización y espera a que el showcase informe su card', () => {
+    const t = new CaseTransition()
+    let navigated = 0
+    t.start('open', '/showcase', () => navigated++, { project, index: 0, from: TO })
+    // La página del caso sigue informando mientras se va: no es el destino.
+    t.anchor(TO, 'case')
+    t.advance(TRANSITION_DURATION.open.out)
+    expect(navigated).toBe(1)
+    t.arrive('/showcase')
+    expect(t.to).toBeNull()
+    t.advance(10)
+    expect(t.t).toBe(0)
+    expect(transitionView(t.kind, t.phase, t.t, t.from, t.to)).toMatchObject({ veil: 1, card: TO })
+    t.anchor(FROM, 'showcase')
+    t.advance(TRANSITION_DURATION.open.in / 2)
+    expect(t.t).toBeCloseTo(0.5)
     t.advance(TRANSITION_DURATION.open.in)
     expect(t.active).toBe(false)
   })
