@@ -144,6 +144,8 @@ export interface Person {
   /** Ancla de la persona en la capa semántica y en su modal. */
   id: string
   name: string
+  /** Etiqueta sobre el nombre, en la card y en el modal («Fundador», «Fundadora»). */
+  label: string
   role: string
   /** Bio corta: de dónde viene y qué hace en Tres Medusas. */
   bio: string
@@ -156,22 +158,23 @@ export const ABOUT = {
     id: 'nosotros',
     // TODO: copy definitivo.
     title: '**Tres fundadores.** Un equipo que construye **contigo.**',
-    intro: 'Hablas con quien construye. Entendemos tu proceso y construimos tu sistema, de la primera llamada a la entrega.',
+    // Sin intro (pedido del usuario, 2026-11-27).
   } satisfies Section,
   foundersLabel: 'Fundadores',
-  /** La card de cada fundador y su modal («Conocer a …»). */
+  /**
+   * El modal de cada fundador. La card no lleva «Conocer a …» (pedido del
+   * usuario, 2026-11-27): se abre con un clic en la card o con el nombre,
+   * que es el link en la capa semántica.
+   */
   card: {
-    label: 'Fundador',
-    /** Con el nombre de pila: entra en el pie de la card. */
-    cta: (name: string) => `Conocer a ${name.split(' ')[0]}`,
     close: 'Cerrar',
   },
   // TODO: bios reales. El equipo actual no se muestra por ahora.
   // Cada bio abre con una oración corta (2 a 6 palabras) que hace de lead-in.
   founders: [
-    { id: 'sofia-dome', name: 'Sofia Dome', role: 'Sr Designer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/sofia-dome.jpg' },
-    { id: 'uriel-rivero', name: 'Uriel Rivero', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/uriel-rivero.jpg' },
-    { id: 'matias-caballero', name: 'Matias Caballero', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/matias-caballero.jpg' },
+    { id: 'sofia-dome', name: 'Sofia Dome', label: 'Fundadora', role: 'Sr Designer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/sofia-dome.jpg' },
+    { id: 'uriel-rivero', name: 'Uriel Rivero', label: 'Fundador', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/uriel-rivero.jpg' },
+    { id: 'matias-caballero', name: 'Matias Caballero', label: 'Fundador', role: 'Sr Software Engineer', bio: 'Bio por definir. De dónde viene y qué hace en Tres Medusas.', photo: '/founders/matias-caballero.jpg' },
   ] satisfies Person[] as readonly Person[],
 } as const
 

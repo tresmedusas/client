@@ -8,7 +8,7 @@
   /**
    * Nosotros: los tres fundadores como protagonistas, cada uno en su card con
    * su foto. La fila (o la columna, en un teléfono) va centrada como
-   * bloque; «Conocer a …» abre el modal del fundador.
+   * bloque; un clic en la card abre el modal del fundador.
    *
    * En escritorio la escena llena la ventana (pedido del usuario,
    * 2026-11-25): las cards crecen hasta ocupar el alto que deja el

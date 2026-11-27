@@ -48,25 +48,24 @@
 
 <section id={ABOUT.section.id} aria-labelledby="{ABOUT.section.id}-title">
   <h2 id="{ABOUT.section.id}-title"><InlineHeadline text={ABOUT.section.title} /></h2>
-  <p><LeadIn text={ABOUT.section.intro} /></p>
   <h3 class="label">{ABOUT.foundersLabel}</h3>
   <ul class="cards founders">
     {#each ABOUT.founders as person (person.id)}
       <li id={person.id}>
         {#if person.photo}<img class="portrait" src={person.photo} alt="" width="240" height="336" loading="lazy" />{/if}
-        <p class="eyebrow">{ABOUT.card.label}</p>
-        <h4>{person.name}</h4>
+        <p class="eyebrow">{person.label}</p>
+        <!-- El nombre abre el modal del fundador (con JS); la escena le dibuja el foco a su card. -->
+        <h4>
+          <a
+            href="#{person.id}"
+            onclick={(e) => {
+              e.preventDefault()
+              openFounder(person.id)
+            }}>{person.name}</a
+          >
+        </h4>
         <p class="role">{person.role}</p>
         <p><LeadIn text={person.bio} /></p>
-        <!-- Con JS abre el modal del fundador; la escena le dibuja el foco a su card. -->
-        <a
-          class="more"
-          href="#{person.id}"
-          onclick={(e) => {
-            e.preventDefault()
-            openFounder(person.id)
-          }}>{ABOUT.card.cta(person.name)}</a
-        >
       </li>
     {/each}
   </ul>
