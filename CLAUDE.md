@@ -33,6 +33,7 @@ La postura técnica del proyecto está en [`docs/agent/soul.md`](docs/agent/soul
 - **Confirmá explícitamente antes de acciones irreversibles o visibles para otros**: `git push`, abrir o mergear PRs, forzar historial, borrar archivos o ramas, mergear a `main`, deployar.
 - **Cambios acotados**: no agregues abstracciones, dependencias nuevas ni "mejoras" que no se pidieron. Un patrón se extrae a un lugar compartido solo cuando ya hay duplicación real.
 - **Verificá antes de asumir**: revisá el `package.json` antes de confiar en un script, y que un archivo exista antes de citarlo.
+- **Checks, tests y build solo al pushear**: `npm test`, `npm run check` y `npm run build` se corren únicamente antes de un `git push`, no después de cada cambio ni al cerrar una tarea que no se pushea.
 - **Cerrá el loop**: antes de dar una tarea por terminada, cumplí la Definition of Done de `AGENTS.md`.
 
 ## Formato de respuesta

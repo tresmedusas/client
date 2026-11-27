@@ -48,6 +48,8 @@ No hay CI de tests ni de tipos (el único check de un PR es el deploy de preview
 
 ## Definition of Done
 
+Los pasos 1 a 3 se corren solo antes de pushear, no después de cada cambio: una tarea que no se pushea se cierra con los pasos 4 y 5.
+
 1. **Tests:** `npm test`.
 2. **Tipos:** `npm run check`. Tiene que dar 0 errores. Los warnings preexistentes no frenan, pero no sumes nuevos.
 3. **Build:** `npm run build`. El sitio se prerenderiza, así que un error de SSR aparece recién acá.

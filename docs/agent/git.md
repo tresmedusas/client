@@ -38,7 +38,7 @@ El historial anterior a esta guía está en español y sin tipo: no lo reescriba
 - **Capturas** si cambia algo visual.
 - **Base del PR:** `develop`. Solo el PR de release apunta a `main`.
 - **Un tema por PR,** chico y revisable. Los refactors y reformateos van en PRs separados.
-- **Verificación:** no hay CI de tests ni de tipos, así que la Definition of Done de `AGENTS.md` se corre en local antes de pedir el merge. Qué correr, en [`environment.md`](./environment.md#verificación-local). El check `Vercel` solo dice que el build pasó y deja la preview para revisar.
+- **Verificación:** no hay CI de tests ni de tipos, así que la Definition of Done de `AGENTS.md` se corre en local antes de pushear. Qué correr, en [`environment.md`](./environment.md#verificación-local). El check `Vercel` solo dice que el build pasó y deja la preview para revisar.
 - **Merge:** con merge commit.
 
 ## Deploy
